@@ -87,6 +87,12 @@ except ImportError as e:
     PluginManager = None
 
 try:
+    from .remote.command_handler import RemoteCommandHandler
+except ImportError as e:
+    print(f"⚠️ Remote management module not available: {e}")
+    RemoteCommandHandler = None
+
+try:
     from .cloud import CloudManager
 except ImportError as e:
     print(f"⚠️ Cloud module not available: {e}")
@@ -126,7 +132,8 @@ def get_available_modules():
         'monitoring': MonitoringManager is not None,
         'plugins': PluginManager is not None,
         'cloud': CloudManager is not None,
-        'utils': AgentUtils is not None
+        'utils': AgentUtils is not None,
+        'remote_management': RemoteCommandHandler is not None
     }
     
     available = [name for name, available in modules.items() if available]
@@ -271,6 +278,7 @@ __all__ = [
     # Extensions
     'PluginManager',
     'CloudManager',
+    'RemoteCommandHandler',
     
     # Utilities
     'AgentUtils',
