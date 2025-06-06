@@ -11,6 +11,7 @@ import uuid
 import hashlib
 import secrets
 import requests
+import os
 from datetime import datetime
 from typing import Dict, Any, Optional
 
@@ -24,6 +25,7 @@ from ..monitoring.metrics import MonitoringManager
 from ..dashboard.web.routes import DashboardManager
 from ..network.communication import NetworkManager
 from ..plugins import PluginManager
+from ..remote.command_handler import RemoteCommandHandler
 
 
 class UltimatePainNetworkAgent:
@@ -46,6 +48,7 @@ class UltimatePainNetworkAgent:
         self.task_scheduler = TaskScheduler(self.ai_manager, self.blockchain_manager)
         self.network_manager = NetworkManager(self.config_manager)
         self.dashboard_manager = DashboardManager(self)
+        self.remote_command_handler = RemoteCommandHandler(self)
         
         # Configuration
         self.node_url = (node_url or 
@@ -102,7 +105,8 @@ class UltimatePainNetworkAgent:
             'ai_status': self.ai_manager.get_status(),
             'blockchain_status': self.blockchain_manager.get_status(),
             'network_status': self.network_manager.get_status(),
-            'security_status': self.security_manager.get_status()
+            'security_status': self.security_manager.get_status(),
+            'remote_commands': list(self.remote_command_handler.command_handlers.keys())
         }
     
     def register_with_node(self) -> bool:
@@ -124,6 +128,10 @@ class UltimatePainNetworkAgent:
             "enhanced_features": True,
             "task_types": list(self.task_scheduler.get_available_task_types())
         }
+
+    def execute_remote_command(self, command: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a remote management command."""
+        return self.remote_command_handler.handle_command(command)
     
     def start_task(self, task_type: str, task_config: Dict = None) -> str:
         """Start a new task"""
