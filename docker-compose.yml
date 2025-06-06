@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    environment:
+      REDIS_URL: redis://redis:6379
+      JWT_PUBLIC_KEY_PATH: /keys/public.pem
+    volumes:
+      - ./keys:/keys
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8080:8080"
+    environment:
+      REDIS_URL: redis://redis:6379
+      JWT_PUBLIC_KEY_PATH: /keys/public.pem
+    volumes:
+      - ./keys:/keys
+
+  manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.manager
+    ports:
+      - "9090:9090"
+    environment:
+      JWT_PRIVATE_KEY_PATH: /keys/private.pem
+      JWT_PUBLIC_KEY_PATH: /keys/public.pem
+    volumes:
+      - ./keys:/keys

@@ -1,0 +1,7 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY ultimate_agent /app/ultimate_agent
+COPY scripts /app/scripts
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+CMD ["python", "ultimate_agent/main.py"]
