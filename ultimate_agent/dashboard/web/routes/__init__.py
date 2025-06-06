@@ -165,6 +165,21 @@ class DashboardManager:
                     return jsonify({'success': False, 'error': 'Task scheduler not available'})
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/v4/remote/command', methods=['POST'])
+        def remote_command():
+            """Execute a remote management command"""
+            try:
+                data = request.get_json() or {}
+                result = self.agent.execute_remote_command(data)
+                return jsonify(result)
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/v4/remote/capabilities')
+        def remote_capabilities():
+            """List available remote management commands"""
+            return jsonify({'commands': list(self.agent.remote_command_handler.command_handlers.keys())})
         
         # Enhanced API endpoints
         @self.app.route('/api/v3/blockchain/enhanced')
@@ -318,6 +333,15 @@ class DashboardManager:
                 real_time_data['scheduler'] = scheduler_status
             
             emit('real_time_data', real_time_data)
+
+        @self.socketio.on('remote_command')
+        def handle_remote_command(data):
+            """Handle remote command execution"""
+            try:
+                result = self.agent.execute_remote_command(data)
+                emit('remote_command_response', result)
+            except Exception as e:
+                emit('remote_command_response', {'success': False, 'error': str(e)})
     
     def broadcast_task_progress(self, task_id: str, progress: float, details: Dict = None):
         """Broadcast task progress to connected clients"""
