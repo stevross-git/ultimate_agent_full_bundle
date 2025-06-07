@@ -16,7 +16,7 @@ scipy>=1.9.0
 
 # Database & Storage
 sqlalchemy>=1.4.0
-sqlite3  # Built-in with Python
+# sqlite3  # Built-in with Python
 
 # System Monitoring & Performance
 psutil>=5.9.0
