@@ -11,10 +11,13 @@ import argparse
 import traceback
 import time
 
-# Add the current directory to Python path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add the package root directory to Python path for imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+package_root = os.path.dirname(current_dir)
+sys.path.insert(0, package_root)
 
-from core.agent import UltimatePainNetworkAgent
+# Import the full-featured agent class
+from ultimate_agent import UltimatePainNetworkAgent
 
 VERSION = "3.0.0-modular"
 
