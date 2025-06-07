@@ -58,7 +58,6 @@ class RemoteCommandHandler:
         delay = int(params.get('delay', 1))
         self.agent.stop()
         time.sleep(delay)
-        # in modular repo restarting would require external supervisor
         return {'action': 'restart_scheduled', 'delay': delay}
 
     def shutdown_agent(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -69,14 +68,12 @@ class RemoteCommandHandler:
         return self.agent.get_status()
 
     def start_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Start a task via the agent's scheduler"""
         task_type = params.get('task_type', 'data_processing')
         task_config = params.get('task_config', {})
         task_id = self.agent.start_task(task_type, task_config)
         return {'task_id': task_id, 'task_type': task_type}
 
     def cancel_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Cancel a running or queued task"""
         task_id = params.get('task_id')
         if not task_id:
             raise ValueError('task_id required')
@@ -89,7 +86,6 @@ class RemoteCommandHandler:
         return {'task_id': task_id, 'cancelled': success}
 
     def update_config(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Update configuration section with provided key/value pairs"""
         section = params.get('section')
         updates = params.get('updates', {})
         if not section or not isinstance(updates, dict):
@@ -99,11 +95,9 @@ class RemoteCommandHandler:
         return {'section': section, 'updated_keys': list(updates.keys())}
 
     def reload_config(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Reload configuration from disk"""
         self.agent.config_manager.reload()
         return {'reloaded': True}
 
-    # --- additional task management commands ---
     def pause_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
         task_id = params.get('task_id')
         task = getattr(self.agent, 'current_tasks', {}).get(task_id)
@@ -129,7 +123,6 @@ class RemoteCommandHandler:
             return {'task_id': task_id, 'priority': priority}
         return {'error': 'task_not_found', 'task_id': task_id}
 
-    # --- resource tuning ---
     def set_cpu_limit(self, params: Dict[str, Any]) -> Dict[str, Any]:
         limit = int(params.get('limit', 80))
         setattr(self.agent, 'cpu_limit', limit)
@@ -147,7 +140,6 @@ class RemoteCommandHandler:
         return {'gpu_enabled': enabled}
 
     def optimize_performance(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        # placeholder optimization logic
         return {'optimized': True}
 
     def get_detailed_status(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -191,7 +183,6 @@ class RemoteCommandHandler:
             t.sleep(interval)
         return {'samples': samples}
 
-    # --- maintenance tasks ---
     def cleanup_logs(self, params: Dict[str, Any]) -> Dict[str, Any]:
         removed = 0
         for file in os.listdir('.'):
