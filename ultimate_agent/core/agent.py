@@ -1,9 +1,10 @@
 import asyncio
-from ultimate_agent.config.settings import settings
-from ultimate_agent.core.container import Container
-from ultimate_agent.tasks.execution.scheduler import TaskScheduler
-from ultimate_agent.remote.handler import RemoteCommandHandler  # ✅ use the actual file
-from ultimate_agent.core.events import event_bus
+
+from ..config.settings import settings
+from .container import Container
+from ..tasks.execution.scheduler import TaskScheduler
+from ..remote.handler import RemoteCommandHandler  # ✅ use the actual file
+from .events import event_bus
 
 class UltimateAgent:
     def __init__(self):
