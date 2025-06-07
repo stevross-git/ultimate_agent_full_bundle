@@ -1,6 +1,10 @@
 import asyncio
-import aioredis
 import signal
+
+try:
+    import aioredis  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - fallback for tests
+    aioredis = None
 from ultimate_agent.tasks.execution.executor import TaskExecutor
 from ultimate_agent.config.settings import settings
 
@@ -14,6 +18,8 @@ class TaskScheduler:
         self.consumer_name = f"agent-{id(self)}"
 
     async def connect_redis(self):
+        if aioredis is None:
+            raise RuntimeError("aioredis is required for scheduler")
         self.redis = await aioredis.from_url(settings.REDIS_URL)
         print("🔗 Connected to Redis")
         try:

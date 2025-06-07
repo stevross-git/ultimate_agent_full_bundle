@@ -1,4 +1,27 @@
-from dependency_injector import containers, providers
+try:
+    from dependency_injector import containers, providers
+except ModuleNotFoundError:  # pragma: no cover - fallback for minimal envs
+    class containers:
+        class DeclarativeContainer:
+            pass
+
+    class providers:
+        class Configuration(dict):
+            def override(self, value):
+                self.update(value)
+
+        class Singleton:
+            def __init__(self, cls, *args, **kwargs):
+                self.cls = cls
+                self.args = args
+                self.kwargs = kwargs
+                self._instance = None
+
+            def __call__(self):
+                if self._instance is None:
+                    self._instance = self.cls(*self.args, **self.kwargs)
+                return self._instance
+
 from ultimate_agent.config.settings import settings
 
 class Container(containers.DeclarativeContainer):
