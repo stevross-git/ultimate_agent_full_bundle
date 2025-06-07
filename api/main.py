@@ -17,6 +17,10 @@ class TaskPayload(BaseModel):
     type: str
     job: str
 
+class CommandPayload(BaseModel):
+    command: str
+    params: dict | None = None
+
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(bearer)):
     try:
         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
@@ -34,3 +38,11 @@ async def post_task(task: TaskPayload, token_data: dict = Depends(verify_token))
     })
     await redis.close()
     return {"message": "Task submitted", "task_id": task_id}
+
+
+@app.post("/command")
+async def post_command(cmd: CommandPayload, token_data: dict = Depends(verify_token)):
+    redis = await aioredis.from_url(REDIS_URL)
+    await redis.publish("agent:control", json.dumps(cmd.dict()))
+    await redis.close()
+    return {"message": "Command dispatched"}

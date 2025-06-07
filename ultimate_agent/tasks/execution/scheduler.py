@@ -52,7 +52,15 @@ class TaskScheduler:
         print("📡 Subscribed to Redis channel: agent:control")
         async for message in pubsub.listen():
             if message['type'] == 'message':
-                print(f"📨 Redis Control Message: {message['data']}")
+                try:
+                    data = message["data"].decode() if isinstance(message["data"], bytes) else message["data"]
+                    print(f"📨 Redis Control Message: {data}")
+                    import json
+                    command = json.loads(data)
+                    from ultimate_agent.core.events import event_bus
+                    event_bus.publish("remote.command", command)
+                except Exception as e:
+                    print(f"❌ Failed to process control message: {e}")
 
     async def run_loop(self):
         await self.connect_redis()
