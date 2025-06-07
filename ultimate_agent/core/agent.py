@@ -2,7 +2,7 @@ import asyncio
 
 from ..config.settings import settings
 from .container import Container
-from ..tasks.execution.scheduler import TaskScheduler
+from ..tasks.execution.task_scheduler import TaskScheduler
 from ..remote.handler import RemoteCommandHandler  # ✅ use the actual file
 from .events import event_bus
 

@@ -15,10 +15,10 @@ import os
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-from ..config.settings import ConfigManager
+from ..config.config_settings import ConfigManager
 from ..ai.models import AIModelManager
 from ..blockchain.wallet.security import BlockchainManager
-from ..tasks.execution.scheduler import TaskScheduler
+from ..tasks.execution.task_scheduler import TaskScheduler
 from ..security.authentication import SecurityManager
 from ..storage.database.migrations import DatabaseManager
 from ..monitoring.metrics import MonitoringManager
