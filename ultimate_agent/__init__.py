@@ -18,7 +18,7 @@ __author__ = "Ultimate Agent Team"
 __description__ = "Enhanced Ultimate Pain Network Agent with Modular Architecture"
 
 # Core module imports
-from .core.agent import UltimateAgent as UltimatePainNetworkAgent
+from .core.agent1 import UltimateAgent as UltimatePainNetworkAgent
 from .config.config_settings import ConfigManager
 
 # Optional imports with graceful fallbacks

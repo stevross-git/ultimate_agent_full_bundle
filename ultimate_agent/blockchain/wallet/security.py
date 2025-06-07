@@ -184,6 +184,76 @@ class BlockchainManager:
             'wallet_type': 'standard'
         }
     
+     def backup_wallet(self, backup_path: str) -> bool:
+        """Backup wallet configuration and transaction history"""
+        try:
+            import json
+            
+            backup_data = {
+                'wallet_address': self.earnings_wallet,
+                'transaction_history': self.transaction_pool,
+                'smart_contracts': self.smart_contract_manager.get_contract_addresses(),
+                'network_config': self.network_manager.get_network_config() if hasattr(self.network_manager, 'get_network_config') else {},
+                'backup_timestamp': time.time(),
+                'backup_version': '3.0.0-modular'
+            }
+            
+            with open(backup_path, 'w') as f:
+                json.dump(backup_data, f, indent=2, default=str)
+            
+            print(f"💾 Wallet backed up to {backup_path}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Wallet backup failed: {e}")
+            return False
+    
+    def restore_wallet(self, backup_path: str) -> bool:
+        """Restore wallet from backup"""
+        try:
+            import json
+            
+            with open(backup_path, 'r') as f:
+                backup_data = json.load(f)
+            
+            # Restore transaction history
+            if 'transaction_history' in backup_data:
+                self.transaction_pool = backup_data['transaction_history']
+            
+            print(f"✅ Wallet restored from {backup_path}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Wallet restore failed: {e}")
+            return False
+    
+    def get_wallet_stats(self) -> Dict[str, Any]:
+        """Get wallet statistics"""
+        return {
+            'address': self.earnings_wallet,
+            'transaction_count': len(self.transaction_pool),
+            'balance': self.get_balance(),
+            'contracts_available': len(self.smart_contract_manager.contracts) if self.smart_contract_manager else 0,
+            'network_status': self.network_manager.get_status() if hasattr(self.network_manager, 'get_status') else {}
+        }
+    
+    def close(self):
+        """Close blockchain manager and cleanup"""
+        try:
+            if hasattr(self, 'smart_contract_manager'):
+                # Clean up smart contract manager if it has a close method
+                if hasattr(self.smart_contract_manager, 'close'):
+                    self.smart_contract_manager.close()
+            
+            if hasattr(self, 'network_manager'):
+                # Clean up network manager if it has a close method
+                if hasattr(self.network_manager, 'close'):
+                    self.network_manager.close()
+                    
+            print("💰 Blockchain manager closed")
+            
+        except Exception as e:
+            print(f"⚠️ Blockchain manager close warning: {e}")
     def backup_wallet(self, backup_path: str) -> bool:
         """Backup wallet configuration and transaction history"""
         try:
@@ -193,5 +263,64 @@ class BlockchainManager:
                 'wallet_address': self.earnings_wallet,
                 'transaction_history': self.transaction_pool,
                 'smart_contracts': self.smart_contract_manager.get_contract_addresses(),
-                'network_config': self.network_manager.get_network_config(),
-                'backu
+                'network_config': self.network_manager.get_network_config() if hasattr(self.network_manager, 'get_network_config') else {},
+                'backup_timestamp': time.time(),
+                'backup_version': '3.0.0-modular'
+            }
+            
+            with open(backup_path, 'w') as f:
+                json.dump(backup_data, f, indent=2, default=str)
+            
+            print(f"💾 Wallet backed up to {backup_path}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Wallet backup failed: {e}")
+            return False
+    
+    def restore_wallet(self, backup_path: str) -> bool:
+        """Restore wallet from backup"""
+        try:
+            import json
+            
+            with open(backup_path, 'r') as f:
+                backup_data = json.load(f)
+            
+            # Restore transaction history
+            if 'transaction_history' in backup_data:
+                self.transaction_pool = backup_data['transaction_history']
+            
+            print(f"✅ Wallet restored from {backup_path}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Wallet restore failed: {e}")
+            return False
+    
+    def get_wallet_stats(self) -> Dict[str, Any]:
+        """Get wallet statistics"""
+        return {
+            'address': self.earnings_wallet,
+            'transaction_count': len(self.transaction_pool),
+            'balance': self.get_balance(),
+            'contracts_available': len(self.smart_contract_manager.contracts) if self.smart_contract_manager else 0,
+            'network_status': self.network_manager.get_status() if hasattr(self.network_manager, 'get_status') else {}
+        }
+    
+    def close(self):
+        """Close blockchain manager and cleanup"""
+        try:
+            if hasattr(self, 'smart_contract_manager'):
+                # Clean up smart contract manager if it has a close method
+                if hasattr(self.smart_contract_manager, 'close'):
+                    self.smart_contract_manager.close()
+            
+            if hasattr(self, 'network_manager'):
+                # Clean up network manager if it has a close method
+                if hasattr(self.network_manager, 'close'):
+                    self.network_manager.close()
+                    
+            print("💰 Blockchain manager closed")
+            
+        except Exception as e:
+            print(f"⚠️ Blockchain manager close warning: {e}")

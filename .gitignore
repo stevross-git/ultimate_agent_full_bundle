@@ -1,0 +1,3 @@
+ultimate_agent/.venv/*
+***/__pycache__/*
+ultimate_agent/ai/inference/__pycache__/__init__.cpython-310.pyc
