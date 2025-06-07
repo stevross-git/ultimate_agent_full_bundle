@@ -5,8 +5,12 @@ try:
     import aioredis  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - fallback for tests
     aioredis = None
-from .executor import TaskExecutor
-from ...config.settings import settings
+try:
+    from .executor import TaskExecutor
+    from ...config.settings import settings
+except ImportError:  # pragma: no cover - allow running module standalone
+    from ultimate_agent.tasks.execution.executor import TaskExecutor  # type: ignore
+    from ultimate_agent.config.settings import settings  # type: ignore
 
 class TaskScheduler:
     def __init__(self):
