@@ -1,6 +1,7 @@
 import time
-from ultimate_agent.core.events import event_bus
-from ultimate_agent.config.settings import settings
+
+from ...core.events import event_bus
+from ...config.settings import settings
 
 class TaskExecutor:
     def __init__(self):
