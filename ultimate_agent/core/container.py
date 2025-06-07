@@ -22,7 +22,10 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for minimal envs
                     self._instance = self.cls(*self.args, **self.kwargs)
                 return self._instance
 
-from ultimate_agent.config.settings import settings
+try:
+    from ..config.settings import settings
+except ImportError:  # pragma: no cover - allow running module standalone
+    from ultimate_agent.config.settings import settings  # type: ignore
 
 class Container(containers.DeclarativeContainer):
     config = providers.Configuration()
