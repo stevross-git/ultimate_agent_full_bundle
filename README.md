@@ -19,6 +19,7 @@ A next-generation, modular agent system for distributed AI training, blockchain 
 - Federated Learning support
 - Hyperparameter optimization
 - GPU/CPU adaptive processing
+- Download models from Hugging Face
 
 💰 **Enhanced Blockchain Integration**
 - Multi-currency wallet support (ETH, PAIN, AI tokens)
@@ -228,6 +229,7 @@ from ultimate_agent.ai.models import AIModelManager
 ai_manager = AIModelManager()
 result = ai_manager.run_inference('sentiment', "This is great!")
 models = ai_manager.list_models()
+ai_manager.download_huggingface_model('bert-base-uncased', './models/bert')
 ```
 
 #### **AI Training Engine (`ai/training/`)**
