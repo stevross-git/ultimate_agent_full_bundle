@@ -133,6 +133,17 @@ curl -X POST http://localhost:8080/api/start_task \
   -d '{"type": "neural_network_training"}'
 ```
 
+### **Google Colab Quickstart**
+
+```bash
+# Launch in Colab
+!git clone https://github.com/your-repo/ultimate-agent.git
+%cd ultimate-agent
+!pip install -r requirements.txt
+!python ultimate_agent/examples/example_scripts.py
+```
+
+
 ---
 
 ## ⚙️ **Configuration**
