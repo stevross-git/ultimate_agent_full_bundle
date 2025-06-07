@@ -15,6 +15,13 @@ class RemoteCommandHandler:
         event_bus.subscribe("remote.command", self.handle_command)
         self._shutdown_callback: Callable[[], None] | None = None
 
+    def execute(self, command: str, **params: Any) -> Dict[str, Any]:
+        """Execute command directly and return result."""
+        handler = self._handlers.get(command)
+        if not handler:
+            return {"error": f"unknown command {command}"}
+        return handler(params)
+
     def set_shutdown_callback(self, cb: Callable[[], None]):
         self._shutdown_callback = cb
 
