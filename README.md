@@ -152,7 +152,7 @@ curl -X POST http://localhost:8080/api/start_task \
 
 ```ini
 [DEFAULT]
-node_url = http://srvnodes.peoplesainetwork.com:5000
+node_url = http://srvnodes.peoplesainetwork.com:5001
 dashboard_port = 8080
 heartbeat_interval = 30
 auto_start_tasks = true
