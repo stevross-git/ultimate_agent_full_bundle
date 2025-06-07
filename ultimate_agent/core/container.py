@@ -22,7 +22,7 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for minimal envs
                     self._instance = self.cls(*self.args, **self.kwargs)
                 return self._instance
 
-from ultimate_agent.config.settings import settings
+from ..config.settings import settings
 
 class Container(containers.DeclarativeContainer):
     config = providers.Configuration()

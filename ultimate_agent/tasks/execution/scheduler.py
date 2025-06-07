@@ -5,8 +5,8 @@ try:
     import aioredis  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - fallback for tests
     aioredis = None
-from ultimate_agent.tasks.execution.executor import TaskExecutor
-from ultimate_agent.config.settings import settings
+from .executor import TaskExecutor
+from ...config.settings import settings
 
 class TaskScheduler:
     def __init__(self):
@@ -63,7 +63,7 @@ class TaskScheduler:
                     print(f"📨 Redis Control Message: {data}")
                     import json
                     command = json.loads(data)
-                    from ultimate_agent.core.events import event_bus
+                    from ...core.events import event_bus
                     event_bus.publish("remote.command", command)
                 except Exception as e:
                     print(f"❌ Failed to process control message: {e}")
