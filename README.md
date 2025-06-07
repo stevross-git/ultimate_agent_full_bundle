@@ -19,6 +19,7 @@ A next-generation, modular agent system for distributed AI training, blockchain 
 - Federated Learning support
 - Hyperparameter optimization
 - GPU/CPU adaptive processing
+- Download models from Hugging Face
 
 💰 **Enhanced Blockchain Integration**
 - Multi-currency wallet support (ETH, PAIN, AI tokens)
@@ -132,6 +133,17 @@ curl -X POST http://localhost:8080/api/start_task \
   -d '{"type": "neural_network_training"}'
 ```
 
+### **Google Colab Quickstart**
+
+```bash
+# Launch in Colab
+!git clone https://github.com/your-repo/ultimate-agent.git
+%cd ultimate-agent
+!pip install -r requirements.txt
+!python ultimate_agent/examples/example_scripts.py
+```
+
+
 ---
 
 ## ⚙️ **Configuration**
@@ -228,6 +240,7 @@ from ultimate_agent.ai.models import AIModelManager
 ai_manager = AIModelManager()
 result = ai_manager.run_inference('sentiment', "This is great!")
 models = ai_manager.list_models()
+ai_manager.download_huggingface_model('bert-base-uncased', './models/bert')
 ```
 
 #### **AI Training Engine (`ai/training/`)**

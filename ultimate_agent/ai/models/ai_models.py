@@ -259,3 +259,17 @@ class AIModelManager:
         except Exception as e:
             print(f"❌ Model restore failed: {e}")
             return False
+
+    def download_huggingface_model(self, repo_id: str, local_dir: str) -> bool:
+        """Download a model from the Hugging Face Hub."""
+        try:
+            from huggingface_hub import snapshot_download
+
+            snapshot_download(repo_id=repo_id,
+                              local_dir=local_dir,
+                              local_dir_use_symlinks=False)
+            print(f"✅ Hugging Face model downloaded to {local_dir}")
+            return True
+        except Exception as e:
+            print(f"❌ Failed to download Hugging Face model: {e}")
+            return False
