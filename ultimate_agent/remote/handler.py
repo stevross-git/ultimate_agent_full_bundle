@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict
 
-from ultimate_agent.core.events import event_bus
+from ultimate_agent_full_bundle.ultimate_agent.core.events import event_bus
 
 
 class RemoteCommandHandler:
