@@ -1,5 +1,23 @@
-from pydantic import BaseSettings, Field
 from typing import Literal
+
+try:
+    from pydantic import BaseSettings, Field
+except ModuleNotFoundError:  # pragma: no cover - fallback for minimal envs
+    class BaseSettings:
+        """Basic stub of pydantic.BaseSettings for test environments."""
+
+        def __init__(self, **data):
+            for key, value in data.items():
+                setattr(self, key, value)
+
+        def dict(self):
+            return self.__dict__
+
+    def Field(default=None, *, description: str | None = None, default_factory=None):
+        """Simple replacement for pydantic.Field."""
+        if default_factory is not None:
+            return default_factory()
+        return default
 
 class Settings(BaseSettings):
     ENV: Literal['dev', 'staging', 'prod'] = 'dev'
