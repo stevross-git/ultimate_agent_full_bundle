@@ -1,0 +1,158 @@
+Folder PATH listing
+Volume serial number is B8D8-F17C
+C:.
+|   docker-compose.yml
+|   Dockerfile.agent
+|   Dockerfile.api
+|   Dockerfile.manager
+|   folder_structure.txt
+|   
++---.github
+|   \---workflows
+|           ci.yml
+|           
++---api
+|       .env
+|       main.py
+|       requirements.txt
+|       
++---manager
+|   |   requirements.txt
+|   |   
+|   \---auth
+|           generate_keys.py
+|           jwt_manager.py
+|           revoke.py
+|           validator.py
+|           __init__.py
+|           
++---scripts
+|       push_task_to_redis.py
+|       
+\---ultimate_agent
+    |   main.py
+    |   __init__.py
+    |   
+    +---ai
+    |   +---inference
+    |   |       __init__.py
+    |   |       
+    |   +---models
+    |   |       __init__.py
+    |   |       
+    |   \---training
+    |           __init__.py
+    |           
+    +---blockchain
+    |   +---contracts
+    |   |       __init__.py
+    |   |       
+    |   +---networks
+    |   |       __init__.py
+    |   |       
+    |   \---wallet
+    |           security.py
+    |           __init__.py
+    |           
+    +---config
+    |       settings.py
+    |       __init__.py
+    |       
+    +---core
+    |       agent.py
+    |       container.py
+    |       events.py
+    |       __init__.py
+    |       
+    +---dashboard
+    |   +---static
+    |   |   +---assets
+    |   |   |       __init__.py
+    |   |   |       
+    |   |   +---css
+    |   |   |       __init__.py
+    |   |   |       
+    |   |   \---js
+    |   |           __init__.py
+    |   |           
+    |   +---web
+    |   |   +---routes
+    |   |   |       __init__.py
+    |   |   |       
+    |   |   \---templates
+    |   |       \---components
+    |   |               __init__.py
+    |   |               
+    |   \---websocket
+    |           __init__.py
+    |           
+    +---monitoring
+    |   +---health
+    |   |       __init__.py
+    |   |       
+    |   +---logging
+    |   |       __init__.py
+    |   |       
+    |   \---metrics
+    |           __init__.py
+    |           
+    +---network
+    |   +---communication
+    |   |       __init__.py
+    |   |       
+    |   +---discovery
+    |   |       __init__.py
+    |   |       
+    |   \---protocols
+    |           __init__.py
+    |           
+    +---plugins
+    |       __init__.py
+    |       
+    +---security
+    |   +---authentication
+    |   |       __init__.py
+    |   |       
+    |   +---encryption
+    |   |       __init__.py
+    |   |       
+    |   \---validation
+    |           __init__.py
+    |           
+    +---storage
+    |   +---cache
+    |   |   \---backends
+    |   |           __init__.py
+    |   |           
+    |   +---database
+    |   |   \---migrations
+    |   |           __init__.py
+    |   |           
+    |   \---files
+    |           __init__.py
+    |           
+    +---tasks
+    |   +---control
+    |   |       __init__.py
+    |   |       
+    |   +---execution
+    |   |       executor.py
+    |   |       scheduler.py
+    |   |       __init__.py
+    |   |       
+    |   \---simulation
+    |           __init__.py
+    |           
+    +---tests
+    |   +---fixtures
+    |   |       __init__.py
+    |   |       
+    |   +---integration
+    |   |       __init__.py
+    |   |       
+    |   \---unit
+    |           __init__.py
+    |           
+    \---utils
+            __init__.py
+            
