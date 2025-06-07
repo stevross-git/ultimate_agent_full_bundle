@@ -204,7 +204,32 @@ class RemoteCommandHandler:
         return {'cache_cleared': True}
 
     def update_agent(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        return {'update': 'not_implemented'}
+        """Pull the latest code from the git repository."""
+        repo_path = params.get('repo_path', '.')
+        restart = params.get('restart', False)
+
+        import subprocess
+
+        try:
+            result = subprocess.run(
+                ['git', '-C', repo_path, 'pull'],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            output = result.stdout.strip()
+            if restart:
+                self.agent.stop()
+            return {
+                'updated': True,
+                'output': output,
+                'restart': restart,
+            }
+        except subprocess.CalledProcessError as e:
+            return {
+                'updated': False,
+                'error': e.stderr.strip() or str(e),
+            }
 
     def deploy_configuration(self, params: Dict[str, Any]) -> Dict[str, Any]:
         config = params.get('config', {})
