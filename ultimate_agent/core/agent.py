@@ -26,4 +26,7 @@ class UltimateAgent:
 
     def handle_command(self, command: str, **kwargs):
         """Execute a remote command via the command handler."""
-        return self.remote_commands.execute(command, **kwargs)
+        result = self.remote_commands.execute(command, **kwargs)
+        if command == "ping" and "status" in result:
+            return {"message": result["status"]}
+        return result

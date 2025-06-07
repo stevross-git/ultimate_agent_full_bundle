@@ -18,15 +18,15 @@ __author__ = "Ultimate Agent Team"
 __description__ = "Enhanced Ultimate Pain Network Agent with Modular Architecture"
 
 # Core module imports
-from .core.agent import UltimatePainNetworkAgent
-from .config.settings import ConfigManager
+from .core.agent import UltimateAgent as UltimatePainNetworkAgent
+from .config.config_settings import ConfigManager
 
 # Optional imports with graceful fallbacks
 try:
     from .ai.models import AIModelManager
     from .ai.training import AITrainingEngine
     from .ai.inference import InferenceEngine
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ AI modules not available: {e}")
     AIModelManager = None
     AITrainingEngine = None
@@ -35,7 +35,7 @@ except ImportError as e:
 try:
     from .blockchain.wallet.security import BlockchainManager
     from .blockchain.contracts import SmartContractManager
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Blockchain modules not available: {e}")
     BlockchainManager = None
     SmartContractManager = None
@@ -44,7 +44,7 @@ try:
     from .tasks.execution.scheduler import TaskScheduler
     from .tasks.simulation import TaskSimulator
     from .tasks.control import TaskControlClient
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Task modules not available: {e}")
     TaskScheduler = None
     TaskSimulator = None
@@ -52,55 +52,55 @@ except ImportError as e:
 
 try:
     from .storage.database.migrations import DatabaseManager
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Database module not available: {e}")
     DatabaseManager = None
 
 try:
     from .dashboard.web.routes import DashboardManager
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Dashboard module not available: {e}")
     DashboardManager = None
 
 try:
     from .network.communication import NetworkManager
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Network module not available: {e}")
     NetworkManager = None
 
 try:
     from .security.authentication import SecurityManager
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Security module not available: {e}")
     SecurityManager = None
 
 try:
     from .monitoring.metrics import MonitoringManager
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Monitoring module not available: {e}")
     MonitoringManager = None
 
 try:
     from .plugins import PluginManager
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Plugin module not available: {e}")
     PluginManager = None
 
 try:
     from .remote.command_handler import RemoteCommandHandler
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Remote management module not available: {e}")
     RemoteCommandHandler = None
 
 try:
     from .cloud import CloudManager
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Cloud module not available: {e}")
     CloudManager = None
 
 try:
     from .utils import AgentUtils, AsyncTaskRunner, PerformanceProfiler
-except ImportError as e:
+except Exception as e:
     print(f"⚠️ Utils module not available: {e}")
     AgentUtils = None
     AsyncTaskRunner = None
