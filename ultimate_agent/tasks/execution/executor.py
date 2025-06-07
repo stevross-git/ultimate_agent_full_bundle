@@ -1,10 +1,10 @@
 import time
 
+from ultimate_agent_full_bundle.ultimate_agent.core.events import event_bus
+
 try:
-    from ...core.events import event_bus
     from ...config.settings import settings
 except ImportError:  # pragma: no cover - allow running module standalone
-    from ultimate_agent.core.events import event_bus  # type: ignore
     from ultimate_agent.config.settings import settings  # type: ignore
 
 class TaskExecutor:

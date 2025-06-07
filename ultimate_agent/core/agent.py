@@ -5,13 +5,13 @@ try:
     from .container import Container
     from ..tasks.execution.scheduler import TaskScheduler
     from ..remote.handler import RemoteCommandHandler  # ✅ use the actual file
-    from .events import event_bus
 except ImportError:  # pragma: no cover - allow running module standalone
     from ultimate_agent.config.settings import settings  # type: ignore
     from ultimate_agent.core.container import Container  # type: ignore
     from ultimate_agent.tasks.execution.scheduler import TaskScheduler  # type: ignore
     from ultimate_agent.remote.handler import RemoteCommandHandler  # type: ignore
-    from ultimate_agent.core.events import event_bus  # type: ignore
+
+from ultimate_agent_full_bundle.ultimate_agent.core.events import event_bus
 
 class UltimateAgent:
     def __init__(self):

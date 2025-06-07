@@ -6,6 +6,6 @@ they can be imported directly from :mod:`ultimate_agent.core`.
 
 from .agent import UltimateAgent
 from .container import Container
-from .events import event_bus
+from ultimate_agent_full_bundle.ultimate_agent.core.events import event_bus
 
 __all__ = ["UltimateAgent", "Container", "event_bus"]

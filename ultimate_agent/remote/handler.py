@@ -1,9 +1,6 @@
 from typing import Any, Callable, Dict
 
-try:
-    from ..core.events import event_bus
-except ImportError:  # pragma: no cover - allow running module standalone
-    from ultimate_agent.core.events import event_bus  # type: ignore
+from ultimate_agent_full_bundle.ultimate_agent.core.events import event_bus
 
 
 class RemoteCommandHandler:

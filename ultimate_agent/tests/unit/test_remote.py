@@ -4,7 +4,7 @@ from pathlib import Path
 # add repository root so tests run without installation
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from ultimate_agent.remote.handler import RemoteCommandHandler
-from ultimate_agent.core.events import event_bus
+from ultimate_agent_full_bundle.ultimate_agent.core.events import event_bus
 
 
 def test_ping_command():

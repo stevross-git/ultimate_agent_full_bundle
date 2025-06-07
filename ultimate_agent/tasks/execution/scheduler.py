@@ -67,7 +67,7 @@ class TaskScheduler:
                     print(f"📨 Redis Control Message: {data}")
                     import json
                     command = json.loads(data)
-                    from ...core.events import event_bus
+                    from ultimate_agent_full_bundle.ultimate_agent.core.events import event_bus
                     event_bus.publish("remote.command", command)
                 except Exception as e:
                     print(f"❌ Failed to process control message: {e}")
