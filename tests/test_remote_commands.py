@@ -74,3 +74,22 @@ def test_unknown_command():
     result = handler.handle_command(cmd)
     assert result["success"] is False
     assert result["command_id"] == "c4"
+
+
+def test_update_agent(monkeypatch):
+    agent = DummyAgent()
+    handler = RemoteCommandHandler(agent)
+
+    class Result:
+        stdout = "Already up to date."
+
+    def fake_run(*args, **kwargs):
+        return Result()
+
+    import subprocess
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    cmd = {"command_id": "c5", "command_type": "update_agent", "parameters": {}}
+    result = handler.handle_command(cmd)
+    assert result["success"] is True
+    assert result["result"]["updated"] is True

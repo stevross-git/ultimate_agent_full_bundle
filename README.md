@@ -33,6 +33,7 @@ A next-generation, modular agent system for distributed AI training, blockchain 
 - Task queue management and prioritization
 - Load balancing and resource optimization
 - Task failure recovery and retry logic
+- Automated agent updates via remote command
 
 🔒 **Enterprise Security**
 - Advanced authentication and authorization
