@@ -241,9 +241,5 @@ class TaskControlManager:
             self.update_task_in_db(task)
             self.logger.info(f"Task {task_id} cancelled")
             return True
-        
-<<<<<<< HEAD
         return False
-=======
-        return False
->>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
+    
