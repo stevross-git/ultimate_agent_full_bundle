@@ -104,14 +104,14 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 # Run the server
-python main.py
+python -m enhanced_node.main
 ```
 
 ### Method 3: Direct Execution
 
 ```bash
 # If you have all dependencies installed
-python main.py
+python -m enhanced_node.main
 ```
 
 ## 🌐 Access Points
