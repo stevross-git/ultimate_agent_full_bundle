@@ -6,9 +6,14 @@ Web dashboard and API routes
 
 import threading
 import secrets
-from flask import Flask, jsonify, request, send_from_directory
-from flask_cors import CORS
-from flask_socketio import SocketIO, emit
+try:
+    from flask import Flask, jsonify, request, send_from_directory
+    from flask_cors import CORS
+    from flask_socketio import SocketIO, emit
+except Exception:  # pragma: no cover - optional dependency
+    Flask = None
+    CORS = lambda *a, **k: None
+    SocketIO = emit = None
 from typing import Dict, Any
 
 

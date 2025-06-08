@@ -8,7 +8,14 @@ import time
 import threading
 import random
 import uuid
-import numpy as np
+try:
+    import numpy as np
+except Exception:  # pragma: no cover - optional dependency
+    class _DummyNumpy:
+        class ndarray:
+            pass
+
+    np = _DummyNumpy()
 from datetime import datetime
 from typing import Dict, Any, List, Callable
 from ..simulation import TaskSimulator

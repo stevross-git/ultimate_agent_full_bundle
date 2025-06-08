@@ -6,7 +6,14 @@ AI model inference engine for prediction and analysis
 
 import time
 import random
-import numpy as np
+try:
+    import numpy as np
+except Exception:  # pragma: no cover - optional dependency
+    class _DummyNumpy:
+        class ndarray:
+            pass
+
+    np = _DummyNumpy()
 from typing import Dict, Any, List, Optional, Union
 import json
 import threading

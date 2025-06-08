@@ -10,7 +10,10 @@ import platform
 import uuid
 import hashlib
 import secrets
-import requests
+try:
+    import requests
+except Exception:  # pragma: no cover - optional dependency
+    requests = None
 import os
 from datetime import datetime
 from typing import Dict, Any, Optional
