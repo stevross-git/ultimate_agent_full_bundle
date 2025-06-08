@@ -1,4 +1,6 @@
 from typing import Literal
+import os
+os.environ.pop("ENV", None)  # ✅ This removes the bad ENV set by Colab
 
 try:
     from pydantic_settings import BaseSettings
