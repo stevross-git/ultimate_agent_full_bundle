@@ -1,0 +1,38 @@
+2025-06-08 11:36:53,324 - EnhancedNodeServerAdvanced - INFO - [__init__:68] - Enhanced Node Server enhanced-node-3b944e376241 v3.4.0-advanced-remote-control initialized
+2025-06-08 11:36:53,548 - EnhancedNodeServerAdvanced - INFO - [_start_metrics_server:76] - Prometheus metrics server started on :8091
+2025-06-08 11:36:53,580 - EnhancedNodeServerAdvanced - INFO - [start_task_control_services:63] - Task control services started
+2025-06-08 11:36:53,584 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:36:53,584 - EnhancedNodeServerAdvanced - INFO - [start_command_scheduler:49] - Command scheduler started
+2025-06-08 11:36:53,593 - EnhancedNodeServerAdvanced - INFO - [start_health_monitor:64] - Agent health monitor started
+2025-06-08 11:36:53,596 - EnhancedNodeServerAdvanced - INFO - [start_advanced_services:34] - Advanced remote control services started
+2025-06-08 11:36:53,617 - werkzeug - INFO - [_log:97] - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8090
+ * Running on http://192.168.1.19:8090
+2025-06-08 11:36:53,631 - werkzeug - INFO - [_log:97] - [33mPress CTRL+C to quit[0m
+2025-06-08 11:37:12,434 - werkzeug - INFO - [_log:97] - 192.168.1.19 - - [08/Jun/2025 11:37:12] "[33mGET / HTTP/1.1[0m" 404 -
+2025-06-08 11:37:16,226 - werkzeug - INFO - [_log:97] - 192.168.1.19 - - [08/Jun/2025 11:37:16] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-08 11:37:53,602 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:38:53,611 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:39:53,619 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:40:53,620 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:41:53,620 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:42:53,629 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:43:53,643 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:44:53,651 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:45:53,659 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:46:53,665 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:47:53,679 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:48:53,685 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:49:53,690 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:50:53,700 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:51:53,709 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:52:53,714 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:53:53,729 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:54:53,740 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:55:53,746 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:56:53,759 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 11:57:53,771 - EnhancedNodeServerAdvanced - ERROR - [scheduler_loop:44] - Command scheduler error: 'AdvancedRemoteControlManager' object has no attribute 'process_scheduled_commands'
+2025-06-08 12:05:26,600 - EnhancedNodeServerAdvanced - WARNING - [_init_redis:97] - Redis not available, using in-memory cache
+2025-06-08 12:05:26,667 - EnhancedNodeServerAdvanced - INFO - [_start_metrics_server:104] - Prometheus metrics server started on :8091
+2025-06-08 12:05:26,667 - EnhancedNodeServerAdvanced - INFO - [__init__:85] - Enhanced Node Server enhanced-node-54f50d68c686 v3.4.0-advanced-remote-control initialized
