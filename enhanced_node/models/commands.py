@@ -42,4 +42,8 @@ class AgentConfiguration:
     
     def __post_init__(self):
         if self.created_at is None:
+<<<<<<< HEAD
             self.created_at = datetime.now()
+=======
+            self.created_at = datetime.now()
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923

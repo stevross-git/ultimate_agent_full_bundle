@@ -12,6 +12,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
 
+<<<<<<< HEAD
 from config.settings import (
     NODE_ID, NODE_VERSION, NODE_PORT, DATABASE_PATH,
     MANAGER_HOST, MANAGER_PORT, DEFAULT_RATE_LIMITS, METRICS_PORT
@@ -22,6 +23,18 @@ from control.remote_manager import AdvancedRemoteControlManager
 from models.agents import EnhancedAgentInfo, EnhancedAgentStatus
 from utils.logger import get_server_logger
 from utils.serialization import serialize_for_json
+=======
+from ..config.settings import (
+    NODE_ID, NODE_VERSION, NODE_PORT, DATABASE_PATH,
+    MANAGER_HOST, MANAGER_PORT, DEFAULT_RATE_LIMITS, METRICS_PORT
+)
+from .database import EnhancedNodeDatabase
+from ..control.task_manager import TaskControlManager
+from ..control.remote_manager import AdvancedRemoteControlManager
+from ..models.agents import EnhancedAgentInfo, EnhancedAgentStatus
+from ..utils.logger import get_server_logger
+from ..utils.serialization import serialize_for_json
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
 
 
 class EnhancedNodeServer:
@@ -289,7 +302,11 @@ class EnhancedNodeServer:
         self.agent_status[agent_id] = EnhancedAgentStatus(id=agent_id)
         
         # Store in database
+<<<<<<< HEAD
         from core.database import Agent
+=======
+        from .database import Agent
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
         db_agent = Agent(
             id=agent.id,
             name=agent.name,
@@ -373,7 +390,11 @@ class EnhancedNodeServer:
         status.last_heartbeat = current_time
         
         # Store enhanced heartbeat
+<<<<<<< HEAD
         from core.database import AgentHeartbeat, Agent
+=======
+        from .database import AgentHeartbeat, Agent
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
         heartbeat = AgentHeartbeat(
             agent_id=agent_id,
             timestamp=current_time,
@@ -460,4 +481,8 @@ class EnhancedNodeServer:
         if self.db:
             self.db.close()
         
+<<<<<<< HEAD
         self.logger.info("Enhanced Node Server stopped")
+=======
+        self.logger.info("Enhanced Node Server stopped")
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923

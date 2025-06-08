@@ -9,6 +9,7 @@ from flask_limiter.util import get_remote_address
 from prometheus_client import Gauge, Counter, start_http_server
 from collections import defaultdict, deque
 
+<<<<<<< HEAD
 from config.settings import NODE_ID, NODE_VERSION, NODE_PORT, LOG_DIR, DATABASE_PATH, MANAGER_HOST, MANAGER_PORT
 from core.database import EnhancedNodeDatabase
 from control.task_manager import TaskControlManager
@@ -16,6 +17,21 @@ from control.remote_manager import AdvancedRemoteControlManager
 from routes.api_v3 import api_v3
 from routes.api_v5_remote import api_v5_remote
 from websocket.events import AgentEventNamespace
+=======
+from ..config.settings import NODE_ID, NODE_VERSION, NODE_PORT, LOG_DIR, DATABASE_PATH, MANAGER_HOST, MANAGER_PORT
+from ..core.database import EnhancedNodeDatabase
+from ..control.task_manager import TaskControlManager
+from ..control.remote_manager import AdvancedRemoteControlManager
+from ..routes.api_v_3 import api_v3
+from ..routes.api_v_5_remote import api_v5_remote
+
+
+class AgentEventNamespace:
+    """Placeholder Socket.IO namespace for agent events."""
+    def __init__(self, namespace: str):
+        self.namespace = namespace
+
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
 
 class EnhancedNodeServer:
     def __init__(self):

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict, deque
 from typing import Dict, List, Optional, Any
 
+<<<<<<< HEAD
 from models.commands import AgentCommand, AgentConfiguration
 from models.scripts import ScheduledCommand, BulkOperation, AgentHealthCheck, AgentScript
 from models.agents import EnhancedAgentStatus
@@ -14,6 +15,17 @@ from core.database import (
 )
 from utils.serialization import serialize_for_json
 from utils.logger import get_remote_logger
+=======
+from ..models.commands import AgentCommand, AgentConfiguration
+from ..models.scripts import ScheduledCommand, BulkOperation, AgentHealthCheck, AgentScript
+from ..models.agents import EnhancedAgentStatus
+from ..core.database import (
+    AgentCommandRecord, ScheduledCommandRecord, BulkOperationRecord,
+    AgentHealthRecord, AgentScriptRecord
+)
+from ..utils.serialization import serialize_for_json
+from ..utils.logger import get_remote_logger
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
 
 
 class AdvancedRemoteControlManager:
@@ -746,4 +758,8 @@ class AdvancedRemoteControlManager:
     
     def update_script_in_db(self, script: AgentScript):
         """Update script in database"""
+<<<<<<< HEAD
         self.store_script_in_db(script)
+=======
+        self.store_script_in_db(script)
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from core.server import EnhancedNodeServer
+=======
+from .core.server import EnhancedNodeServer
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
 
 if __name__ == "__main__":
     print("""

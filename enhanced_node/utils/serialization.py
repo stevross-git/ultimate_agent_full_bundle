@@ -32,4 +32,8 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         if isinstance(obj, datetime):
             return obj.isoformat()
+<<<<<<< HEAD
         return super().default(obj)
+=======
+        return super().default(obj)
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923

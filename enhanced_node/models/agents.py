@@ -86,4 +86,8 @@ class EnhancedAgentStatus:
     
     def __post_init__(self):
         if self.current_tasks is None:
+<<<<<<< HEAD
             self.current_tasks = {}
+=======
+            self.current_tasks = {}
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923

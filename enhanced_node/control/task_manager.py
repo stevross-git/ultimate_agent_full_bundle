@@ -6,9 +6,15 @@ from collections import deque
 from datetime import datetime
 from typing import Dict, Any
 
+<<<<<<< HEAD
 from models.tasks import CentralTask
 from core.database import CentralTaskRecord
 from utils.logger import get_task_logger
+=======
+from ..models.tasks import CentralTask
+from ..core.database import CentralTaskRecord
+from ..utils.logger import get_task_logger
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
 
 
 class TaskControlManager:
@@ -242,4 +248,8 @@ class TaskControlManager:
             self.logger.info(f"Task {task_id} cancelled")
             return True
         
+<<<<<<< HEAD
         return False
+=======
+        return False
+>>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
