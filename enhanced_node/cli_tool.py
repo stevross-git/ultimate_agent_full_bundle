@@ -351,6 +351,29 @@ def command(ctx, agent_id, command_type, params):
         click.echo(f"❌ Failed to send command: {e}", err=True)
 
 
+@remote.command('update')
+@click.argument('agent_id')
+@click.option('--repo', 'repo_path', default='.', help='Path to git repo on agent')
+@click.option('--restart', is_flag=True, help='Restart agent after update')
+@click.pass_context
+def update_agent(ctx, agent_id, repo_path, restart):
+    """Update single agent via remote command"""
+    client = ctx.obj['client']
+
+    try:
+        parameters = {"repo_path": repo_path, "restart": restart}
+        result = client.send_command(agent_id, 'update_agent', parameters)
+
+        if result.get('success'):
+            click.echo(f"✅ Update command sent to agent {agent_id}")
+            click.echo(f"Command ID: {result.get('command_id')}")
+        else:
+            click.echo(f"❌ Failed to send update command: {result.get('error')}")
+
+    except Exception as e:
+        click.echo(f"❌ Failed to send update command: {e}", err=True)
+
+
 @remote.command()
 @click.argument('operation_type')
 @click.option('--agents', help='Comma-separated list of agent IDs')
@@ -389,6 +412,43 @@ def bulk(ctx, operation_type, agents, all_online, params):
         click.echo("❌ Invalid JSON in parameters", err=True)
     except Exception as e:
         click.echo(f"❌ Failed to create bulk operation: {e}", err=True)
+
+
+@remote.command('update-all')
+@click.option('--agents', help='Comma-separated list of agent IDs')
+@click.option('--all-online', is_flag=True, help='Target all online agents')
+@click.option('--repo', 'repo_path', default='.', help='Path to git repo on agents')
+@click.option('--restart', is_flag=True, help='Restart agents after update')
+@click.pass_context
+def update_all(ctx, agents, all_online, repo_path, restart):
+    """Update multiple agents via bulk operation"""
+    client = ctx.obj['client']
+
+    try:
+        if all_online:
+            data = client.get_agents()
+            target_agents = [a['id'] for a in data['agents'] if a.get('status') == 'online']
+        elif agents:
+            target_agents = [a.strip() for a in agents.split(',')]
+        else:
+            click.echo("❌ Must specify either --agents or --all-online", err=True)
+            return
+
+        if not target_agents:
+            click.echo("❌ No target agents specified", err=True)
+            return
+
+        parameters = {"repo_path": repo_path, "restart": restart}
+        result = client.create_bulk_operation('update_agent', target_agents, parameters)
+
+        if result.get('success'):
+            click.echo(f"✅ Update command sent to {len(target_agents)} agents")
+            click.echo(f"Operation ID: {result.get('operation_id')}")
+        else:
+            click.echo(f"❌ Failed to create bulk update: {result.get('error')}")
+
+    except Exception as e:
+        click.echo(f"❌ Failed to create bulk update: {e}", err=True)
 
 
 @remote.command()

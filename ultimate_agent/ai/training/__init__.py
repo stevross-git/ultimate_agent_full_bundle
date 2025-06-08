@@ -6,7 +6,14 @@ Advanced AI training engine with real computation
 
 import time
 import random
-import numpy as np
+try:
+    import numpy as np
+except Exception:  # pragma: no cover - optional dependency
+    class _DummyNumpy:
+        class ndarray:
+            pass
+
+    np = _DummyNumpy()
 from typing import Dict, Any, Callable
 import uuid
 

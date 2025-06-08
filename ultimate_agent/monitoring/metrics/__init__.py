@@ -5,7 +5,10 @@ Performance monitoring and metrics collection
 """
 
 import time
-import psutil
+try:
+    import psutil
+except Exception:  # pragma: no cover - optional dependency
+    psutil = None
 import threading
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional

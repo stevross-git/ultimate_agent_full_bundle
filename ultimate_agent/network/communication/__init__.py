@@ -5,7 +5,10 @@ Network communication and node interaction
 """
 
 import time
-import requests
+try:
+    import requests
+except Exception:  # pragma: no cover - optional dependency
+    requests = None
 import threading
 from typing import Dict, Any, Optional
 import ssl

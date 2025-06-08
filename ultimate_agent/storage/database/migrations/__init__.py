@@ -10,14 +10,62 @@ import time
 import sqlite3
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, Text, JSON
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+try:
+    from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, Text, JSON
+    from sqlalchemy.ext.declarative import declarative_base
+    from sqlalchemy.orm import sessionmaker
+except Exception:  # pragma: no cover - optional dependency
+    create_engine = None
+
+    class Dummy:
+        def __init__(self, *args, **kwargs):
+            pass
+
+    Column = Integer = String = Float = Boolean = DateTime = Text = JSON = Dummy
+
+    def declarative_base():
+        class Base:
+            metadata = type('Meta', (), {'create_all': lambda *a, **k: None})
+        return Base
+
+    def sessionmaker(*args, **kwargs):
+        def factory(**kw):
+            class Session:
+                def __enter__(self):
+                    return self
+                def __exit__(self, exc_type, exc_val, exc_tb):
+                    pass
+                def add(self, *a, **k):
+                    pass
+                def commit(self):
+                    pass
+                def rollback(self):
+                    pass
+                def close(self):
+                    pass
+            return Session()
+        return factory
+
 from contextlib import contextmanager
 
+# If SQLAlchemy is unavailable, provide dummy DatabaseManager and skip models
+if create_engine is None:
+    Base = object
 
-# Database Models
-Base = declarative_base()
+    class DatabaseManager:
+        def __init__(self, *args, **kwargs):
+            self.session = None
+
+        def init_database(self):
+            pass
+
+        @contextmanager
+        def session_scope(self):
+            yield None
+
+else:
+    # Database Models
+    Base = declarative_base()
 
 
 class TaskRecord(Base):

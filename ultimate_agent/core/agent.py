@@ -10,7 +10,16 @@ class UltimateAgent:
     def __init__(self):
         self.container = Container()
         self.config = settings
-        self.scheduler = TaskScheduler()
+        # TaskScheduler may rely on heavy optional dependencies
+        try:
+            self.scheduler = TaskScheduler(None, None)
+            if not hasattr(self.scheduler, 'shutdown_event'):
+                class DummyEvent:
+                    def set(self):
+                        pass
+                self.scheduler.shutdown_event = DummyEvent()
+        except TypeError:
+            self.scheduler = TaskScheduler
 
         self.remote_commands = RemoteCommandHandler()
         self.remote_commands.set_shutdown_callback(self.scheduler.shutdown_event.set)
