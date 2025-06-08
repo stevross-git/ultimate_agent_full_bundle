@@ -9,6 +9,7 @@ REM Activate environment
 venv\Scripts\activate
 
 echo 📦 Installing dependencies...
+python.exe -m pip install --upgrade pip
 pip install --upgrade pip
 pip install -r requirements.txt
 
