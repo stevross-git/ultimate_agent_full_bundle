@@ -331,8 +331,4 @@ class EnhancedNodeDatabase:
     
     def close(self):
         """Close database connection"""
-<<<<<<< HEAD
         self.session.close()
-=======
-        self.session.close()
->>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
