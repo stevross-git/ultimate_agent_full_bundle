@@ -58,25 +58,30 @@ def register_api_v3_routes(server):
             server.logger.error(f"Heartbeat processing failed: {e}")
             return jsonify({"success": False, "error": str(e)}), 500
     
-    @server.app.route('/api/v3/agents', methods=['GET'])
-    def get_enhanced_agents():
-        """Get enhanced agent information with statistics"""
+        @server.app.route('/api/v3/agents', methods=['GET'])
+        def get_enhanced_agents():
+            """Get enhanced agent information with statistics"""
         try:
             # Get agent list with current status
             agents_list = []
             for agent_id, agent_info in server.agents.items():
                 agent_status = server.agent_status.get(agent_id)
                 if agent_status:
-                    # Merge agent info with current status
-                    agent_data = {
-                        **serialize_for_json(agent_info),
-                        **serialize_for_json(agent_status)
-                    }
+                    info_json = serialize_for_json(agent_info)
+                    status_json = serialize_for_json(agent_status)
+
+                    if not isinstance(info_json, dict):
+                        info_json = {"agent_info": info_json}
+
+                    if not isinstance(status_json, dict):
+                        status_json = {"agent_status": status_json}
+
+                    agent_data = {**info_json, **status_json}
                     agents_list.append(agent_data)
-            
+
             # Get enhanced statistics
             stats = server.get_enhanced_node_stats()
-            
+
             return jsonify({
                 "success": True,
                 "node_id": NODE_ID,
@@ -87,10 +92,11 @@ def register_api_v3_routes(server):
                 "ai_summary": server.get_ai_summary(),
                 "blockchain_summary": server.get_blockchain_summary()
             })
-            
+
         except Exception as e:
             server.logger.error(f"Failed to get agents: {e}")
             return jsonify({"success": False, "error": str(e)}), 500
+
     
     @server.app.route('/api/v3/agents/<agent_id>', methods=['GET'])
     def get_agent_details(agent_id):
