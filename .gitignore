@@ -4,3 +4,7 @@ ultimate_agent/ai/inference/__pycache__/__init__.cpython-310.pyc
 ultimate_agent/ultimate_agent_config.ini
 ultimate_agent/ultimate_agent_id.txt
 ultimate_agent/ultimate_agent.db
+Node/*venv/*
+
+Node/logs/enhanced_node_server_advanced.log
+Node/enhanced_node_server.db

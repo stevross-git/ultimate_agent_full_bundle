@@ -4,6 +4,7 @@ from typing import Any
 
 
 def serialize_for_json(obj: Any) -> Any:
+    """Convert datetime objects and other non-serializable objects to JSON-serializable format"""
     if isinstance(obj, datetime):
         return obj.isoformat()
     elif hasattr(obj, '__dict__'):
@@ -27,6 +28,7 @@ def serialize_for_json(obj: Any) -> Any:
 
 
 class DateTimeJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects"""
     def default(self, obj: Any) -> Any:
         if isinstance(obj, datetime):
             return obj.isoformat()
