@@ -10,16 +10,19 @@ import os
 from pathlib import Path
 
 # Add current directory to path for imports
-current_dir = Path(__file__).parent
-sys.path.insert(0, str(current_dir))
+current_dir = Path(__file__).resolve().parent
+# Ensure package imports work when running as a script
+if __package__ in (None, ""):
+    sys.path.insert(0, str(current_dir.parent))
+    __package__ = current_dir.name
 
 # Import modular components
 try:
-    from core.server import EnhancedNodeServer
-    from routes.api_v3 import register_api_v3_routes
-    from routes.api_v5_remote import register_api_v5_routes
-    from websocket.events import register_websocket_events
-    from config.settings import NODE_PORT, NODE_VERSION, NODE_ID
+    from .core.server import EnhancedNodeServer
+    from .routes.api_v3 import register_api_v3_routes
+    from .routes.api_v5_remote import register_api_v5_routes
+    from .websocket.events import register_websocket_events
+    from .config.settings import NODE_PORT, NODE_VERSION, NODE_ID
 except ImportError as e:
     print(f"❌ Import Error: {e}")
     print("   Please ensure you're running from the enhanced_node/ directory")
