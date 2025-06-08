@@ -1,0 +1,201 @@
+version: '3.8'
+
+services:
+  # Enhanced Node Server
+  enhanced-node:
+    build: .
+    container_name: enhanced-node-server
+    restart: unless-stopped
+    ports:
+      - "5000:5000"   # Main server
+      - "8091:8091"   # Prometheus metrics
+    environment:
+      - NODE_ENV=production
+      - NODE_PORT=5000
+      - METRICS_PORT=8091
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DATABASE_PATH=/app/data/enhanced_node_server.db
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./agent_scripts:/app/agent_scripts
+      - ./command_history:/app/command_history
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - enhanced-node-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v3/node/stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis for caching and real-time data
+  redis:
+    image: redis:7-alpine
+    container_name: enhanced-node-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - enhanced-node-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # PostgreSQL for production database (optional)
+  postgres:
+    image: postgres:15-alpine
+    container_name: enhanced-node-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=enhanced_node
+      - POSTGRES_USER=enhanced_user
+      - POSTGRES_PASSWORD=enhanced_password_2025
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - enhanced-node-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U enhanced_user -d enhanced_node"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: enhanced-node-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - enhanced-node-network
+    depends_on:
+      - enhanced-node
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: enhanced-node-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=enhanced_grafana_2025
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - enhanced-node-network
+    depends_on:
+      - prometheus
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: enhanced-node-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/ssl:/etc/nginx/ssl
+    networks:
+      - enhanced-node-network
+    depends_on:
+      - enhanced-node
+      - grafana
+
+  # Log aggregation (optional)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: enhanced-node-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - enhanced-node-network
+
+  # Kibana for log visualization (optional)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: enhanced-node-kibana
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - enhanced-node-network
+    depends_on:
+      - elasticsearch
+
+  # Backup service (optional)
+  backup:
+    image: alpine:latest
+    container_name: enhanced-node-backup
+    restart: unless-stopped
+    volumes:
+      - ./data:/backup/data
+      - ./logs:/backup/logs
+      - ./command_history:/backup/command_history
+      - ./backups:/backups
+    networks:
+      - enhanced-node-network
+    command: |
+      sh -c "
+        apk add --no-cache tar gzip
+        while true; do
+          echo 'Creating backup...'
+          tar -czf /backups/enhanced-node-backup-$$(date +%Y%m%d-%H%M%S).tar.gz /backup
+          find /backups -name '*.tar.gz' -mtime +7 -delete
+          sleep 86400
+        done
+      "
+
+networks:
+  enhanced-node-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:
+  postgres-data:
+  prometheus-data:
+  grafana-data:
+  elasticsearch-data:

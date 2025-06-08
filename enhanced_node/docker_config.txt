@@ -1,0 +1,68 @@
+# Enhanced Node Server - Production Docker Configuration
+FROM python:3.11-slim
+
+# Set metadata
+LABEL maintainer="Enhanced Node Server Team"
+LABEL version="3.4.0-advanced-remote-control"
+LABEL description="Enhanced Ultimate Pain Network Node Server - Modular Architecture"
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    NODE_ENV=production \
+    NODE_PORT=5000 \
+    METRICS_PORT=8091
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    redis-server \
+    supervisor \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create necessary directories with proper permissions
+RUN mkdir -p logs agent_scripts command_history templates && \
+    chmod 755 logs agent_scripts command_history templates
+
+# Create non-root user for security
+RUN adduser --disabled-password --gecos '' --uid 1000 nodeuser && \
+    chown -R nodeuser:nodeuser /app
+
+# Copy supervisor configuration
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy startup script
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
+
+# Switch to non-root user
+USER nodeuser
+
+# Create health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${NODE_PORT}/api/v3/node/stats || exit 1
+
+# Expose ports
+EXPOSE ${NODE_PORT} ${METRICS_PORT}
+
+# Set entrypoint
+ENTRYPOINT ["/start.sh"]
+
+# Default command
+CMD ["python", "main.py"]

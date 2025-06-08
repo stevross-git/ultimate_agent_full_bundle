@@ -1,0 +1,817 @@
+openapi: 3.0.3
+info:
+  title: Enhanced Node Server API
+  description: |
+    # Enhanced Ultimate Pain Network Node Server API
+    
+    Complete API documentation for the Enhanced Node Server v3.4.0 with advanced remote control capabilities.
+    
+    ## Features
+    - **Agent Management** - Register, monitor, and manage Ultimate agents
+    - **Task Control** - Centralized task assignment and tracking
+    - **Remote Control** - Advanced remote command execution
+    - **Bulk Operations** - Execute commands across multiple agents
+    - **Command Scheduling** - Schedule commands for future execution
+    - **Script Deployment** - Deploy and execute custom scripts
+    - **Health Monitoring** - Comprehensive agent health tracking
+    - **Real-time Updates** - WebSocket-based live monitoring
+    
+    ## Architecture
+    - **Modular Design** - Clean separation of concerns
+    - **Production Ready** - Enterprise-grade reliability
+    - **Scalable** - Handle thousands of agents
+    - **Secure** - Built-in security features
+    
+  version: 3.4.0-advanced-remote-control
+  contact:
+    name: Enhanced Node Server Team
+    email: support@enhancednode.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://api.enhancednode.com
+    description: Production server
+
+tags:
+  - name: Agent Management
+    description: Agent registration, heartbeat, and status
+  - name: Task Control
+    description: Centralized task management
+  - name: Remote Control
+    description: Advanced remote command execution
+  - name: Bulk Operations
+    description: Multi-agent command execution
+  - name: Command Scheduling
+    description: Scheduled command execution
+  - name: Script Deployment
+    description: Deploy and manage agent scripts
+  - name: Health Monitoring
+    description: Agent health and recovery
+  - name: Statistics
+    description: Node and agent statistics
+  - name: WebSocket
+    description: Real-time communication
+
+paths:
+  # Agent Management Endpoints
+  /api/v3/agents/register:
+    post:
+      tags: [Agent Management]
+      summary: Register a new Ultimate agent
+      description: Register a new agent with the node server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRegistration'
+            example:
+              agent_id: "ultimate-agent-001"
+              name: "Production Agent 1"
+              host: "192.168.1.100"
+              version: "2.1.0"
+              agent_type: "ultimate"
+              capabilities: ["ai", "blockchain", "cloud"]
+              ai_models: ["gpt-4", "claude-3", "llama-2"]
+              gpu_available: true
+              blockchain_enabled: true
+              cloud_enabled: true
+      responses:
+        '200':
+          description: Agent registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v3/agents/heartbeat:
+    post:
+      tags: [Agent Management]
+      summary: Send agent heartbeat
+      description: Update agent status and metrics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentHeartbeat'
+            example:
+              agent_id: "ultimate-agent-001"
+              status: "online"
+              cpu_percent: 75.5
+              memory_percent: 60.2
+              gpu_percent: 45.0
+              tasks_running: 3
+              tasks_completed: 127
+              ai_models_loaded: 2
+              blockchain_balance: 1.5
+              efficiency_score: 92.5
+      responses:
+        '200':
+          description: Heartbeat processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartbeatResponse'
+        '400':
+          description: Invalid heartbeat data
+        '404':
+          description: Agent not registered
+
+  /api/v3/agents:
+    get:
+      tags: [Agent Management]
+      summary: Get all agents with statistics
+      description: Retrieve list of all registered agents with current status and node statistics
+      responses:
+        '200':
+          description: Agents and statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsResponse'
+
+  /api/v3/agents/{agent_id}:
+    get:
+      tags: [Agent Management]
+      summary: Get specific agent details
+      description: Get detailed information about a specific agent
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "ultimate-agent-001"
+      responses:
+        '200':
+          description: Agent details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDetails'
+        '404':
+          description: Agent not found
+
+  # Task Control Endpoints
+  /api/v4/task-control/create-task:
+    post:
+      tags: [Task Control]
+      summary: Create a new central task
+      description: Create a centralized task for agent assignment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+            example:
+              task_type: "neural_network_training"
+              priority: 8
+              config:
+                epochs: 100
+                learning_rate: 0.001
+                model_type: "transformer"
+      responses:
+        '200':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Invalid task data
+
+  /api/v4/task-control/statistics:
+    get:
+      tags: [Task Control]
+      summary: Get task control statistics
+      description: Retrieve comprehensive task management statistics
+      responses:
+        '200':
+          description: Task statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatistics'
+
+  # Remote Control Endpoints
+  /api/v5/remote/agents/{agent_id}/command:
+    post:
+      tags: [Remote Control]
+      summary: Send command to specific agent
+      description: Execute a remote command on a specific agent
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteCommand'
+            example:
+              command_type: "restart_agent"
+              parameters:
+                delay_seconds: 5
+                save_state: true
+                graceful_shutdown: true
+      responses:
+        '200':
+          description: Command sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResponse'
+        '404':
+          description: Agent not found
+
+  # Bulk Operations Endpoints
+  /api/v5/remote/bulk-operation:
+    post:
+      tags: [Bulk Operations]
+      summary: Create bulk operation
+      description: Execute operation across multiple agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkOperation'
+            example:
+              operation_type: "system_update"
+              target_agents: ["agent-001", "agent-002", "agent-003"]
+              parameters:
+                update_type: "security"
+                restart_after: true
+      responses:
+        '200':
+          description: Bulk operation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkOperationResponse'
+
+  /api/v5/remote/bulk-operations:
+    get:
+      tags: [Bulk Operations]
+      summary: Get bulk operations list
+      description: Retrieve list of all bulk operations
+      responses:
+        '200':
+          description: Bulk operations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkOperationsList'
+
+  # Command Scheduling Endpoints
+  /api/v5/remote/schedule-command:
+    post:
+      tags: [Command Scheduling]
+      summary: Schedule command execution
+      description: Schedule a command for future execution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduledCommand'
+            example:
+              agent_id: "ultimate-agent-001"
+              command_type: "backup_data"
+              scheduled_time: "2025-06-09T02:00:00Z"
+              parameters:
+                backup_path: "/data/backups"
+                compression: true
+              repeat_interval: 86400
+              max_repeats: 7
+      responses:
+        '200':
+          description: Command scheduled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledCommandResponse'
+
+  /api/v5/remote/scheduled-commands:
+    get:
+      tags: [Command Scheduling]
+      summary: Get scheduled commands
+      description: Retrieve list of all scheduled commands
+      responses:
+        '200':
+          description: Scheduled commands retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledCommandsList'
+
+  # Script Deployment Endpoints
+  /api/v5/remote/deploy-script:
+    post:
+      tags: [Script Deployment]
+      summary: Deploy script to agents
+      description: Deploy and execute custom script on target agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScriptDeployment'
+            example:
+              script_name: "performance_check"
+              script_content: |
+                import psutil
+                print(f"CPU: {psutil.cpu_percent()}%")
+                print(f"Memory: {psutil.virtual_memory().percent}%")
+              script_type: "python"
+              target_agents: ["agent-001", "agent-002"]
+      responses:
+        '200':
+          description: Script deployed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScriptDeploymentResponse'
+
+  /api/v5/remote/scripts:
+    get:
+      tags: [Script Deployment]
+      summary: Get deployed scripts
+      description: Retrieve list of all deployed scripts
+      responses:
+        '200':
+          description: Scripts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScriptsList'
+
+  # Health Monitoring Endpoints
+  /api/v5/remote/agents/{agent_id}/health:
+    get:
+      tags: [Health Monitoring]
+      summary: Get agent health information
+      description: Retrieve comprehensive health information for an agent
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent health retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentHealth'
+        '404':
+          description: Agent not found
+
+  /api/v5/remote/agents/{agent_id}/history:
+    get:
+      tags: [Remote Control]
+      summary: Get command history
+      description: Retrieve command execution history for an agent
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Command history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandHistory'
+
+  # Statistics Endpoints
+  /api/v3/node/stats:
+    get:
+      tags: [Statistics]
+      summary: Get comprehensive node statistics
+      description: Retrieve detailed node and agent statistics
+      responses:
+        '200':
+          description: Node statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeStatistics'
+
+  /api/v5/remote/advanced-statistics:
+    get:
+      tags: [Statistics]
+      summary: Get advanced remote control statistics
+      description: Retrieve statistics for advanced remote control features
+      responses:
+        '200':
+          description: Advanced statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvancedStatistics'
+
+components:
+  schemas:
+    # Agent Management Schemas
+    AgentRegistration:
+      type: object
+      required: [agent_id, name, host, version]
+      properties:
+        agent_id:
+          type: string
+          description: Unique agent identifier
+        name:
+          type: string
+          description: Human-readable agent name
+        host:
+          type: string
+          description: Agent host address
+        version:
+          type: string
+          description: Agent software version
+        agent_type:
+          type: string
+          default: "ultimate"
+          enum: [ultimate, standard, lite]
+        capabilities:
+          type: array
+          items:
+            type: string
+          description: Agent capabilities
+        ai_models:
+          type: array
+          items:
+            type: string
+          description: Available AI models
+        plugins:
+          type: array
+          items:
+            type: string
+          description: Installed plugins
+        features:
+          type: array
+          items:
+            type: string
+          description: Enabled features
+        gpu_available:
+          type: boolean
+          default: false
+        blockchain_enabled:
+          type: boolean
+          default: false
+        cloud_enabled:
+          type: boolean
+          default: false
+        security_enabled:
+          type: boolean
+          default: false
+
+    AgentHeartbeat:
+      type: object
+      required: [agent_id]
+      properties:
+        agent_id:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, busy, maintenance]
+        cpu_percent:
+          type: number
+          format: float
+        memory_mb:
+          type: number
+          format: float
+        memory_percent:
+          type: number
+          format: float
+        gpu_percent:
+          type: number
+          format: float
+        network_io:
+          type: number
+          format: float
+        tasks_running:
+          type: integer
+        tasks_completed:
+          type: integer
+        tasks_failed:
+          type: integer
+        current_tasks:
+          type: object
+        ai_models_loaded:
+          type: integer
+        ai_inference_count:
+          type: integer
+        neural_training_active:
+          type: boolean
+        blockchain_balance:
+          type: number
+          format: float
+        blockchain_transactions:
+          type: integer
+        wallet_address:
+          type: string
+        performance_prediction:
+          type: number
+          format: float
+        efficiency_score:
+          type: number
+          format: float
+
+    # Task Control Schemas
+    CreateTaskRequest:
+      type: object
+      required: [task_type]
+      properties:
+        task_type:
+          type: string
+          enum: [neural_network_training, blockchain_transaction, sentiment_analysis, data_processing]
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+        config:
+          type: object
+          description: Task-specific configuration
+        requirements:
+          type: object
+          description: Agent requirements for task
+
+    # Remote Control Schemas
+    RemoteCommand:
+      type: object
+      required: [command_type]
+      properties:
+        command_type:
+          type: string
+          description: Type of command to execute
+        parameters:
+          type: object
+          description: Command parameters
+
+    BulkOperation:
+      type: object
+      required: [operation_type, target_agents]
+      properties:
+        operation_type:
+          type: string
+          description: Type of operation to perform
+        target_agents:
+          type: array
+          items:
+            type: string
+          description: List of target agent IDs
+        parameters:
+          type: object
+          description: Operation parameters
+
+    ScheduledCommand:
+      type: object
+      required: [agent_id, command_type, scheduled_time]
+      properties:
+        agent_id:
+          type: string
+        command_type:
+          type: string
+        scheduled_time:
+          type: string
+          format: date-time
+        parameters:
+          type: object
+        repeat_interval:
+          type: integer
+          description: Repeat interval in seconds
+        max_repeats:
+          type: integer
+          default: 1
+
+    ScriptDeployment:
+      type: object
+      required: [script_name, script_content, target_agents]
+      properties:
+        script_name:
+          type: string
+        script_content:
+          type: string
+          description: Script source code
+        script_type:
+          type: string
+          enum: [python, bash, javascript]
+          default: "python"
+        target_agents:
+          type: array
+          items:
+            type: string
+
+    # Response Schemas
+    RegistrationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        agent_id:
+          type: string
+        node_id:
+          type: string
+        node_version:
+          type: string
+        message:
+          type: string
+        features_supported:
+          type: array
+          items:
+            type: string
+        task_control_available:
+          type: boolean
+        remote_management_available:
+          type: boolean
+        advanced_control_available:
+          type: boolean
+
+    HeartbeatResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        node_id:
+          type: string
+        next_heartbeat:
+          type: integer
+        supported_features:
+          type: array
+          items:
+            type: string
+        task_control_available:
+          type: boolean
+        remote_management_available:
+          type: boolean
+        advanced_control_available:
+          type: boolean
+
+    AgentsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        node_id:
+          type: string
+        node_version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentInfo'
+        stats:
+          $ref: '#/components/schemas/NodeStatistics'
+        ai_summary:
+          type: object
+        blockchain_summary:
+          type: object
+
+    AgentInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        host:
+          type: string
+        version:
+          type: string
+        agent_type:
+          type: string
+        status:
+          type: string
+        cpu_percent:
+          type: number
+        memory_percent:
+          type: number
+        gpu_percent:
+          type: number
+        tasks_running:
+          type: integer
+        tasks_completed:
+          type: integer
+        efficiency_score:
+          type: number
+        last_heartbeat:
+          type: string
+          format: date-time
+
+    NodeStatistics:
+      type: object
+      properties:
+        node_id:
+          type: string
+        node_version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        total_agents:
+          type: integer
+        online_agents:
+          type: integer
+        offline_agents:
+          type: integer
+        total_tasks_running:
+          type: integer
+        total_tasks_completed:
+          type: integer
+        total_tasks_failed:
+          type: integer
+        success_rate:
+          type: number
+        avg_cpu_percent:
+          type: number
+        avg_memory_percent:
+          type: number
+        avg_gpu_percent:
+          type: number
+        total_ai_models:
+          type: integer
+        total_blockchain_balance:
+          type: number
+        avg_efficiency_score:
+          type: number
+        health_score:
+          type: number
+        task_control_enabled:
+          type: boolean
+        remote_management_enabled:
+          type: boolean
+        advanced_control_enabled:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+        code:
+          type: integer
+          description: Error code
+        details:
+          type: object
+          description: Additional error details
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+    
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
+# Additional documentation
+externalDocs:
+  description: Enhanced Node Server Documentation
+  url: https://docs.enhancednode.com
