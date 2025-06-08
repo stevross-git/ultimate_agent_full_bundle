@@ -184,7 +184,7 @@ class BlockchainManager:
             'wallet_type': 'standard'
         }
     
-     def backup_wallet(self, backup_path: str) -> bool:
+    def backup_wallet(self, backup_path: str) -> bool:
         """Backup wallet configuration and transaction history"""
         try:
             import json
@@ -236,6 +236,17 @@ class BlockchainManager:
             'contracts_available': len(self.smart_contract_manager.contracts) if self.smart_contract_manager else 0,
             'network_status': self.network_manager.get_status() if hasattr(self.network_manager, 'get_status') else {}
         }
+        
+    def get_status(self) -> Dict[str, Any]:
+        """Return current blockchain manager status"""
+        return {
+        'wallet': self.earnings_wallet,
+        'balance': self.get_balance(),
+        'connected_networks': len(self.network_manager.connected_networks) if hasattr(self.network_manager, 'connected_networks') else 0,
+        'smart_contracts': len(self.smart_contract_manager.contracts) if hasattr(self.smart_contract_manager, 'contracts') else 0,
+        'transaction_pool_size': len(self.transaction_pool)
+    }
+
     
     def close(self):
         """Close blockchain manager and cleanup"""
