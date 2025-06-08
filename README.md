@@ -105,7 +105,7 @@ ultimate_agent/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/ultimate-agent.git
+git clone https://github.com/stevross-git/ultimate_agent_full_bundle.git
 cd ultimate-agent
 
 # Install required dependencies
@@ -137,7 +137,7 @@ curl -X POST http://localhost:8080/api/start_task \
 
 ```bash
 # Launch in Colab
-!git clone https://github.com/your-repo/ultimate-agent.git
+!git clone https://github.com/stevross-git/ultimate_agent_full_bundle.git
 %cd ultimate-agent
 !pip install -r requirements.txt
 !python ultimate_agent/examples/example_scripts.py
