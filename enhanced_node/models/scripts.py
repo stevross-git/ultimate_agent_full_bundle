@@ -95,8 +95,4 @@ class AgentScript:
         if self.created_at is None:
             self.created_at = datetime.now()
         if not self.checksum:
-<<<<<<< HEAD
             self.checksum = hashlib.sha256(self.script_content.encode()).hexdigest()
-=======
-            self.checksum = hashlib.sha256(self.script_content.encode()).hexdigest()
->>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923

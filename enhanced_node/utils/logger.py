@@ -1,11 +1,7 @@
 import sys
 import logging
 from pathlib import Path
-<<<<<<< HEAD
-from config.settings import LOG_DIR
-=======
 from ..config.settings import LOG_DIR
->>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
 
 
 def setup_logger(name: str, log_file: str = None) -> logging.Logger:

@@ -6,15 +6,9 @@ from collections import deque
 from datetime import datetime
 from typing import Dict, Any
 
-<<<<<<< HEAD
-from models.tasks import CentralTask
-from core.database import CentralTaskRecord
-from utils.logger import get_task_logger
-=======
-from ..models.tasks import CentralTask
-from ..core.database import CentralTaskRecord
-from ..utils.logger import get_task_logger
->>>>>>> 1eee087fad254c0d8449abb55113bbe3bc442923
+from enhanced_node.models.tasks import CentralTask
+from enhanced_node.core.database import CentralTaskRecord
+from enhanced_node.utils.logger import get_task_logger
 
 
 class TaskControlManager:
