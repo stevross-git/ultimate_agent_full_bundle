@@ -11,7 +11,7 @@ import random
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import threading
-from collections import deque
+from collections import deque, defaultdict
 
 
 class ConversationManager:
@@ -29,6 +29,11 @@ class ConversationManager:
         self.context_memory_enabled = True
         self.response_creativity = 0.7
         self.conversation_timeout = 3600  # 1 hour
+
+        # Rate limiting
+        self.user_message_counts = defaultdict(lambda: {'count': 0, 'reset_time': time.time()})
+        self.rate_limit_messages = 100
+        self.rate_limit_window = 3600
         
         # Advanced chat responses
         self.personality_traits = {
@@ -61,6 +66,20 @@ class ConversationManager:
         }
         
         print("💬 Conversation Manager initialized")
+
+    def _check_rate_limit(self, user_id: str) -> bool:
+        """Check whether the user is within rate limits"""
+        current_time = time.time()
+        user_data = self.user_message_counts[user_id]
+        if current_time > user_data['reset_time'] + self.rate_limit_window:
+            user_data['count'] = 0
+            user_data['reset_time'] = current_time
+
+        if user_data['count'] >= self.rate_limit_messages:
+            return False
+
+        user_data['count'] += 1
+        return True
     
     def create_conversation(self, user_id: str = None, model_type: str = 'general') -> str:
         """Create a new conversation session"""
@@ -104,7 +123,7 @@ class ConversationManager:
         else:
             return random.choice(self.conversation_templates['greeting'])
     
-    async def process_message(self, conversation_id: str, user_message: str, 
+    async def process_message(self, conversation_id: str, user_message: str,
                             context_aware: bool = True) -> Dict[str, Any]:
         """Process user message and generate AI response"""
         start_time = time.time()
@@ -114,6 +133,15 @@ class ConversationManager:
         
         conversation = self.conversations[conversation_id]
         
+        # Rate limit check
+        user_id = conversation.get('user_id', 'anonymous')
+        if not self._check_rate_limit(user_id):
+            return {
+                'success': False,
+                'error': 'Rate limit exceeded',
+                'conversation_id': conversation_id
+            }
+
         # Add user message
         self._add_message(conversation_id, 'user', user_message)
         
@@ -180,15 +208,38 @@ class ConversationManager:
                 'error': str(e),
                 'fallback': True
             }
+
+    def _sanitize_message_content(self, content: str) -> str:
+        """Sanitize message content to mitigate XSS attacks"""
+        import html
+        import re
+
+        if not isinstance(content, str):
+            content = str(content)
+
+        content = html.escape(content)
+        content = re.sub(r'<script.*?</script>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        content = re.sub(r'javascript:', '', content, flags=re.IGNORECASE)
+        content = re.sub(r'on\w+\s*=', '', content, flags=re.IGNORECASE)
+
+        if len(content) > 10000:
+            content = content[:10000] + '... [truncated]'
+
+        return content
     
     def _add_message(self, conversation_id: str, role: str, content: str):
         """Add message to conversation"""
         if conversation_id not in self.conversations:
             return
-        
+
+        if role not in ['user', 'assistant', 'system']:
+            raise ValueError(f"Invalid role: {role}")
+
+        sanitized_content = self._sanitize_message_content(content)
+
         message = {
             'role': role,
-            'content': content,
+            'content': sanitized_content,
             'timestamp': datetime.now().isoformat(),
             'id': f"msg_{uuid.uuid4().hex[:8]}"
         }
