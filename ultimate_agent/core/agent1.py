@@ -27,6 +27,7 @@ from ..storage.database.migrations import DatabaseManager
 from ..monitoring.metrics import MonitoringManager
 from ..dashboard.web.routes import DashboardManager
 from ..network.communication import NetworkManager
+from ..network.discovery.service_discovery import DiscoveryClient
 from ..plugins import PluginManager
 from ..remote.command_handler import RemoteCommandHandler
 
@@ -50,13 +51,19 @@ class UltimatePainNetworkAgent:
         self.database_manager = DatabaseManager()
         self.task_scheduler = TaskScheduler(self.ai_manager, self.blockchain_manager)
         self.network_manager = NetworkManager(self.config_manager)
+        self.discovery_client = DiscoveryClient()
         self.dashboard_manager = DashboardManager(self)
         self.remote_command_handler = RemoteCommandHandler(self)
         
         # Configuration
-        self.node_url = (node_url or 
-                        self.config_manager.get('DEFAULT', 'node_url', 
+        if node_url is None:
+            discovered = self.discovery_client.get_best_node(self.network_manager.test_connection)
+            node_url = discovered.get('url') if discovered else None
+
+        self.node_url = (node_url or
+                        self.config_manager.get('DEFAULT', 'node_url',
                                               fallback='http://srvnodes.peoplesainetwork.com:5000')).rstrip('/')
+        self.network_manager.set_node_url(self.node_url)
         self.dashboard_port = (dashboard_port or 
                               int(self.config_manager.get('DEFAULT', 'dashboard_port', fallback='8080')))
         
