@@ -1245,6 +1245,35 @@ def get_enhanced_dashboard_html():
                 }}
             }}
             
+
+            async function getPerformanceMetrics() {
+                try {
+                    showNotification("Fetching performance metrics...", "info");
+
+                    const response = await fetch("/api/v3/node/stats");
+                    const stats = await response.json();
+
+                    if (stats.error) {
+                        throw new Error(stats.error);
+                    }
+
+                    let summary = `Node Performance Metrics:\n\n`;
+                    summary += `Online Agents: ${stats.online_agents}/${stats.total_agents}\n`;
+                    summary += `Tasks Running: ${stats.total_tasks_running}\n`;
+                    summary += `CPU Avg: ${stats.avg_cpu_percent}%\n`;
+                    summary += `Memory Avg: ${stats.avg_memory_percent}%\n`;
+                    summary += `GPU Avg: ${stats.avg_gpu_percent}%\n`;
+                    summary += `Efficiency: ${stats.avg_efficiency_score}%`;
+
+                    alert(summary);
+                    showNotification("Performance metrics retrieved!", "success");
+
+                } catch (error) {
+                    console.error("Failed to get performance metrics:", error);
+                    showNotification("Performance metrics failed!", "error");
+                }
+
+            }
             async function testAgentAPI(agentId) {{
                 try {{
                     showNotification(`Testing API for ${{agentId}}...`, 'info');
