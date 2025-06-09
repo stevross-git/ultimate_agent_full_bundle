@@ -4,6 +4,10 @@ import statistics
 from datetime import datetime
 from collections import defaultdict, deque
 from typing import Dict, Any
+import socket
+import threading
+import time
+import requests
 
 from flask import Flask
 from flask_cors import CORS
@@ -87,6 +91,35 @@ class EnhancedNodeServer:
         self.logger.info(f"Enhanced Node Server {NODE_ID} v{NODE_VERSION} initialized")
         self.logger.info("✅ Modular architecture enabled")
         self.logger.info("🎮 Advanced remote control features available")
+
+    def _register_with_manager(self) -> bool:
+        """Register this node with the central manager."""
+        payload = {
+            "node_id": NODE_ID,
+            "host": socket.gethostname(),
+            "port": NODE_PORT,
+            "version": NODE_VERSION,
+        }
+        try:
+            response = requests.post(f"{self.manager_url}/api/nodes/register",
+                                     json=payload, timeout=10)
+            if response.status_code == 200 and response.json().get("success"):
+                self.registered_with_manager = True
+                self.logger.info("Registered with manager")
+                return True
+        except Exception as exc:
+            self.logger.warning(f"Manager registration failed: {exc}")
+        return False
+
+    def _manager_heartbeat_loop(self):
+        """Send periodic heartbeat to the manager."""
+        while self.running:
+            try:
+                requests.post(f"{self.manager_url}/api/nodes/heartbeat",
+                              json={"node_id": NODE_ID}, timeout=10)
+            except Exception as exc:
+                self.logger.warning(f"Manager heartbeat failed: {exc}")
+            time.sleep(60)
     
     def _init_redis(self):
         """Initialize Redis for real-time caching"""
@@ -446,11 +479,16 @@ class EnhancedNodeServer:
     def start(self):
         """Start the node server"""
         self.running = True
-        
+
+        if not self.registered_with_manager:
+            self._register_with_manager()
+            if self.registered_with_manager:
+                threading.Thread(target=self._manager_heartbeat_loop, daemon=True).start()
+
         # Start background services
         self.task_control.start_task_control_services()
         self.advanced_remote_control.start_advanced_services()
-        
+
         self.logger.info("Enhanced Node Server started with advanced capabilities")
     
     def stop(self):
