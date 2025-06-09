@@ -93,3 +93,23 @@ def test_update_agent(monkeypatch):
     result = handler.handle_command(cmd)
     assert result["success"] is True
     assert result["result"]["updated"] is True
+
+
+def test_update_system(monkeypatch):
+    agent = DummyAgent()
+    handler = RemoteCommandHandler(agent)
+
+    class Result:
+        stdout = "system updated"
+        stderr = ""
+
+    def fake_run(*args, **kwargs):
+        return Result()
+
+    import subprocess
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    cmd = {"command_id": "c6", "command_type": "update_system", "parameters": {}}
+    result = handler.handle_command(cmd)
+    assert result["success"] is True
+    assert result["result"]["updated"] is True

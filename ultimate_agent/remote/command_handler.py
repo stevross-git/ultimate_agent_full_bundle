@@ -36,6 +36,7 @@ class RemoteCommandHandler:
             'backup_data': self.backup_data,
             'clear_cache': self.clear_cache,
             'update_agent': self.update_agent,
+            'update_system': self.update_system,
             'deploy_configuration': self.deploy_configuration,
         }
 
@@ -229,6 +230,38 @@ class RemoteCommandHandler:
             return {
                 'updated': False,
                 'error': e.stderr.strip() or str(e),
+            }
+
+    def update_system(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Update system packages on the host."""
+        package_manager = params.get('package_manager', 'apt')
+        restart = params.get('restart', False)
+
+        import subprocess
+
+        try:
+            if package_manager == 'apt':
+                subprocess.run(['apt', 'update'], check=True, capture_output=True, text=True)
+                subprocess.run(['apt', 'upgrade', '-y'], check=True, capture_output=True, text=True)
+            elif package_manager == 'yum':
+                subprocess.run(['yum', 'update', '-y'], check=True, capture_output=True, text=True)
+            else:
+                return {
+                    'updated': False,
+                    'error': f'unknown package manager: {package_manager}'
+                }
+
+            if restart:
+                self.agent.stop()
+
+            return {
+                'updated': True,
+                'restart': restart
+            }
+        except subprocess.CalledProcessError as e:
+            return {
+                'updated': False,
+                'error': e.stderr.strip() or str(e)
             }
 
     def deploy_configuration(self, params: Dict[str, Any]) -> Dict[str, Any]:
