@@ -63,10 +63,13 @@ except Exception as e:
     DashboardManager = None
 
 try:
-    from .network.communication import NetworkManager
+    from .network.advanced.integration import create_network_manager as NetworkManager
 except Exception as e:
-    print(f"⚠️ Network module not available: {e}")
-    NetworkManager = None
+    try:
+        from .network.communication import NetworkManager  # fallback
+    except Exception as e2:
+        print(f"⚠️ Network module not available: {e2}")
+        NetworkManager = None
 
 try:
     from .security.authentication import SecurityManager

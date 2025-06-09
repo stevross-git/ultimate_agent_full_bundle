@@ -2,7 +2,10 @@ import time
 import threading
 from typing import List, Dict, Optional
 
-import requests
+try:
+    import requests
+except Exception:  # pragma: no cover - optional dependency
+    requests = None
 
 
 class DiscoveryClient:
@@ -20,6 +23,10 @@ class DiscoveryClient:
 
     def refresh_nodes(self) -> List[Dict[str, str]]:
         """Fetch node list from the discovery service."""
+        if requests is None:
+            print("⚠️ 'requests' not available - using cached nodes")
+            return self.nodes_cache
+
         try:
             resp = requests.get(f"{self.node_service}/api/nodes", timeout=10)
             resp.raise_for_status()
@@ -35,6 +42,10 @@ class DiscoveryClient:
 
     def refresh_manager(self) -> Optional[str]:
         """Fetch manager URL from the manager registry."""
+        if requests is None:
+            print("⚠️ 'requests' not available - manager discovery disabled")
+            return self.manager_url
+
         try:
             resp = requests.get(f"{self.manager_service}/api/manager", timeout=10)
             resp.raise_for_status()
