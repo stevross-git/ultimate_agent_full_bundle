@@ -10,6 +10,7 @@ import platform
 import uuid
 import hashlib
 import secrets
+import logging
 try:
     import requests
 except Exception:  # pragma: no cover - optional dependency
@@ -17,6 +18,8 @@ except Exception:  # pragma: no cover - optional dependency
 import os
 from datetime import datetime
 from typing import Dict, Any, Optional
+
+logger = logging.getLogger(__name__)
 
 from ..config.config_settings import ConfigManager
 from ..ai.models import AIModelManager
@@ -35,7 +38,7 @@ class UltimatePainNetworkAgent:
     """Main agent class that coordinates all modules"""
     
     def __init__(self, node_url: str = None, dashboard_port: int = None):
-        print(f"🚀 Initializing Enhanced Ultimate Pain Network Agent")
+        logger.info("🚀 Initializing Enhanced Ultimate Pain Network Agent")
         
         # Initialize core configuration
         self.config_manager = ConfigManager()
@@ -66,7 +69,7 @@ class UltimatePainNetworkAgent:
         self.current_tasks = {}
         self.stats = self._load_stats()
         
-        print(f"🎯 Enhanced Ultimate Agent {self.agent_id} initialized")
+        logger.info("🎯 Enhanced Ultimate Agent %s initialized", self.agent_id)
     
     def _get_or_create_agent_id(self) -> str:
         """Generate or load agent ID"""
@@ -146,15 +149,15 @@ class UltimatePainNetworkAgent:
             try:
                 if not self.registered:
                     if self.register_with_node():
-                        print("✅ Successfully registered with node")
+                        logger.info("✅ Successfully registered with node")
                 else:
                     if not self.network_manager.send_heartbeat(self.agent_id, self.get_status()):
-                        print("⚠️ Heartbeat failed, attempting to re-register")
+                        logger.warning("⚠️ Heartbeat failed, attempting to re-register")
                         self.registered = False
                 
                 time.sleep(30)  # Heartbeat interval
             except Exception as e:
-                print(f"❌ Heartbeat loop error: {e}")
+                logger.exception("❌ Heartbeat loop error: %s", e)
                 time.sleep(60)
     
     def _auto_task_loop(self):
@@ -169,14 +172,14 @@ class UltimatePainNetworkAgent:
                 
                 time.sleep(30)
             except Exception as e:
-                print(f"❌ Auto task loop error: {e}")
+                logger.exception("❌ Auto task loop error: %s", e)
                 time.sleep(60)
     
     def start(self):
         """Start the agent"""
-        print(f"\n🚀 Starting Enhanced Ultimate Pain Network Agent")
-        print(f"   Node URL: {self.node_url}")
-        print(f"   Dashboard: http://localhost:{self.dashboard_port}")
+        logger.info("\n🚀 Starting Enhanced Ultimate Pain Network Agent")
+        logger.info("   Node URL: %s", self.node_url)
+        logger.info("   Dashboard: http://localhost:%s", self.dashboard_port)
         
         self.running = True
         
@@ -190,22 +193,22 @@ class UltimatePainNetworkAgent:
         for service_name, service_func in services:
             thread = threading.Thread(target=service_func, daemon=True, name=service_name)
             thread.start()
-            print(f"✅ {service_name} service started")
+            logger.info("✅ %s service started", service_name)
         
-        print("🚀 All systems online!")
+        logger.info("🚀 All systems online!")
         
         try:
             while self.running:
                 time.sleep(1)
         except KeyboardInterrupt:
-            print(f"\n🛑 Agent shutdown initiated...")
+            logger.info("\n🛑 Agent shutdown initiated...")
             self.stop()
         
         return True
     
     def stop(self):
         """Stop the agent"""
-        print("🛑 Stopping Enhanced Ultimate Pain Network Agent...")
+        logger.info("🛑 Stopping Enhanced Ultimate Pain Network Agent...")
         self.running = False
         
         # Save state
@@ -216,4 +219,4 @@ class UltimatePainNetworkAgent:
         self.task_scheduler.stop()
         self.dashboard_manager.stop()
         
-        print("🎯 Agent stopped successfully")
+        logger.info("🎯 Agent stopped successfully")

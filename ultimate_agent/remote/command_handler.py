@@ -1,6 +1,18 @@
 import time
 import os
+import logging
 from typing import Dict, Any
+
+
+logger = logging.getLogger(__name__)
+
+
+class RemoteCommandError(Exception):
+    """Custom exception for command handling errors."""
+
+    def __init__(self, message: str, data: Dict[str, Any] | None = None):
+        super().__init__(message)
+        self.data = data or {}
 
 
 class RemoteCommandHandler:
@@ -47,11 +59,20 @@ class RemoteCommandHandler:
 
         handler = self.command_handlers.get(cmd_type)
         if not handler:
+            logger.warning("Unknown command: %s", cmd_type)
             return {'success': False, 'command_id': command_id, 'error': 'unknown_command'}
+
         try:
             result = handler(params)
+            logger.debug("Command %s executed with result: %s", cmd_type, result)
             return {'success': True, 'command_id': command_id, 'result': result}
+        except RemoteCommandError as e:
+            logger.error("Command %s failed: %s", cmd_type, e)
+            error_data = {'success': False, 'command_id': command_id, 'error': str(e)}
+            error_data.update(e.data)
+            return error_data
         except Exception as e:
+            logger.exception("Unhandled error while executing %s", cmd_type)
             return {'success': False, 'command_id': command_id, 'error': str(e)}
 
     def restart_agent(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -76,7 +97,7 @@ class RemoteCommandHandler:
     def cancel_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
         task_id = params.get('task_id')
         if not task_id:
-            raise ValueError('task_id required')
+            raise RemoteCommandError('task_id required')
         success = False
         if hasattr(self.agent, 'task_scheduler'):
             success = self.agent.task_scheduler.cancel_task(task_id)
@@ -89,7 +110,7 @@ class RemoteCommandHandler:
         section = params.get('section')
         updates = params.get('updates', {})
         if not section or not isinstance(updates, dict):
-            raise ValueError('invalid parameters')
+            raise RemoteCommandError('invalid parameters')
         for key, value in updates.items():
             self.agent.config_manager.set(section, key, str(value))
         return {'section': section, 'updated_keys': list(updates.keys())}
@@ -104,7 +125,7 @@ class RemoteCommandHandler:
         if task:
             task['status'] = 'paused'
             return {'task_id': task_id, 'status': 'paused'}
-        return {'error': 'task_not_found', 'task_id': task_id}
+        raise RemoteCommandError('task_not_found', {'task_id': task_id})
 
     def resume_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
         task_id = params.get('task_id')
@@ -112,7 +133,7 @@ class RemoteCommandHandler:
         if task:
             task['status'] = 'running'
             return {'task_id': task_id, 'status': 'running'}
-        return {'error': 'task_not_found', 'task_id': task_id}
+        raise RemoteCommandError('task_not_found', {'task_id': task_id})
 
     def set_task_priority(self, params: Dict[str, Any]) -> Dict[str, Any]:
         task_id = params.get('task_id')
@@ -121,7 +142,7 @@ class RemoteCommandHandler:
         if task:
             task['priority'] = priority
             return {'task_id': task_id, 'priority': priority}
-        return {'error': 'task_not_found', 'task_id': task_id}
+        raise RemoteCommandError('task_not_found', {'task_id': task_id})
 
     def set_cpu_limit(self, params: Dict[str, Any]) -> Dict[str, Any]:
         limit = int(params.get('limit', 80))
@@ -155,7 +176,7 @@ class RemoteCommandHandler:
         lines = int(params.get('lines', 50))
         log_file = 'ultimate_agent.log'
         if not os.path.exists(log_file):
-            return {'error': 'log_not_found'}
+            raise RemoteCommandError('log_not_found')
         with open(log_file, 'r') as f:
             content = f.readlines()[-lines:]
         return {'lines': len(content), 'log': ''.join(content)}
@@ -198,7 +219,7 @@ class RemoteCommandHandler:
             import shutil
             shutil.copy2(db_file, backup)
             return {'backup': backup}
-        return {'error': 'db_not_found'}
+        raise RemoteCommandError('db_not_found')
 
     def clear_cache(self, params: Dict[str, Any]) -> Dict[str, Any]:
         return {'cache_cleared': True}
@@ -226,10 +247,7 @@ class RemoteCommandHandler:
                 'restart': restart,
             }
         except subprocess.CalledProcessError as e:
-            return {
-                'updated': False,
-                'error': e.stderr.strip() or str(e),
-            }
+            raise RemoteCommandError(e.stderr.strip() or str(e))
 
     def deploy_configuration(self, params: Dict[str, Any]) -> Dict[str, Any]:
         config = params.get('config', {})
