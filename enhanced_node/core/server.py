@@ -16,18 +16,40 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
 
-
-from ..config.settings import (
-    NODE_ID, NODE_VERSION, NODE_PORT, DATABASE_PATH,
-    MANAGER_HOST, MANAGER_PORT, DEFAULT_RATE_LIMITS, METRICS_PORT
-)
-from .database import EnhancedNodeDatabase
-from ..control.task_manager import TaskControlManager
-from ..control.remote_manager import AdvancedRemoteControlManager
-from ..models.agents import EnhancedAgentInfo, EnhancedAgentStatus
-from ..utils.logger import get_server_logger
-from ..utils.serialization import serialize_for_json
-
+# Use try/except for imports to handle both relative and absolute imports
+try:
+    from config.settings import (
+        NODE_ID, NODE_VERSION, NODE_PORT, DATABASE_PATH,
+        MANAGER_HOST, MANAGER_PORT, DEFAULT_RATE_LIMITS, METRICS_PORT
+    )
+    from core.database import EnhancedNodeDatabase
+    from control.task_manager import TaskControlManager
+    from control.remote_manager import AdvancedRemoteControlManager
+    from models.agents import EnhancedAgentInfo, EnhancedAgentStatus
+    from utils.logger import get_server_logger
+    from utils.serialization import serialize_for_json
+    from routes.api_v3 import register_api_v3_routes
+    from routes.api_v5_remote import register_api_v5_routes
+    from websocket.events import register_websocket_events
+except ImportError:
+    # Fallback to relative imports
+    try:
+        from .config.settings import (
+            NODE_ID, NODE_VERSION, NODE_PORT, DATABASE_PATH,
+            MANAGER_HOST, MANAGER_PORT, DEFAULT_RATE_LIMITS, METRICS_PORT
+        )
+        from .database import EnhancedNodeDatabase
+        from ..control.task_manager import TaskControlManager
+        from ..control.remote_manager import AdvancedRemoteControlManager
+        from ..models.agents import EnhancedAgentInfo, EnhancedAgentStatus
+        from ..utils.logger import get_server_logger
+        from ..utils.serialization import serialize_for_json
+        from ..routes.api_v3 import register_api_v3_routes
+        from ..routes.api_v5_remote import register_api_v5_routes
+        from ..websocket.events import register_websocket_events
+    except ImportError as e:
+        print(f"Import error: {e}")
+        raise
 
 
 class EnhancedNodeServer:
@@ -88,9 +110,23 @@ class EnhancedNodeServer:
         # Start metrics server
         self._start_metrics_server()
         
+        # Register routes and websocket events
+        self._register_routes()
+        
         self.logger.info(f"Enhanced Node Server {NODE_ID} v{NODE_VERSION} initialized")
         self.logger.info("✅ Modular architecture enabled")
         self.logger.info("🎮 Advanced remote control features available")
+
+    def _register_routes(self):
+        """Register all API routes and WebSocket events"""
+        try:
+            register_api_v3_routes(self)
+            register_api_v5_routes(self)
+            register_websocket_events(self)
+            self.logger.info("✅ All routes and WebSocket events registered")
+        except Exception as e:
+            self.logger.error(f"Failed to register routes: {e}")
+            raise
 
     def _register_with_manager(self) -> bool:
         """Register this node with the central manager."""
@@ -408,7 +444,7 @@ class EnhancedNodeServer:
         status.last_heartbeat = current_time
         
         # Store enhanced heartbeat
-        from .database import AgentHeartbeat, Agent
+        from core.database import AgentHeartbeat, Agent
         heartbeat = AgentHeartbeat(
             agent_id=agent_id,
             timestamp=current_time,
