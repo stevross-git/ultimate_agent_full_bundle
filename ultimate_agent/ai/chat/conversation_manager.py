@@ -844,4 +844,4 @@ def add_chat_routes(dashboard_manager):
 
 
 # Export the conversation manager and route setup
-__all__ = ['ConversationManager', 'add_chat_routes'
+__all__ = ['ConversationManager', 'add_chat_routes']
