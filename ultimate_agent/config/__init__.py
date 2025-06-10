@@ -1,5 +1,12 @@
 # ultimate_agent/config/__init__.py
 
-from .settings import config  # ✅ correctly imported config dictionary
+"""Package initialization for configuration module."""
 
-print(config['port'])  # ✅ now this will work
+# Import the settings dictionary from settings.py
+from .settings import settings
+
+# Export `config` as an alias for backward compatibility
+config = settings
+
+# Simple sanity check to ensure settings were loaded
+print(settings["port"])
