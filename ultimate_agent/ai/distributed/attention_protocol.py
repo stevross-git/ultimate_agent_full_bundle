@@ -28,14 +28,28 @@ class DistributedAttentionCoordinator:
         self.shards[shard.shard_id] = shard
         self.node_connections[shard.node_id] = connection
     
-    async def distributed_attention(self, 
+    async def distributed_attention(self,
                                   query: np.ndarray,
-                                  key: np.ndarray, 
+                                  key: np.ndarray,
                                   value: np.ndarray,
                                   layer_index: int,
                                   request_id: str) -> np.ndarray:
         """Perform distributed multi-head attention"""
-        
+        if not all(isinstance(x, np.ndarray) for x in [query, key, value]):
+            raise ValueError("All inputs must be numpy arrays")
+
+        if not (query.shape == key.shape == value.shape):
+            raise ValueError(f"Shape mismatch: query={query.shape}, key={key.shape}, value={value.shape}")
+
+        if len(query.shape) != 3:
+            raise ValueError("Expected 3D tensors (batch, sequence, hidden)")
+
+        if not isinstance(layer_index, int) or layer_index < 0:
+            raise ValueError("Layer index must be a non-negative integer")
+
+        if not isinstance(request_id, str) or not request_id.strip():
+            raise ValueError("Request ID must be a non-empty string")
+
         batch_size, seq_len, hidden_size = query.shape
         
         # Split Q, K, V across attention heads
@@ -154,5 +168,7 @@ class AttentionShardProcessor:
     
     def _softmax(self, x: np.ndarray) -> np.ndarray:
         """Numerically stable softmax"""
-        exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
-        return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
+        x_max = np.max(x, axis=-1, keepdims=True)
+        x_shifted = np.clip(x - x_max, -700, 700)
+        exp_x = np.exp(x_shifted)
+        return exp_x / (np.sum(exp_x, axis=-1, keepdims=True) + 1e-8)

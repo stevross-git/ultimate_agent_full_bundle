@@ -186,13 +186,30 @@ class AIModelManager:
         }
     
     def load_model(self, model_name: str, model_config: Dict[str, Any]) -> bool:
-        """Load a new model"""
+        """Load a new model with validation."""
+        # Input validation
+        if not isinstance(model_name, str) or not model_name.strip():
+            raise ValueError("Model name must be a non-empty string")
+
+        if not isinstance(model_config, dict):
+            raise ValueError("Model config must be a dictionary")
+
+        valid_types = ['nlp', 'vision', 'tabular', 'rl', 'custom',
+                       'nlp_advanced', 'vision_advanced', 'general']
+        model_type = model_config.get('type', 'custom')
+        if model_type not in valid_types:
+            raise ValueError(f"Invalid model type: {model_type}")
+
+        accuracy = model_config.get('accuracy', 0.0)
+        if not isinstance(accuracy, (int, float)) or not 0.0 <= accuracy <= 1.0:
+            raise ValueError("Accuracy must be a number between 0.0 and 1.0")
+
         try:
             self.models[model_name] = {
-                'type': model_config.get('type', 'custom'),
+                'type': model_type,
                 'status': 'loaded',
                 'size': model_config.get('size', 'medium'),
-                'accuracy': model_config.get('accuracy', 0.0),
+                'accuracy': accuracy,
                 'loaded_at': time.time()
             }
             print(f"✅ Model loaded: {model_name}")
@@ -200,6 +217,19 @@ class AIModelManager:
         except Exception as e:
             print(f"❌ Failed to load model {model_name}: {e}")
             return False
+
+    def get_memory_usage(self) -> Dict[str, float]:
+        """Estimate memory usage of loaded models."""
+        total_memory = 0.0
+        model_memory: Dict[str, float] = {}
+
+        size_multipliers = {'small': 100, 'medium': 500, 'large': 2000}
+        for model_name, model_info in self.models.items():
+            estimated_mb = size_multipliers.get(model_info.get('size'), 500)
+            model_memory[model_name] = float(estimated_mb)
+            total_memory += estimated_mb
+
+        return {'total_mb': float(total_memory), 'by_model': model_memory}
     
     def unload_model(self, model_name: str) -> bool:
         """Unload a model"""
