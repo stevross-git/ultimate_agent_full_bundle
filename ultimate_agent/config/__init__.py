@@ -1,2 +1,2 @@
-"""Package initialization."""
-from .settings import settings
+from ultimate_agent.config import settings
+print(settings['port'])  # ✅ This works
