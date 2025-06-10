@@ -4,6 +4,7 @@ Ultimate Agent Utilities
 
 import logging
 import sys
+import json
 from pathlib import Path
 
 def setup_logging(name: str, level: int = logging.INFO) -> logging.Logger:
