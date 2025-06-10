@@ -158,3 +158,5 @@ class UltimateAgent:
         if command == "ping" and result.get("status") == "pong":
             return {"message": "pong"}
         return result
+# Alias for compatibility
+UltimatePainNetworkAgent = UltimateAgent
