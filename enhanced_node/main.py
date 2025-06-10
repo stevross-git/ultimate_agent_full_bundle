@@ -13,10 +13,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 if __name__ == "__main__":
     try:
-        from core.server import EnhancedNodeServerAdvanced
+        from core.server import EnhancedNodeServer
 
         print("🚀 Starting Enhanced Node Server...")
-        server = EnhancedNodeServerAdvanced()
+        server = EnhancedNodeServer()
         server.run()
     except ImportError as e:
         print(f"❌ Import error: {e}")
