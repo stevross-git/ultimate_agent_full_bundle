@@ -1,36 +1,3 @@
-import asyncio
-import signal
-
-try:
-    import aioredis  # type: ignore
-except ModuleNotFoundError:  # pragma: no cover - fallback for tests
-    aioredis = None
-from .executor import TaskExecutor
-from ...config.settings import settings
-
-class TaskScheduler:
-
-    def __init__(self, config):
-        self.config = config or {}
-
-        self.ai_manager = config.get('ai_manager')
-        self.blockchain_manager = config.get('blockchain_manager')
-
-        from ..simulation import TaskSimulator
-        from ..control import TaskControlClient
-
-        self.task_simulator = TaskSimulator(self.ai_manager, self.blockchain_manager)
-        self.task_control_client = TaskControlClient(self)
-
-        self.current_tasks = {}
-        self.completed_tasks = []
-        self.task_queue = []
-        self.max_concurrent_tasks = config.get('max_concurrent_tasks', 3)
-
-        self.executor_threads = {}
-        self.running = True
-
-    print(f"🎯 Task Scheduler initialized")
 
 #!/usr/bin/env python3
 """
@@ -38,27 +5,36 @@ ultimate_agent/tasks/execution/scheduler.py
 Task scheduling and execution management
 """
 
+import asyncio
+import signal
 import time
 import threading
 import random
 import uuid
+from datetime import datetime
+from typing import Dict, Any, List, Callable
+
 try:
     import numpy as np
 except Exception:  # pragma: no cover - optional dependency
     class _DummyNumpy:
         class ndarray:
             pass
-
     np = _DummyNumpy()
-from datetime import datetime
-from typing import Dict, Any, List, Callable
 
+try:
+    import aioredis  # type: ignore
+except ModuleNotFoundError:
+    aioredis = None
+
+from .executor import TaskExecutor
+from ...config.settings import settings
 from ..simulation import TaskSimulator
 from ..control import TaskControlClient
 
 
 class TaskScheduler:
-    """Manages task scheduling and execution"""
+    """Manages task scheduling, execution, and Redis streaming."""
 
     def __init__(self, config):
         self.config = config or {}
@@ -77,11 +53,6 @@ class TaskScheduler:
         self.executor_threads = {}
         self.running = True
 
-        print(f"🎯 Task Scheduler initialized")
-
-
-
-      
         self.executor = TaskExecutor()
         self.redis = None
         self.shutdown_event = asyncio.Event()
@@ -89,10 +60,12 @@ class TaskScheduler:
         self.group_name = "agent-workers"
         self.consumer_name = f"agent-{id(self)}"
 
+        print("🎯 Task Scheduler initialized")
+
     async def connect_redis(self):
         if aioredis is None:
             raise RuntimeError("aioredis is required for scheduler")
-        self.redis = await aioredis.from_url(settings.REDIS_URL)
+        self.redis = await aioredis.from_url(settings.get("REDIS_URL", "redis://localhost:6379"))
         print("🔗 Connected to Redis")
         try:
             await self.redis.xgroup_create(self.stream_key, self.group_name, id='0', mkstream=True)
@@ -158,3 +131,7 @@ class TaskScheduler:
         redis_task.cancel()
 
         await self.redis.close()
+
+    async def process_pending(self):
+        """Placeholder for async task processing logic"""
+        print("🔄 Checking for pending tasks... (stub)")
