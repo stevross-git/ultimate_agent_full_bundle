@@ -5,17 +5,13 @@ Main entry point for the Ultimate Agent
 """
 
 import sys
-import os
-from pathlib import Path
 
-# Add the ultimate_agent directory to Python path  
-sys.path.insert(0, str(Path(__file__).parent))
 
 def main():
     """Main entry point for Ultimate Agent"""
     try:
-        from core.agent import UltimateAgent
-        from config.settings import get_config
+        from .core.agent import UltimateAgent
+        from .config.settings import get_config
 
         print("🤖 Initializing Ultimate Agent...")
         config = get_config()
