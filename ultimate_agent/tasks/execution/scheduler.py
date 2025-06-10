@@ -9,7 +9,30 @@ from .executor import TaskExecutor
 from ...config.settings import settings
 
 class TaskScheduler:
-    def __init__(self):
+
+    def __init__(self, config):
+        self.config = config or {}
+
+        self.ai_manager = config.get('ai_manager')
+        self.blockchain_manager = config.get('blockchain_manager')
+
+        from ..simulation import TaskSimulator
+        from ..control import TaskControlClient
+
+        self.task_simulator = TaskSimulator(self.ai_manager, self.blockchain_manager)
+        self.task_control_client = TaskControlClient(self)
+
+        self.current_tasks = {}
+        self.completed_tasks = []
+        self.task_queue = []
+        self.max_concurrent_tasks = config.get('max_concurrent_tasks', 3)
+
+        self.executor_threads = {}
+        self.running = True
+
+    print(f"🎯 Task Scheduler initialized")
+
+
         self.executor = TaskExecutor()
         self.redis = None
         self.shutdown_event = asyncio.Event()
@@ -86,3 +109,5 @@ class TaskScheduler:
         redis_task.cancel()
 
         await self.redis.close()
+
+    
