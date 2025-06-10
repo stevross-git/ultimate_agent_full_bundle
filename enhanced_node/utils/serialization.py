@@ -1,35 +1,37 @@
+"""
+Enhanced Node Serialization Utilities
+"""
+
 import json
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict
 
+def serialize_for_json(obj: Any) -> Dict[str, Any]:
+    """Serialize objects for JSON response"""
+    if obj is None:
+        return None
 
-def serialize_for_json(obj: Any) -> Any:
-    """Convert datetime objects and other non-serializable objects to JSON-serializable format"""
-    if isinstance(obj, datetime):
-        return obj.isoformat()
-    elif hasattr(obj, '__dict__'):
-        result = {}
-        for key, value in obj.__dict__.items():
-            if isinstance(value, datetime):
-                result[key] = value.isoformat()
-            elif isinstance(value, (list, tuple)):
-                result[key] = [serialize_for_json(item) for item in value]
-            elif isinstance(value, dict):
-                result[key] = {k: serialize_for_json(v) for k, v in value.items()}
-            else:
-                result[key] = value
-        return result
-    elif isinstance(obj, dict):
-        return {k: serialize_for_json(v) for k, v in obj.items()}
-    elif isinstance(obj, (list, tuple)):
-        return [serialize_for_json(item) for item in obj]
-    else:
+    if isinstance(obj, (str, int, float, bool)):
         return obj
 
+    if isinstance(obj, datetime):
+        return obj.isoformat()
 
-class DateTimeJSONEncoder(json.JSONEncoder):
-    """Custom JSON encoder that handles datetime objects"""
-    def default(self, obj: Any) -> Any:
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
+    if isinstance(obj, dict):
+        return {k: serialize_for_json(v) for k, v in obj.items()}
+
+    if isinstance(obj, (list, tuple)):
+        return [serialize_for_json(item) for item in obj]
+
+    if hasattr(obj, '__dict__'):
+        return {k: serialize_for_json(v) for k, v in obj.__dict__.items() 
+                if not k.startswith('_')}
+
+    return str(obj)
+
+def safe_json_loads(data: str) -> Any:
+    """Safely load JSON data"""
+    try:
+        return json.loads(data)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON data: {e}")

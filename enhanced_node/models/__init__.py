@@ -1,20 +1,15 @@
 """
-Models module - Data structures for the Enhanced Node Server
+Enhanced Node Models Package
 """
 
-from .agents import EnhancedAgentInfo, EnhancedAgentStatus
-from .tasks import CentralTask
-from .commands import AgentCommand, AgentConfiguration
-from .scripts import ScheduledCommand, BulkOperation, AgentHealthCheck, AgentScript
+from .agents import Agent, AgentStatus
+from .tasks import Task, TaskStatus, TaskType
+from .commands import Command, CommandStatus, CommandType
+from .scripts import AgentScript, ScriptStatus, ScriptType
 
 __all__ = [
-    'EnhancedAgentInfo',
-    'EnhancedAgentStatus', 
-    'CentralTask',
-    'AgentCommand',
-    'AgentConfiguration',
-    'ScheduledCommand',
-    'BulkOperation',
-    'AgentHealthCheck',
-    'AgentScript'
+    'Agent', 'AgentStatus',
+    'Task', 'TaskStatus', 'TaskType', 
+    'Command', 'CommandStatus', 'CommandType',
+    'AgentScript', 'ScriptStatus', 'ScriptType'
 ]

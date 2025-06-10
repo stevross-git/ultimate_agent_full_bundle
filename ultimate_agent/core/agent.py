@@ -5,9 +5,16 @@ Ultimate Agent Core - Main Agent Coordination
 
 import asyncio
 import logging
+import json
 from typing import Dict, Any, Optional
 from ..config.settings import get_config
 from ..utils import setup_logging
+
+def serialize_for_json(obj):
+    """Serialize object for JSON response"""
+    if hasattr(obj, '__dict__'):
+        return {k: v for k, v in obj.__dict__.items() if not k.startswith('_')}
+    return str(obj)
 
 class UltimateAgent:
     """Main Ultimate Agent coordination class"""
