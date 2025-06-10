@@ -26,7 +26,8 @@ from ..config.settings import settings
 
 class Container(containers.DeclarativeContainer):
     config = providers.Configuration()
-    config.override(settings.dict())
+    # Override configuration with loaded settings dictionary
+    config.override(settings)
 
     # Example: Register components here
     # logger = providers.Singleton(YourLoggerClass)
