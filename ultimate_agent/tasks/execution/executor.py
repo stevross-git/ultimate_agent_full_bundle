@@ -5,7 +5,8 @@ from ...config.settings import settings
 
 class TaskExecutor:
     def __init__(self):
-        self.batch_size = settings.TASK_FETCH_BATCH
+        self.batch_size = settings.get("TASK_FETCH_BATCH", 5)
+
 
     def execute(self, task: dict):
         task_id = task.get("task_id", "unknown")
