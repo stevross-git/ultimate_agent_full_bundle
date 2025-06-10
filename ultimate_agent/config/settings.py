@@ -1,38 +1,44 @@
-from typing import Literal
+
+"""
+Ultimate Agent Configuration Settings
+"""
+
 import os
-os.environ.pop("ENV", None)  # ✅ This removes the bad ENV set by Colab
+from typing import Dict, Any
 
-try:
-    from pydantic_settings import BaseSettings
-    from pydantic import Field
+def get_config() -> Dict[str, Any]:
+    """Get configuration dictionary"""
+    return {
+        # Core settings
+        'debug': os.getenv('DEBUG', 'false').lower() == 'true',
+        'log_level': os.getenv('LOG_LEVEL', 'INFO'),
+        
+        # Module toggles
+        'ai_enabled': os.getenv('AI_ENABLED', 'true').lower() == 'true',
+        'tasks_enabled': os.getenv('TASKS_ENABLED', 'true').lower() == 'true',
+        'dashboard_enabled': os.getenv('DASHBOARD_ENABLED', 'true').lower() == 'true',
+        'blockchain_enabled': os.getenv('BLOCKCHAIN_ENABLED', 'false').lower() == 'true',
+        
+        # Network settings
+        'host': os.getenv('HOST', '0.0.0.0'),
+        'port': int(os.getenv('PORT', '5000')),
+        
+        # Database settings
+        'database_url': os.getenv('DATABASE_URL', 'sqlite:///ultimate_agent.db'),
+        
+        # AI settings
+        'ai_model_path': os.getenv('AI_MODEL_PATH', './models'),
+        'max_ai_workers': int(os.getenv('MAX_AI_WORKERS', '4')),
+        
+        # Task settings
+        'max_concurrent_tasks': int(os.getenv('MAX_CONCURRENT_TASKS', '10')),
+        'task_timeout': int(os.getenv('TASK_TIMEOUT', '300')),
+        
+        # Security settings
+        'api_key': os.getenv('API_KEY'),
+        'secret_key': os.getenv('SECRET_KEY', 'dev-secret-key'),
+    }
 
-except ModuleNotFoundError:  # pragma: no cover - fallback for minimal envs
-    class BaseSettings:
-        """Basic stub of pydantic.BaseSettings for test environments."""
-
-        def __init__(self, **data):
-            for key, value in data.items():
-                setattr(self, key, value)
-
-        def dict(self):
-            return self.__dict__
-
-    def Field(default=None, *, description: str | None = None, default_factory=None):
-        """Simple replacement for pydantic.Field."""
-        if default_factory is not None:
-            return default_factory()
-        return default
-
-class Settings(BaseSettings):
-    ENV: Literal['dev', 'staging', 'prod'] = 'dev'
-    NODE_URL: str = Field(..., description='URL of the Enhanced Node')
-    REDIS_URL: str = 'redis://localhost:6379'
-    DATABASE_URL: str = 'postgresql://user:pass@localhost:5432/ai_net'
-    WALLET_ENCRYPTION_KEY: str = Field(..., description='Fernet encryption key for wallet')
-    TASK_FETCH_BATCH: int = 4
-
-    class Config:
-        env_file = '.env'
-        case_sensitive = True
-
-settings = Settings()
+# Legacy compatibility
+LOG_DIR = "logs"
+DATABASE_PATH = "ultimate_agent.db"
