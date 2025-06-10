@@ -10,7 +10,8 @@ import hashlib
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, Any, Callable, Optional
+from typing import Dict, Any, Callable, Optional, Tuple
+
 
 
 class ConnectionState(Enum):
@@ -70,7 +71,7 @@ class NodeAuthenticator:
         return hmac.compare_digest(expected, signature)
 
 
-class NATTraversalManager:
+
     """Placeholder NAT traversal helper returning an unknown NAT type."""
 
     def __init__(self) -> None:
@@ -80,6 +81,7 @@ class NATTraversalManager:
         """Detect NAT type (stub)."""
         await asyncio.sleep(0)
         return self.nat_type
+
 
 
 class AdvancedNetworkManager:
@@ -92,7 +94,9 @@ class AdvancedNetworkManager:
 
         self.auth = NodeAuthenticator(self.secret)
         self.nat = NATTraversalManager()
+
         self.nat_type: str = "unknown"
+
 
         self.server: Optional[asyncio.AbstractServer] = None
         self.connections: Dict[str, Dict[str, Any]] = {}
@@ -107,11 +111,13 @@ class AdvancedNetworkManager:
         if self.listen_port == 0:
             self.listen_port = self.server.sockets[0].getsockname()[1]
         self.running = True
+
         # Detect NAT type asynchronously
         try:
             self.nat_type = await self.nat.detect()
         except Exception:
             self.nat_type = "unknown"
+
         asyncio.create_task(self.server.serve_forever())
         return self.listen_port
 
@@ -166,6 +172,7 @@ class AdvancedNetworkManager:
         except Exception:
             return False
 
+
     async def disconnect(self, node_id: str) -> None:
         """Disconnect from a peer and close the connection."""
         info = self.connections.pop(node_id, None)
@@ -175,6 +182,7 @@ class AdvancedNetworkManager:
 
     def register_handler(self, msg_type: str, handler: Callable[[NetworkMessage], Any]):
         """Register a handler for a given message type."""
+
         self.handlers[msg_type] = handler
 
     async def _handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -216,20 +224,29 @@ class AdvancedNetworkManager:
                 self.metrics["received"] += 1
                 handler = self.handlers.get(message.message_type)
                 if handler:
+
                     result = handler(message)
                     if asyncio.iscoroutine(result):
                         await result
+
         except Exception:
             pass
         finally:
             if node_id in self.connections:
-                await self.disconnect(node_id)
+
+
+                self.connections[node_id]["writer"].close()
+                await self.connections[node_id]["writer"].wait_closed()
+                del self.connections[node_id]
+
 
 
 __all__ = [
     "AdvancedNetworkManager",
     "ConnectionState",
     "NetworkMessage",
+
     "NATTraversalManager",
     "NodeAuthenticator",
+
 ]

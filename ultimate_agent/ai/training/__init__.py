@@ -77,9 +77,21 @@ class AITrainingEngine:
     def train_neural_network(self, config: Dict, progress_callback: Callable) -> Dict:
         """Enhanced neural network training with real computation"""
         try:
-            epochs = config.get('epochs', 10)
-            batch_size = config.get('batch_size', 32)
-            learning_rate = config.get('learning_rate', 0.001)
+            # Validate training parameters
+            epochs = int(config.get('epochs', 10))
+            if not 1 <= epochs <= 1000:
+                raise ValueError('Epochs must be between 1 and 1000')
+
+            batch_size = int(config.get('batch_size', 32))
+            if not 1 <= batch_size <= 1024:
+                raise ValueError('Batch size must be between 1 and 1024')
+
+            learning_rate = float(config.get('learning_rate', 0.001))
+            if not 1e-6 <= learning_rate <= 1.0:
+                raise ValueError('Learning rate must be between 1e-6 and 1.0')
+
+            if not callable(progress_callback):
+                raise ValueError('Progress callback must be callable')
             
             # Model architecture
             input_dim = config.get('input_dim', 784)
@@ -91,6 +103,10 @@ class AITrainingEngine:
             weights_ho = np.random.randn(hidden_dim, output_dim) * 0.1
             bias_h = np.zeros(hidden_dim)
             bias_o = np.zeros(output_dim)
+
+            import psutil
+            process = psutil.Process()
+            initial_memory = process.memory_info().rss / 1024 / 1024
             
             training_losses = []
             validation_losses = []
@@ -163,6 +179,10 @@ class AITrainingEngine:
                 # Adaptive learning rate
                 if epoch > 0 and validation_losses[-1] > validation_losses[-2]:
                     learning_rate *= 0.95
+
+                current_memory = process.memory_info().rss / 1024 / 1024
+                if current_memory > initial_memory * 2:
+                    print(f"⚠️ High memory usage: {current_memory:.1f}MB")
             
             return {
                 'success': True,

@@ -200,11 +200,15 @@ class ConnectionPool:
         if self.session is None or self.session.closed:
             async with self._lock:
                 if self.session is None or self.session.closed:
+                    if self.session and not self.session.closed:
+                        await self.session.close()
+
                     timeout = aiohttp.ClientTimeout(total=self.instance.timeout)
                     connector = aiohttp.TCPConnector(
                         limit=self.instance.max_connections,
                         ttl_dns_cache=300,
                         use_dns_cache=True,
+                        enable_cleanup_closed=True
                     )
                     self.session = aiohttp.ClientSession(
                         timeout=timeout,
@@ -370,6 +374,9 @@ class LoadBalancer:
             return None
         
         if self.strategy == LoadBalanceStrategy.ROUND_ROBIN:
+            selected = self._weighted_round_robin_select(healthy_instances)
+            if selected is not None:
+                return selected
             return self._round_robin_select(healthy_instances)
         elif self.strategy == LoadBalanceStrategy.LEAST_CONNECTIONS:
             return self._least_connections_select(healthy_instances)
@@ -387,6 +394,30 @@ class LoadBalancer:
         instance = instances[self.round_robin_index % len(instances)]
         self.round_robin_index += 1
         return instance
+
+    def _weighted_round_robin_select(self, instances: List[OllamaInstance]) -> Optional[OllamaInstance]:
+        """Weighted round robin based on instance health and capacity"""
+        if not instances:
+            return None
+
+        weights = []
+        for instance in instances:
+            capacity_factor = 1.0 - (instance.active_connections / instance.max_connections)
+            weight = instance.health_score * capacity_factor * instance.weight
+            weights.append(weight)
+
+        total_weight = sum(weights)
+        if total_weight == 0:
+            return instances[0]
+
+        import random
+        r = random.uniform(0, total_weight)
+        for i, weight in enumerate(weights):
+            r -= weight
+            if r <= 0:
+                return instances[i]
+
+        return instances[-1]
     
     def _least_connections_select(self, instances: List[OllamaInstance]) -> OllamaInstance:
         """Select instance with least active connections"""
