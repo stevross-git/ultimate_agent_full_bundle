@@ -1,12 +1,9 @@
-
 """
 Ultimate Agent Configuration Settings
 """
 
 import os
 from typing import Dict, Any
-from ultimate_agent.config import settings
-print(settings['port'])  # Accessing config like a dict
 
 def validate_config(config: Dict[str, Any]) -> bool:
     """Validate configuration values"""
@@ -61,6 +58,5 @@ def get_config() -> Dict[str, Any]:
 LOG_DIR = "logs"
 DATABASE_PATH = "ultimate_agent.db"
 
-
-
+# ✅ Now define settings without importing it prematurely
 settings = get_config()
