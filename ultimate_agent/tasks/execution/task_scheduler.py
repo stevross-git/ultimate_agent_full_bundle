@@ -369,3 +369,28 @@ class TaskScheduler:
                 thread.join(timeout=5)
         
         print("✅ Task scheduler stopped")
+
+
+
+def __init__(self, config):
+    self.config = config or {}
+
+    # You can extract required subsystems from config if needed
+    self.ai_manager = config.get('ai_manager')
+    self.blockchain_manager = config.get('blockchain_manager')
+
+    from ..simulation import TaskSimulator
+    from ..control import TaskControlClient
+
+    self.task_simulator = TaskSimulator(self.ai_manager, self.blockchain_manager)
+    self.task_control_client = TaskControlClient(self)
+
+    self.current_tasks = {}
+    self.completed_tasks = []
+    self.task_queue = []
+    self.max_concurrent_tasks = config.get('max_concurrent_tasks', 3)
+
+    self.executor_threads = {}
+    self.running = True
+
+    print(f"🎯 Task Scheduler initialized")
