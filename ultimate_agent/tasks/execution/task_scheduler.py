@@ -373,7 +373,9 @@ class TaskScheduler:
 
 
 def __init__(self, config):
+    self.config = config=None):
     self.config = config or {}
+    self.batch_size = self.config.get('TASK_FETCH_BATCH', 5)
 
     # You can extract required subsystems from config if needed
     self.ai_manager = config.get('ai_manager')
