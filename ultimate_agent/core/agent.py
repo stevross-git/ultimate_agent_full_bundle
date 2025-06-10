@@ -24,6 +24,10 @@ class UltimateAgent:
         self.logger = setup_logging("UltimateAgent")
         self.running = False
         self.modules = {}
+        # Remote command handler provides basic commands like 'ping'
+        from ..remote.handler import RemoteCommandHandler
+        self._command_handler = RemoteCommandHandler()
+        self._command_handler.set_shutdown_callback(self.stop)
         
     def start(self):
         """Start the Ultimate Agent"""
@@ -141,3 +145,16 @@ class UltimateAgent:
             'modules': list(self.modules.keys()),
             'config': self.config
         }
+
+    def handle_command(self, command: str, **params: Any) -> Dict[str, Any]:
+        """Execute a simple remote command.
+
+        This delegates to :class:`~ultimate_agent.remote.handler.RemoteCommandHandler`
+        which knows how to handle basic commands like ``ping`` or ``shutdown``.
+        Additional keyword arguments are passed to the command handler.
+        """
+
+        result = self._command_handler.execute(command, **params)
+        if command == "ping" and result.get("status") == "pong":
+            return {"message": "pong"}
+        return result
