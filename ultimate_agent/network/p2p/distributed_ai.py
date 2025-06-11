@@ -25,8 +25,10 @@ from collections import defaultdict, deque
 from enum import Enum
 import logging
 from concurrent.futures import ThreadPoolExecutor
-import pickle
 import zlib
+
+# In-memory registry for simulated networking between nodes
+SIMULATED_NETWORK: Dict[str, 'P2PNetworkManager'] = {}
 
 # Core P2P Infrastructure
 class NodeType(Enum):
@@ -118,12 +120,13 @@ class P2PMessage:
             'timestamp': self.timestamp,
             'path': self.path
         }
-        return zlib.compress(pickle.dumps(message_dict))
+        json_bytes = json.dumps(message_dict).encode("utf-8")
+        return zlib.compress(json_bytes)
     
     @classmethod
     def deserialize(cls, data: bytes) -> 'P2PMessage':
         """Deserialize message from network data"""
-        message_dict = pickle.loads(zlib.decompress(data))
+        message_dict = json.loads(zlib.decompress(data).decode("utf-8"))
         msg = cls(
             MessageType(message_dict['type']),
             message_dict['sender_id'],
@@ -673,6 +676,12 @@ class P2PNetworkManager:
             'consensus_reached': 0,
             'average_latency': 0.0
         }
+
+        # Incoming message queue for simulated network
+        self.incoming_queue: asyncio.Queue = asyncio.Queue()
+
+        # Register this node in the simulated network registry
+        SIMULATED_NETWORK[self.node_id] = self
         
         self._setup_message_handlers()
     
@@ -699,6 +708,7 @@ class P2PNetworkManager:
         asyncio.create_task(self._heartbeat_loop())
         asyncio.create_task(self._network_maintenance_loop())
         asyncio.create_task(self._message_cleanup_loop())
+        asyncio.create_task(self._message_dispatch_loop())
         
         # Announce this node to network
         await self._announce_node()
@@ -708,6 +718,7 @@ class P2PNetworkManager:
     async def stop_network(self):
         """Stop P2P network"""
         self.running = False
+        SIMULATED_NETWORK.pop(self.node_id, None)
         print(f"🛑 P2P Network stopped: {self.node_id}")
     
     async def join_network(self, bootstrap_nodes: List[str]):
@@ -857,6 +868,18 @@ class P2PNetworkManager:
             except Exception as e:
                 logging.error(f"Message cleanup error: {e}")
                 await asyncio.sleep(300)
+
+    async def _message_dispatch_loop(self):
+        """Process incoming messages from peers"""
+        while self.running:
+            try:
+                peer_id, message = await self.incoming_queue.get()
+                handler = self.message_handlers.get(message.type)
+                self.metrics['messages_received'] += 1
+                if handler:
+                    await handler(message)
+            except Exception as e:
+                logging.error(f"Message dispatch error: {e}")
     
     async def _handle_node_announce(self, message: P2PMessage):
         """Handle node announcement"""
@@ -971,10 +994,14 @@ class P2PNetworkManager:
         """Send message to specific peer"""
         # Simulate message sending
         self.metrics['messages_sent'] += 1
-        
+
         # In real implementation, this would send over network
-        # For simulation, we just add to their message queue
-        pass
+        # For simulation, deliver to peer's incoming queue if available
+        peer = SIMULATED_NETWORK.get(peer_id)
+        if peer:
+            await peer.incoming_queue.put((self.node_id, message))
+        else:
+            logging.warning(f"Peer {peer_id} not reachable")
     
     async def _broadcast_message(self, message: P2PMessage):
         """Broadcast message to all connected peers"""
