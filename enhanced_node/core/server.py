@@ -25,11 +25,13 @@ try:
     from core.database import EnhancedNodeDatabase
     from control.task_manager import TaskControlManager
     from control.remote_manager import AdvancedRemoteControlManager
+    from control.version_manager import VersionControlManager  # NEW: Version Control
     from models.agents import EnhancedAgentInfo, EnhancedAgentStatus
     from utils.logger import get_server_logger
     from utils.serialization import serialize_for_json
     from routes.api_v3 import register_api_v3_routes
     from routes.api_v5_remote import register_api_v5_routes
+    from routes.api_v6_version import register_api_v6_routes  # NEW: Version Control Routes
     from websocket.events import register_websocket_events
 except ImportError:
     # Fallback to relative imports
@@ -41,11 +43,13 @@ except ImportError:
         from .database import EnhancedNodeDatabase
         from ..control.task_manager import TaskControlManager
         from ..control.remote_manager import AdvancedRemoteControlManager
+        from ..control.version_manager import VersionControlManager  # NEW: Version Control
         from ..models.agents import EnhancedAgentInfo, EnhancedAgentStatus
         from ..utils.logger import get_server_logger
         from ..utils.serialization import serialize_for_json
         from ..routes.api_v3 import register_api_v3_routes
         from ..routes.api_v5_remote import register_api_v5_routes
+        from ..routes.api_v6_version import register_api_v6_routes  # NEW: Version Control Routes
         from ..websocket.events import register_websocket_events
     except ImportError as e:
         print(f"Import error: {e}")
@@ -53,7 +57,7 @@ except ImportError:
 
 
 class EnhancedNodeServer:
-    """Enhanced Node Server with Advanced Remote Control"""
+    """Enhanced Node Server with Advanced Remote Control and Version Management"""
     
     def __init__(self):
         self.app = Flask(__name__)
@@ -80,12 +84,13 @@ class EnhancedNodeServer:
         # Control managers
         self.task_control = TaskControlManager(self)
         self.advanced_remote_control = AdvancedRemoteControlManager(self)
+        self.version_control = VersionControlManager(self)  # NEW: Version Control Manager
         
         # Performance tracking
         self.performance_history = defaultdict(lambda: deque(maxlen=100))
         self.task_queue = deque()
         
-        # Prometheus metrics
+        # Prometheus metrics (updated with version control metrics)
         self.metrics = {
             'agents_total': Gauge('node_agents_total', 'Total agents connected'),
             'agents_online': Gauge('node_agents_online', 'Online agents'),
@@ -98,7 +103,16 @@ class EnhancedNodeServer:
             'configurations_deployed': Counter('node_configurations_deployed', 'Total configurations deployed'),
             'bulk_operations_total': Counter('node_bulk_operations_total', 'Total bulk operations'),
             'health_checks_total': Counter('node_health_checks_total', 'Total health checks'),
-            'scripts_deployed_total': Counter('node_scripts_deployed_total', 'Total scripts deployed')
+            'scripts_deployed_total': Counter('node_scripts_deployed_total', 'Total scripts deployed'),
+            
+            # NEW: Version Control Metrics
+            'version_updates_total': Counter('node_version_updates_total', 'Total version updates'),
+            'version_rollbacks_total': Counter('node_version_rollbacks_total', 'Total version rollbacks'),
+            'version_deployments_active': Gauge('node_version_deployments_active', 'Active version deployments'),
+            'version_bulk_operations_active': Gauge('node_version_bulk_operations_active', 'Active bulk version operations'),
+            'version_packages_available': Gauge('node_version_packages_available', 'Available update packages'),
+            'version_agents_outdated': Gauge('node_version_agents_outdated', 'Agents with outdated versions'),
+            'version_update_success_rate': Gauge('node_version_update_success_rate', 'Version update success rate'),
         }
         
         # Redis for real-time data
@@ -116,12 +130,14 @@ class EnhancedNodeServer:
         self.logger.info(f"Enhanced Node Server {NODE_ID} v{NODE_VERSION} initialized")
         self.logger.info("✅ Modular architecture enabled")
         self.logger.info("🎮 Advanced remote control features available")
+        self.logger.info("🔄 Version control system enabled")  # NEW
 
     def _register_routes(self):
         """Register all API routes and WebSocket events"""
         try:
             register_api_v3_routes(self)
             register_api_v5_routes(self)
+            register_api_v6_routes(self)  # NEW: Version Control Routes
             register_websocket_events(self)
             self.logger.info("✅ All routes and WebSocket events registered")
         except Exception as e:
@@ -135,6 +151,10 @@ class EnhancedNodeServer:
             "host": socket.gethostname(),
             "port": NODE_PORT,
             "version": NODE_VERSION,
+            "features": [
+                "task_control", "remote_management", "advanced_control", 
+                "version_control"  # NEW: Version control feature
+            ]
         }
         try:
             response = requests.post(f"{self.manager_url}/api/nodes/register",
@@ -151,8 +171,13 @@ class EnhancedNodeServer:
         """Send periodic heartbeat to the manager."""
         while self.running:
             try:
+                heartbeat_data = {
+                    "node_id": NODE_ID,
+                    "version_control_enabled": True,  # NEW
+                    "version_statistics": self.version_control.get_version_statistics()  # NEW
+                }
                 requests.post(f"{self.manager_url}/api/nodes/heartbeat",
-                              json={"node_id": NODE_ID}, timeout=10)
+                              json=heartbeat_data, timeout=10)
             except Exception as exc:
                 self.logger.warning(f"Manager heartbeat failed: {exc}")
             time.sleep(60)
@@ -177,7 +202,7 @@ class EnhancedNodeServer:
             self.logger.warning(f"Metrics server failed: {e}")
     
     def get_enhanced_node_stats(self) -> Dict[str, Any]:
-        """Calculate enhanced node statistics"""
+        """Calculate enhanced node statistics with version control"""
         total_agents = len(self.agents)
         online_agents = sum(1 for s in self.agent_status.values() 
                            if s.status == "online" and s.last_heartbeat and 
@@ -211,6 +236,9 @@ class EnhancedNodeServer:
         
         # Advanced remote control metrics
         advanced_stats = self.advanced_remote_control.get_advanced_statistics()
+        
+        # NEW: Version control metrics
+        version_stats = self.version_control.get_version_statistics()
         
         return {
             "node_id": NODE_ID,
@@ -260,7 +288,11 @@ class EnhancedNodeServer:
             
             # Advanced remote control metrics
             "advanced_control_enabled": True,
-            "advanced_control": advanced_stats
+            "advanced_control": advanced_stats,
+            
+            # NEW: Version control metrics
+            "version_control_enabled": True,
+            "version_control": version_stats
         }
     
     def get_ai_summary(self) -> Dict[str, Any]:
@@ -320,18 +352,28 @@ class EnhancedNodeServer:
         return min(100.0, max(0.0, health_score))
     
     def _update_prometheus_metrics(self):
-        """Update Prometheus metrics"""
+        """Update Prometheus metrics including version control"""
         stats = self.get_enhanced_node_stats()
         
+        # Existing metrics
         self.metrics['agents_total'].set(stats['total_agents'])
         self.metrics['agents_online'].set(stats['online_agents'])
         self.metrics['tasks_running'].set(stats['total_tasks_running'])
         self.metrics['ai_models_total'].set(stats['total_ai_models'])
         self.metrics['blockchain_balance_total'].set(stats['total_blockchain_balance'])
         self.metrics['avg_efficiency'].set(stats['avg_efficiency_score'])
+        
+        # NEW: Version control metrics
+        if 'version_control' in stats:
+            version_stats = stats['version_control']
+            self.metrics['version_deployments_active'].set(version_stats.get('active_deployments', 0))
+            self.metrics['version_bulk_operations_active'].set(version_stats.get('bulk_operations_active', 0))
+            self.metrics['version_packages_available'].set(version_stats.get('available_packages', 0))
+            self.metrics['version_agents_outdated'].set(version_stats.get('agents_outdated', 0))
+            self.metrics['version_update_success_rate'].set(version_stats.get('update_success_rate', 0))
     
     def register_agent(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Register a new agent"""
+        """Register a new agent with version control support"""
         agent_id = agent_data.get('agent_id') or agent_data.get('server_id')
         if not agent_id:
             raise ValueError("agent_id required")
@@ -382,6 +424,12 @@ class EnhancedNodeServer:
         self.db.session.merge(db_agent)
         self.db.session.commit()
         
+        # NEW: Register agent version information
+        version_info = agent_data.get('version_info', {})
+        if version_info:
+            version_info['version'] = agent_data.get('version', 'unknown')
+            self.version_control.register_agent_version(agent_id, version_info)
+        
         # Update metrics
         self.metrics['agents_total'].set(len(self.agents))
         
@@ -397,6 +445,7 @@ class EnhancedNodeServer:
             'agent_id': agent_id,
             'agent_type': agent.agent_type,
             'features': agent.features,
+            'version_control_enabled': True,  # NEW
             'timestamp': current_time.isoformat()
         }, room='dashboard')
         
@@ -406,14 +455,15 @@ class EnhancedNodeServer:
             "node_id": NODE_ID,
             "node_version": NODE_VERSION,
             "message": "Agent registered successfully",
-            "features_supported": ["ai", "blockchain", "cloud", "security", "plugins"],
+            "features_supported": ["ai", "blockchain", "cloud", "security", "plugins", "version_control"],  # NEW: version_control
             "task_control_available": True,
             "remote_management_available": True,
-            "advanced_control_available": True
+            "advanced_control_available": True,
+            "version_control_available": True  # NEW
         }
     
     def process_agent_heartbeat(self, heartbeat_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process agent heartbeat"""
+        """Process agent heartbeat with version control support"""
         agent_id = heartbeat_data.get('server_id') or heartbeat_data.get('agent_id')
         
         if not agent_id or agent_id not in self.agents:
@@ -479,6 +529,11 @@ class EnhancedNodeServer:
         
         self.db.session.commit()
         
+        # NEW: Update version information if provided
+        version_info = heartbeat_data.get('version_info')
+        if version_info:
+            self.version_control.register_agent_version(agent_id, version_info)
+        
         # Update performance history
         self.performance_history[agent_id].append({
             'timestamp': current_time.isoformat(),
@@ -506,14 +561,15 @@ class EnhancedNodeServer:
             "success": True,
             "node_id": NODE_ID,
             "next_heartbeat": 30,
-            "supported_features": ["ai", "blockchain", "cloud", "security"],
+            "supported_features": ["ai", "blockchain", "cloud", "security", "version_control"],  # NEW
             "task_control_available": True,
             "remote_management_available": True,
-            "advanced_control_available": True
+            "advanced_control_available": True,
+            "version_control_available": True  # NEW
         }
     
     def start(self):
-        """Start the node server"""
+        """Start the node server with version control"""
         self.running = True
 
         if not self.registered_with_manager:
@@ -524,14 +580,21 @@ class EnhancedNodeServer:
         # Start background services
         self.task_control.start_task_control_services()
         self.advanced_remote_control.start_advanced_services()
+        self.version_control.start_services()  # NEW: Start version control services
 
         self.logger.info("Enhanced Node Server started with advanced capabilities")
+        self.logger.info("🔄 Version control system active")  # NEW
     
     def stop(self):
         """Stop the node server"""
         self.running = False
         self.advanced_remote_control.scheduler_running = False
         self.advanced_remote_control.health_monitor_running = False
+        
+        # NEW: Stop version control services
+        self.version_control.update_service_running = False
+        self.version_control.health_monitor_running = False
+        self.version_control.package_scanner_running = False
         
         if self.db:
             self.db.close()
