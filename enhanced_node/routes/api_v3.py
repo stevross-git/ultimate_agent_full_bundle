@@ -385,30 +385,27 @@ def register_api_v3_routes(server):
             return jsonify({"error": str(e)}), 500
     
     @server.app.route('/api/health', methods=['GET'])
-    def health_check():
-        """Health check endpoint"""
-        try:
-            stats = server.get_enhanced_node_stats()
-            return jsonify({
-                "status": "healthy",
-                "health_score": stats.get("health_score", 100),
-                "timestamp": datetime.now().isoformat(),
-                "node_id": NODE_ID,
-                "version": NODE_VERSION,
-                "agents_online": stats.get("online_agents", 0),
-                "services": {
-                    "task_control": True,
-                    "remote_management": True,
-                    "websocket": True,
-                    "database": True
-                }
-            })
-        except Exception as e:
-            return jsonify({
-                "status": "unhealthy", 
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }), 500
+    def comprehensive_health_check():
+        """Comprehensive health check endpoint"""
+    try:
+        from core.health import HealthChecker
+        health_checker = HealthChecker(server)
+        health_status = health_checker.get_health_status()
+        
+        status_code = 200
+        if health_status["overall_status"] == "critical":
+            status_code = 503
+        elif health_status["overall_status"] == "warning":
+            status_code = 200  # Still serving but with warnings
+        
+        return jsonify(health_status), status_code
+        
+    except Exception as e:
+        return jsonify({
+            "overall_status": "critical",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 503
 
 
 def get_enhanced_dashboard_html_with_new_features():

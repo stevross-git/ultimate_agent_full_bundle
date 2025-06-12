@@ -2,8 +2,18 @@
 Ultimate Agent Configuration Settings
 """
 
-import os
+
 from typing import Dict, Any
+import os
+import uuid
+from pathlib import Path
+from typing import List
+from pydantic import BaseSettings, Field
+
+class Settings(BaseSettings):
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
 
 def validate_config(config: Dict[str, Any]) -> bool:
     """Validate configuration values"""
