@@ -47,6 +47,11 @@ class DashboardManager:
         def dashboard():
             """Main dashboard page"""
             return self._get_dashboard_html()
+
+        @self.app.route('/control-room')
+        def control_room():
+            """Sleek control room GUI"""
+            return self._get_control_room_html()
         
         @self.app.route('/api/stats')
         def get_stats():
@@ -763,6 +768,52 @@ class DashboardManager:
                 
                 console.log('🏗️ Enhanced Modular Agent Dashboard Ready');
                 console.log('✨ Features: Modular Architecture, Real-time Updates, Advanced Monitoring');
+            </script>
+        </body>
+        </html>
+        """
+
+    def _get_control_room_html(self):
+        """Return a simple futuristic control room interface"""
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Ultimate Agent Control Room</title>
+            <style>
+                body { font-family: Arial, sans-serif; background: radial-gradient(circle at center, #1e1e2f, #0d0d15); color: #e0e0ff; height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; }
+                .panel { background: rgba(20,20,40,0.8); border: 1px solid #555; border-radius: 10px; padding: 40px; box-shadow: 0 0 15px #00f0ff; width: 80%; max-width: 900px; }
+                .screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr)); gap: 20px; margin-top: 20px; }
+                .screen { background: rgba(10,10,25,0.9); border: 1px solid #3a3a55; border-radius: 8px; padding: 20px; box-shadow: 0 0 8px #00e0ff; }
+                .screen h2 { margin-top: 0; font-size: 1.1em; }
+                .glow { animation: pulse 2s infinite; }
+                @keyframes pulse { 0% { box-shadow: 0 0 5px #00e0ff; } 50% { box-shadow: 0 0 15px #00e0ff; } 100% { box-shadow: 0 0 5px #00e0ff; } }
+            </style>
+        </head>
+        <body>
+            <div class="panel">
+                <h1>Ultimate Agent Control Room</h1>
+                <div class="screens">
+                    <div class="screen glow">
+                        <h2>Network</h2>
+                        <p id="network">Connecting...</p>
+                    </div>
+                    <div class="screen glow">
+                        <h2>Blockchain Rewards</h2>
+                        <p id="rewards">0 PAIN</p>
+                    </div>
+                    <div class="screen glow">
+                        <h2>Real-Time Monitoring</h2>
+                        <p id="monitoring">CPU 0%</p>
+                    </div>
+                </div>
+            </div>
+            <script>
+                let val = 0;
+                setInterval(function() {
+                    val = (val + 5) % 100;
+                    document.getElementById('monitoring').textContent = 'CPU ' + val + '%';
+                }, 500);
             </script>
         </body>
         </html>
