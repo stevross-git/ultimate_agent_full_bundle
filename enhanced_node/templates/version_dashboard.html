@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Node Server - Version Control Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 2000px; margin: 0 auto; }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .version-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 5px;
+            display: inline-block;
+        }
+        
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+        
+        .section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4ecdc4;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        
+        /* Control Buttons */
+        .control-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 5px;
+        }
+        
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .version-button { background: linear-gradient(45deg, #9c27b0, #673ab7); }
+        .update-button { background: linear-gradient(45deg, #4caf50, #8bc34a); }
+        .rollback-button { background: linear-gradient(45deg, #ff9800, #ff5722); }
+        .emergency-button { background: linear-gradient(45deg, #f44336, #e91e63); }
+        
+        /* Agent Grid */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .agent-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .agent-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .status-online { background: #4caf50; }
+        .status-offline { background: #f44336; }
+        .status-updating { background: #ff9800; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Package Grid */
+        .package-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .package-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .package-version {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4ecdc4;
+            margin-bottom: 5px;
+        }
+        
+        .package-type {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-right: 5px;
+        }
+        
+        .priority-critical { background: #f44336; }
+        .priority-security { background: #ff9800; }
+        .priority-feature { background: #4caf50; }
+        .priority-experimental { background: #9c27b0; }
+        
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4caf50, #8bc34a);
+            transition: width 0.5s ease;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #4ecdc4;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+        
+        select.form-control {
+            cursor: pointer;
+        }
+        
+        .loading {
+            text-align: center;
+            opacity: 0.7;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4ecdc4;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .agent-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .package-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-code-branch"></i> Version Control Dashboard</h1>
+            <div class="version-badge">
+                <i class="fas fa-server"></i> Enhanced Node Server
+            </div>
+            <div class="version-badge">
+                <i class="fas fa-rocket"></i> Version Control System
+            </div>
+            <div class="version-badge">
+                <i class="fas fa-shield-alt"></i> Enterprise Grade
+            </div>
+            <p style="margin-top: 15px; opacity: 0.9;">
+                Advanced Version Management & Update Orchestration
+            </p>
+        </div>
+        
+        <!-- Statistics Overview -->
+        <div class="section">
+            <h2><i class="fas fa-chart-line"></i> System Overview</h2>
+            <div id="statsGrid" class="stats-grid">
+                <div class="loading">
+                    <span class="spinner"></span>Loading system statistics...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Control Grid -->
+        <div class="main-grid">
+            <!-- Agent Versions -->
+            <div class="section">
+                <h2>
+                    <i class="fas fa-robot"></i> Agent Versions
+                    <button class="control-button version-button" onclick="refreshAgentVersions()" style="margin-left: auto; padding: 5px 10px; font-size: 0.8rem;">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </h2>
+                <div id="agentVersions" class="agent-grid">
+                    <div class="loading">Loading agent versions...</div>
+                </div>
+            </div>
+            
+            <!-- Update Packages -->
+            <div class="section">
+                <h2>
+                    <i class="fas fa-box"></i> Available Updates
+                    <button class="control-button version-button" onclick="refreshPackages()" style="margin-left: auto; padding: 5px 10px; font-size: 0.8rem;">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </h2>
+                <div id="updatePackages" class="package-grid">
+                    <div class="loading">Loading update packages...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Update Operations -->
+        <div class="section">
+            <h2><i class="fas fa-download"></i> Update Operations</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+                <button class="control-button update-button" onclick="scheduleUpdate()">
+                    <i class="fas fa-calendar-plus"></i> Schedule Update
+                </button>
+                <button class="control-button update-button" onclick="bulkUpdate()">
+                    <i class="fas fa-layer-group"></i> Bulk Update
+                </button>
+                <button class="control-button rollback-button" onclick="initiateRollback()">
+                    <i class="fas fa-undo"></i> Rollback Version
+                </button>
+                <button class="control-button emergency-button" onclick="emergencyStop()">
+                    <i class="fas fa-stop"></i> Emergency Stop
+                </button>
+            </div>
+            
+            <!-- Active Operations -->
+            <div id="activeOperations">
+                <h3 style="margin: 20px 0 10px 0;">Active Operations</h3>
+                <div id="operationsList">
+                    <div class="loading">Loading active operations...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Version Health -->
+        <div class="section">
+            <h2><i class="fas fa-heartbeat"></i> System Health</h2>
+            <div id="systemHealth" class="stats-grid">
+                <div class="loading">Loading health status...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Schedule Update Modal -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-calendar-plus"></i> Schedule Update</h3>
+            <div class="form-group">
+                <label for="updateAgent">Agent:</label>
+                <select id="updateAgent" class="form-control">
+                    <option value="">Select Agent...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="updatePackage">Update Package:</label>
+                <select id="updatePackage" class="form-control">
+                    <option value="">Select Package...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="updateStrategy">Strategy:</label>
+                <select id="updateStrategy" class="form-control">
+                    <option value="rolling">Rolling Update</option>
+                    <option value="immediate">Immediate</option>
+                    <option value="canary">Canary</option>
+                    <option value="scheduled">Scheduled</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="control-button update-button" onclick="confirmScheduleUpdate()">
+                    <i class="fas fa-check"></i> Schedule
+                </button>
+                <button class="control-button" onclick="closeModal('scheduleModal')">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bulk Update Modal -->
+    <div id="bulkModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-layer-group"></i> Bulk Update</h3>
+            <div class="form-group">
+                <label for="bulkPackage">Update Package:</label>
+                <select id="bulkPackage" class="form-control">
+                    <option value="">Select Package...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="allOnline" style="margin-right: 8px;">
+                    Update all online agents
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="bulkStrategy">Strategy:</label>
+                <select id="bulkStrategy" class="form-control">
+                    <option value="rolling">Rolling Update</option>
+                    <option value="parallel">Parallel</option>
+                    <option value="sequential">Sequential</option>
+                    <option value="canary">Canary</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="batchSize">Batch Size:</label>
+                <input type="number" id="batchSize" class="form-control" value="5" min="1" max="20">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="control-button update-button" onclick="confirmBulkUpdate()">
+                    <i class="fas fa-check"></i> Start Bulk Update
+                </button>
+                <button class="control-button" onclick="closeModal('bulkModal')">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rollback Modal -->
+    <div id="rollbackModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-undo"></i> Initiate Rollback</h3>
+            <div class="form-group">
+                <label for="rollbackAgent">Agent:</label>
+                <select id="rollbackAgent" class="form-control">
+                    <option value="">Select Agent...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="targetVersion">Target Version:</label>
+                <input type="text" id="targetVersion" class="form-control" placeholder="e.g., 1.0.0">
+            </div>
+            <div class="form-group">
+                <label for="rollbackReason">Reason:</label>
+                <input type="text" id="rollbackReason" class="form-control" placeholder="Reason for rollback">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="control-button rollback-button" onclick="confirmRollback()">
+                    <i class="fas fa-check"></i> Initiate Rollback
+                </button>
+                <button class="control-button" onclick="closeModal('rollbackModal')">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let socket;
+        let versionData = {
+            agents: {},
+            packages: {},
+            statistics: {},
+            health: {}
+        };
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            initSocket();
+            refreshData();
+            setInterval(refreshData, 15000); // Update every 15 seconds
+        });
+        
+        function initSocket() {
+            try {
+                socket = io();
+                socket.on('connect', () => {
+                    console.log('Connected to Enhanced Node Server Version Control');
+                    showNotification('Connected to Version Control System', 'success');
+                });
+                
+                socket.on('version_control_event', (data) => {
+                    handleVersionControlEvent(data);
+                });
+                
+                socket.on('update_scheduled', (data) => {
+                    showNotification(`Update scheduled for agent ${data.agent_id}`, 'info');
+                    refreshData();
+                });
+                
+                socket.on('update_completed', (data) => {
+                    const status = data.success ? 'success' : 'error';
+                    const message = data.success ? 
+                        `Update completed for agent ${data.agent_id}` : 
+                        `Update failed for agent ${data.agent_id}`;
+                    showNotification(message, status);
+                    refreshData();
+                });
+                
+                socket.on('bulk_update_completed', (data) => {
+                    showNotification(`Bulk operation completed: ${data.successful} successful, ${data.failed} failed`, 'info');
+                    refreshData();
+                });
+                
+            } catch (e) {
+                console.log('WebSocket not available');
+            }
+        }
+        
+        async function refreshData() {
+            try {
+                await Promise.all([
+                    refreshStatistics(),
+                    refreshAgentVersions(),
+                    refreshPackages(),
+                    refreshHealth(),
+                    refreshActiveOperations()
+                ]);
+            } catch (error) {
+                console.error('Failed to refresh data:', error);
+            }
+        }
+        
+        async function refreshStatistics() {
+            try {
+                const response = await fetch('/api/v6/version/statistics');
+                const data = await response.json();
+                versionData.statistics = data;
+                updateStatisticsDisplay(data);
+            } catch (error) {
+                console.error('Failed to get statistics:', error);
+            }
+        }
+        
+        async function refreshAgentVersions() {
+            try {
+                const response = await fetch('/api/v6/version/agents');
+                const data = await response.json();
+                versionData.agents = data.agents;
+                updateAgentVersionsDisplay(data.agents);
+            } catch (error) {
+                console.error('Failed to get agent versions:', error);
+            }
+        }
+        
+        async function refreshPackages() {
+            try {
+                const response = await fetch('/api/v6/version/packages');
+                const data = await response.json();
+                versionData.packages = data.packages;
+                updatePackagesDisplay(data.packages);
+            } catch (error) {
+                console.error('Failed to get packages:', error);
+            }
+        }
+        
+        async function refreshHealth() {
+            try {
+                const response = await fetch('/api/v6/version/health');
+                const data = await response.json();
+                versionData.health = data;
+                updateHealthDisplay(data);
+            } catch (error) {
+                console.error('Failed to get health data:', error);
+            }
+        }
+        
+        async function refreshActiveOperations() {
+            try {
+                const [deploymentsResponse, bulkResponse] = await Promise.all([
+                    fetch('/api/v6/version/deployments'),
+                    fetch('/api/v6/version/bulk-operations')
+                ]);
+                
+                const deployments = await deploymentsResponse.json();
+                const bulkOps = await bulkResponse.json();
+                
+                updateActiveOperationsDisplay(deployments.deployments, bulkOps.operations);
+            } catch (error) {
+                console.error('Failed to get active operations:', error);
+            }
+        }
+        
+        function updateStatisticsDisplay(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${stats.total_agents || 0}</div>
+                    <div class="stat-label"><i class="fas fa-robot"></i> Total Agents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.active_deployments || 0}</div>
+                    <div class="stat-label"><i class="fas fa-download"></i> Active Updates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.available_packages || 0}</div>
+                    <div class="stat-label"><i class="fas fa-box"></i> Available Packages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(stats.update_success_rate || 0).toFixed(1)}%</div>
+                    <div class="stat-label"><i class="fas fa-check-circle"></i> Success Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.agents_up_to_date || 0}</div>
+                    <div class="stat-label"><i class="fas fa-arrow-up"></i> Up-to-Date</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.agents_outdated || 0}</div>
+                    <div class="stat-label"><i class="fas fa-exclamation-triangle"></i> Outdated</div>
+                </div>
+            `;
+        }
+        
+        function updateAgentVersionsDisplay(agents) {
+            const agentGrid = document.getElementById('agentVersions');
+            
+            if (!agents || Object.keys(agents).length === 0) {
+                agentGrid.innerHTML = '<div class="loading">No agents with version information</div>';
+                return;
+            }
+            
+            agentGrid.innerHTML = Object.entries(agents).map(([agentId, versionInfo]) => {
+                const isOutdated = checkIfOutdated(versionInfo);
+                const statusClass = isOutdated ? 'status-offline' : 'status-online';
+                
+                return `
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">
+                                <i class="fas fa-robot"></i> ${agentId.substring(0, 20)}
+                            </div>
+                            <div>
+                                <span class="status-indicator ${statusClass}"></span>
+                                <span style="font-size: 0.8rem;">
+                                    ${isOutdated ? 'Outdated' : 'Current'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 10px 0;">
+                            <div><strong>Version:</strong> ${versionInfo.version || 'unknown'}</div>
+                            <div><strong>Build:</strong> ${versionInfo.build_number || 0}</div>
+                            <div><strong>Platform:</strong> ${versionInfo.platform || 'unknown'}</div>
+                            <div><strong>Channel:</strong> ${versionInfo.update_channel || 'stable'}</div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 5px; margin-top: 10px;">
+                            <button class="control-button update-button" style="padding: 5px 10px; font-size: 0.8rem;" 
+                                    onclick="quickUpdate('${agentId}')">
+                                <i class="fas fa-download"></i> Update
+                            </button>
+                            <button class="control-button version-button" style="padding: 5px 10px; font-size: 0.8rem;" 
+                                    onclick="viewAgentHistory('${agentId}')">
+                                <i class="fas fa-history"></i> History
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updatePackagesDisplay(packages) {
+            const packageGrid = document.getElementById('updatePackages');
+            
+            if (!packages || Object.keys(packages).length === 0) {
+                packageGrid.innerHTML = '<div class="loading">No update packages available</div>';
+                return;
+            }
+            
+            packageGrid.innerHTML = Object.entries(packages).map(([packageId, packageInfo]) => {
+                const priorityClass = `priority-${packageInfo.priority || 'feature'}`;
+                const sizeKB = Math.round((packageInfo.size_bytes || 0) / 1024);
+                
+                return `
+                    <div class="package-card">
+                        <div class="package-version">${packageInfo.version || 'unknown'}</div>
+                        <div style="margin: 10px 0;">
+                            <span class="package-type ${priorityClass}">
+                                ${packageInfo.package_type || 'update'}
+                            </span>
+                            <span class="package-type">
+                                ${packageInfo.priority || 'feature'}
+                            </span>
+                        </div>
+                        
+                        <div style="font-size: 0.85rem; margin: 10px 0;">
+                            <div><strong>Size:</strong> ${sizeKB}KB</div>
+                            <div><strong>Type:</strong> ${packageInfo.package_type || 'update'}</div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 5px; margin-top: 10px;">
+                            <button class="control-button update-button" style="padding: 5px 10px; font-size: 0.8rem;" 
+                                    onclick="deployPackage('${packageId}')">
+                                <i class="fas fa-rocket"></i> Deploy
+                            </button>
+                            <button class="control-button version-button" style="padding: 5px 10px; font-size: 0.8rem;" 
+                                    onclick="viewPackageDetails('${packageId}')">
+                                <i class="fas fa-info"></i> Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateHealthDisplay(health) {
+            const healthGrid = document.getElementById('systemHealth');
+            const services = health.services || {};
+            const activeOps = health.active_operations || {};
+            
+            healthGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${health.status === 'healthy' ? '✅' : '❌'}</div>
+                    <div class="stat-label">System Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${services.update_service ? '✅' : '❌'}</div>
+                    <div class="stat-label">Update Service</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${services.health_monitor ? '✅' : '❌'}</div>
+                    <div class="stat-label">Health Monitor</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${services.package_scanner ? '✅' : '❌'}</div>
+                    <div class="stat-label">Package Scanner</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${activeOps.deployments || 0}</div>
+                    <div class="stat-label">Active Updates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${activeOps.bulk_operations || 0}</div>
+                    <div class="stat-label">Bulk Operations</div>
+                </div>
+            `;
+        }
+        
+        function updateActiveOperationsDisplay(deployments, bulkOps) {
+            const operationsList = document.getElementById('operationsList');
+            
+            const activeDeployments = Object.values(deployments || {}).filter(d => 
+                ['pending', 'downloading', 'installing'].includes(d.status)
+            );
+            
+            const activeBulkOps = Object.values(bulkOps || {}).filter(op => 
+                ['created', 'running', 'paused'].includes(op.status)
+            );
+            
+            if (activeDeployments.length === 0 && activeBulkOps.length === 0) {
+                operationsList.innerHTML = '<div style="text-align: center; padding: 20px; opacity: 0.7;">No active operations</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            // Show active deployments
+            activeDeployments.forEach(deployment => {
+                html += `
+                    <div class="agent-card" style="margin: 10px 0;">
+                        <div class="agent-header">
+                            <div>
+                                <i class="fas fa-download"></i> 
+                                Individual Update: ${deployment.agent_id}
+                            </div>
+                            <div class="status-indicator status-updating"></div>
+                        </div>
+                        <div>Status: ${deployment.status}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${deployment.progress || 0}%"></div>
+                        </div>
+                        <div style="font-size: 0.8rem; opacity: 0.8;">
+                            Progress: ${(deployment.progress || 0).toFixed(1)}%
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Show active bulk operations
+            activeBulkOps.forEach(bulkOp => {
+                html += `
+                    <div class="agent-card" style="margin: 10px 0;">
+                        <div class="agent-header">
+                            <div>
+                                <i class="fas fa-layer-group"></i> 
+                                Bulk Operation: ${bulkOp.total_agents} agents
+                            </div>
+                            <div class="status-indicator status-updating"></div>
+                        </div>
+                        <div>Status: ${bulkOp.status}</div>
+                        <div>Success: ${bulkOp.successful_updates}, Failed: ${bulkOp.failed_updates}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${bulkOp.progress || 0}%"></div>
+                        </div>
+                        <div style="font-size: 0.8rem; opacity: 0.8;">
+                            Progress: ${(bulkOp.progress || 0).toFixed(1)}%
+                        </div>
+                    </div>
+                `;
+            });
+            
+            operationsList.innerHTML = html;
+        }
+        
+        // Modal functions
+        function scheduleUpdate() {
+            populateAgentSelect('updateAgent');
+            populatePackageSelect('updatePackage');
+            showModal('scheduleModal');
+        }
+        
+        function bulkUpdate() {
+            populatePackageSelect('bulkPackage');
+            showModal('bulkModal');
+        }
+        
+        function initiateRollback() {
+            populateAgentSelect('rollbackAgent');
+            showModal('rollbackModal');
+        }
+        
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function populateAgentSelect(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Select Agent...</option>';
+            
+            Object.keys(versionData.agents || {}).forEach(agentId => {
+                const option = document.createElement('option');
+                option.value = agentId;
+                option.textContent = agentId;
+                select.appendChild(option);
+            });
+        }
+        
+        function populatePackageSelect(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Select Package...</option>';
+            
+            Object.entries(versionData.packages || {}).forEach(([packageId, packageInfo]) => {
+                const option = document.createElement('option');
+                option.value = packageId;
+                option.textContent = `${packageInfo.version} (${packageInfo.package_type})`;
+                select.appendChild(option);
+            });
+        }
+        
+        // Action functions
+        async function confirmScheduleUpdate() {
+            const agentId = document.getElementById('updateAgent').value;
+            const packageId = document.getElementById('updatePackage').value;
+            const strategy = document.getElementById('updateStrategy').value;
+            
+            if (!agentId || !packageId) {
+                showNotification('Please select both agent and package', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v6/version/updates/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ agent_id: agentId, package_id: packageId, strategy })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Update scheduled successfully', 'success');
+                    closeModal('scheduleModal');
+                    refreshData();
+                } else {
+                    showNotification(`Failed to schedule update: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`Error scheduling update: ${error.message}`, 'error');
+            }
+        }
+        
+        async function confirmBulkUpdate() {
+            const packageId = document.getElementById('bulkPackage').value;
+            const allOnline = document.getElementById('allOnline').checked;
+            const strategy = document.getElementById('bulkStrategy').value;
+            const batchSize = parseInt(document.getElementById('batchSize').value);
+            
+            if (!packageId) {
+                showNotification('Please select a package', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v6/version/updates/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        package_id: packageId, 
+                        all_online: allOnline, 
+                        strategy,
+                        batch_size: batchSize
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`Bulk update started for ${result.total_agents} agents`, 'success');
+                    closeModal('bulkModal');
+                    refreshData();
+                } else {
+                    showNotification(`Failed to start bulk update: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`Error starting bulk update: ${error.message}`, 'error');
+            }
+        }
+        
+        async function confirmRollback() {
+            const agentId = document.getElementById('rollbackAgent').value;
+            const toVersion = document.getElementById('targetVersion').value;
+            const reason = document.getElementById('rollbackReason').value;
+            
+            if (!agentId || !toVersion) {
+                showNotification('Please provide agent and target version', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v6/version/rollback/initiate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        agent_id: agentId, 
+                        to_version: toVersion, 
+                        reason: reason || 'Dashboard rollback'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Rollback initiated successfully', 'success');
+                    closeModal('rollbackModal');
+                    refreshData();
+                } else {
+                    showNotification(`Failed to initiate rollback: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`Error initiating rollback: ${error.message}`, 'error');
+            }
+        }
+        
+        async function emergencyStop() {
+            if (!confirm('Are you sure you want to stop all running updates?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v6/version/emergency/stop-updates', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Emergency stop executed successfully', 'success');
+                    refreshData();
+                } else {
+                    showNotification(`Emergency stop failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`Error during emergency stop: ${error.message}`, 'error');
+            }
+        }
+        
+        // Utility functions
+        function checkIfOutdated(versionInfo) {
+            // Simple logic - you can enhance this based on your versioning scheme
+            return false; // Placeholder
+        }
+        
+        function quickUpdate(agentId) {
+            document.getElementById('updateAgent').value = agentId;
+            populatePackageSelect('updatePackage');
+            showModal('scheduleModal');
+        }
+        
+        function deployPackage(packageId) {
+            document.getElementById('bulkPackage').value = packageId;
+            showModal('bulkModal');
+        }
+        
+        function viewAgentHistory(agentId) {
+            // Open agent details in new window or modal
+            window.open(`/api/v6/version/agents/${agentId}`, '_blank');
+        }
+        
+        function viewPackageDetails(packageId) {
+            // Open package details in new window or modal
+            window.open(`/api/v6/version/packages/${packageId}`, '_blank');
+        }
+        
+        function handleVersionControlEvent(data) {
+            console.log('Version control event:', data);
+            refreshData(); // Refresh all data when events occur
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 600;
+                z-index: 1000;
+                max-width: 400px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                background: ${type === 'success' ? 'linear-gradient(45deg, #4caf50, #8bc34a)' : 
+                           type === 'error' ? 'linear-gradient(45deg, #f44336, #e91e63)' : 
+                           type === 'warning' ? 'linear-gradient(45deg, #ff9800, #ffc107)' : 
+                           'linear-gradient(45deg, #2196f3, #03a9f4)'};
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                 type === 'error' ? 'exclamation-circle' : 
+                                 type === 'warning' ? 'exclamation-triangle' : 
+                                 'info-circle'}"></i>
+                ${message}
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+            
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        console.log('Version Control Dashboard Ready');
+        console.log('Features: Update Scheduling, Bulk Operations, Rollbacks, Health Monitoring');
+    </script>
+</body>
+</html>
