@@ -16,28 +16,24 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
 from flask import request, abort
-import sys
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Use try/except for imports to handle both relative and absolute imports
 try:
-    from enhanced_node.config.settings import (
+    from config.settings import (
         NODE_ID, NODE_VERSION, NODE_PORT, DATABASE_PATH,
         MANAGER_HOST, MANAGER_PORT, DEFAULT_RATE_LIMITS, METRICS_PORT
     )
-    from enhanced_node.core.database import EnhancedNodeDatabase
-    from enhanced_node.control.task_manager import TaskControlManager
-    from enhanced_node.control.remote_manager import AdvancedRemoteControlManager
-    from enhanced_node.control.version_manager import VersionControlManager
-    from enhanced_node.models.agents import EnhancedAgentInfo, EnhancedAgentStatus
-    from enhanced_node.utils.logger import get_server_logger
-    from enhanced_node.utils.serialization import serialize_for_json
-    from enhanced_node.routes.api_v3 import register_api_v3_routes
-    from enhanced_node.routes.api_v5_remote import register_api_v5_routes
-    from enhanced_node.routes.api_v6_version import register_api_v6_routes
-    from enhanced_node.websocket.events import register_websocket_events
-
+    from core.database import EnhancedNodeDatabase
+    from control.task_manager import TaskControlManager
+    from control.remote_manager import AdvancedRemoteControlManager
+    from control.version_manager import VersionControlManager  # NEW: Version Control
+    from models.agents import EnhancedAgentInfo, EnhancedAgentStatus
+    from utils.logger import get_server_logger
+    from utils.serialization import serialize_for_json
+    from routes.api_v3 import register_api_v3_routes
+    from routes.api_v5_remote import register_api_v5_routes
+    from routes.api_v6_version import register_api_v6_routes  # NEW: Version Control Routes
+    from websocket.events import register_websocket_events
 except ImportError:
     # Fallback to relative imports
     try:
@@ -45,7 +41,7 @@ except ImportError:
             NODE_ID, NODE_VERSION, NODE_PORT, DATABASE_PATH,
             MANAGER_HOST, MANAGER_PORT, DEFAULT_RATE_LIMITS, METRICS_PORT
         )
-        from ..core.database import EnhancedNodeDatabase
+        from .database import EnhancedNodeDatabase
         from ..control.task_manager import TaskControlManager
         from ..control.remote_manager import AdvancedRemoteControlManager
         from ..control.version_manager import VersionControlManager  # NEW: Version Control
@@ -654,3 +650,23 @@ def configure_ssl_context(self):
             self.logger.error(f"SSL configuration error: {e}")
             return None
     return None
+    """Setup security middleware for SSL/TLS"""
+    
+    @self.app.before_request
+    def security_checks():
+        # Block known attacking IPs
+        if request.remote_addr in self.settings.BLOCKED_IPS:
+            self.logger.warning(f"Blocked request from {request.remote_addr}")
+            abort(403)
+        
+        # Enforce HTTPS in production
+        if self.settings.USE_SSL and not request.is_secure and request.headers.get('X-Forwarded-Proto') != 'https':
+            if request.endpoint != 'health_check':  # Allow health checks over HTTP
+                return redirect(request.url.replace('http://', 'https://'))
+        
+        # Security headers (additional to Nginx)
+        @self.app.after_request
+        def add_security_headers(response):
+            response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+            response.headers['X-Powered-By'] = 'Enhanced Node Server'
+            return response
