@@ -5,14 +5,24 @@ from pathlib import Path
 from typing import List
 
 try:
-    from pydantic_settings import BaseSettings
-    from pydantic import ConfigDict
+    from pydantic_settings import BaseSettings, SettingsConfigDict
 except ImportError:
     from pydantic import BaseSettings
+    SettingsConfigDict = None
 
 class Settings(BaseSettings):
     # Configuration to allow extra fields (fixes the debug error)
-    model_config = ConfigDict(extra='ignore')  # This allows extra fields in .env
+    if SettingsConfigDict is not None:
+        model_config = SettingsConfigDict(
+            env_file=".env",
+            env_file_encoding="utf-8",
+            extra="ignore",
+        )
+    else:
+        class Config:
+            env_file = ".env"
+            env_file_encoding = "utf-8"
+            extra = "ignore"
     
     # Node Configuration
     NODE_VERSION: str = "3.4.0-advanced-remote-control"
@@ -76,12 +86,6 @@ class Settings(BaseSettings):
     
     # Optional debug field (now it won't cause errors)
     DEBUG: bool = False
-    
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        # For older pydantic versions:
-        extra = "ignore"  # This also allows extra fields
 
 # Create settings instance
 settings = Settings()
