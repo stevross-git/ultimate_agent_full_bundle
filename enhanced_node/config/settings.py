@@ -7,11 +7,13 @@ from typing import List
 try:
     from pydantic_settings import BaseSettings, SettingsConfigDict
 except ImportError:
+
     try:
         from pydantic import BaseSettings
     except Exception:
         class BaseSettings:  # type: ignore[misc]
             pass
+
     SettingsConfigDict = None
 
 class Settings(BaseSettings):
