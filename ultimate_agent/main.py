@@ -15,7 +15,7 @@ def main():
     script_dir = Path(__file__).parent.absolute()
     
     # Add the ultimate_agent directory to Python path
-    ultimate_agent_dir = script_dir / "ultimate_agent"
+    ultimate_agent_dir = script_dir 
     if ultimate_agent_dir.exists():
         sys.path.insert(0, str(ultimate_agent_dir))
         print(f"✅ Added {ultimate_agent_dir} to Python path")
