@@ -8,13 +8,14 @@ import socket
 import threading
 import time
 import requests
-
+import ssl
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
+from flask import request, abort
 
 # Use try/except for imports to handle both relative and absolute imports
 try:
@@ -166,6 +167,8 @@ class EnhancedNodeServer:
         except Exception as exc:
             self.logger.warning(f"Manager registration failed: {exc}")
         return False
+
+        
 
     def _manager_heartbeat_loop(self):
         """Send periodic heartbeat to the manager."""
@@ -600,3 +603,50 @@ class EnhancedNodeServer:
             self.db.close()
         
         self.logger.info("Enhanced Node Server stopped")
+
+
+    
+# Add this security middleware to the EnhancedNodeServer class
+def setup_security_middleware(self):
+    """Setup security middleware for SSL/TLS"""
+    
+    @self.app.before_request
+    def security_checks():
+        # Block known attacking IPs
+        if request.remote_addr in self.settings.BLOCKED_IPS:
+            self.logger.warning(f"Blocked request from {request.remote_addr}")
+            abort(403)
+        
+        # Enforce HTTPS in production
+        if self.settings.USE_SSL and not request.is_secure and request.headers.get('X-Forwarded-Proto') != 'https':
+            if request.endpoint != 'health_check':  # Allow health checks over HTTP
+                return redirect(request.url.replace('http://', 'https://'))
+        
+        # Security headers (additional to Nginx)
+        @self.app.after_request
+        def add_security_headers(response):
+            response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+            response.headers['X-Powered-By'] = 'Enhanced Node Server'
+            return response
+
+# Update the SSL context configuration
+def configure_ssl_context(self):
+    """Configure SSL context for secure connections"""
+    if self.settings.USE_SSL:
+        try:
+            context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_REQUIRED if self.settings.SSL_VERIFY else ssl.CERT_NONE
+            
+            # Load certificates if available
+            if os.path.exists(self.settings.SSL_CERT_PATH):
+                context.load_cert_chain(
+                    self.settings.SSL_CERT_PATH,
+                    self.settings.SSL_KEY_PATH
+                )
+            
+            return context
+        except Exception as e:
+            self.logger.error(f"SSL configuration error: {e}")
+            return None
+    return None
