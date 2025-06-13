@@ -1,42 +1,56 @@
-# config/settings.py - FIXED VERSION with correct pydantic imports
+# config/settings.py - ALTERNATIVE VERSION with comma-separated value support
 import os
 import uuid
 from pathlib import Path
 from typing import List
 
-# FIXED: Import BaseSettings from pydantic_settings instead of pydantic
 try:
     from pydantic_settings import BaseSettings
+    from pydantic import field_validator
 except ImportError:
-    # Fallback for older pydantic versions
-    from pydantic import BaseSettings
+    from pydantic import BaseSettings, validator as field_validator
 
 class Settings(BaseSettings):
     # Node Configuration
     NODE_VERSION: str = "3.4.0-advanced-remote-control"
     NODE_PORT: int = 5000
-    NODE_HOST: str = "127.0.0.1"  # Bind to localhost (behind Nginx)
-    MANAGER_HOST: str = "srvnodes.peoplesainetwork.com"  # Use HTTPS domain
-    MANAGER_PORT: int = 443  # HTTPS port
+    NODE_HOST: str = "127.0.0.1"
+    MANAGER_HOST: str = "srvnodes.peoplesainetwork.com"
+    MANAGER_PORT: int = 443
     NODE_ID: str = f"enhanced-node-{uuid.uuid4().hex[:12]}"
+    
+    # Security Configuration
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secure-secret-key-change-this")
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-jwt-secret-key-change-this")
+    
+    # Lists - can be comma-separated strings or JSON arrays
+    ALLOWED_HOSTS: List[str] = ["srvnodes.peoplesainetwork.com", "127.0.0.1", "localhost"]
+    CORS_ORIGINS: List[str] = [
+        "https://srvnodes.peoplesainetwork.com",
+        "https://peoplesainetwork.com", 
+        "https://www.peoplesainetwork.com"
+    ]
+    BLOCKED_IPS: List[str] = [
+        "122.150.158.121", "122.150.158.126", 
+        "122.150.158.138", "122.150.158.8"
+    ]
+    IP_WHITELIST: List[str] = []
+    DEFAULT_RATE_LIMITS: List[str] = ["100 per hour", "10 per minute"]
+    
+    # Validators to handle comma-separated strings
+    @field_validator('ALLOWED_HOSTS', 'CORS_ORIGINS', 'BLOCKED_IPS', 'IP_WHITELIST', 'DEFAULT_RATE_LIMITS', mode='before')
+    @classmethod
+    def parse_list_from_string(cls, v):
+        if isinstance(v, str):
+            # Handle comma-separated string
+            return [item.strip() for item in v.split(',') if item.strip()]
+        return v
     
     # SSL/TLS Configuration
     USE_SSL: bool = True
     SSL_CERT_PATH: str = "/etc/letsencrypt/live/srvnodes.peoplesainetwork.com/fullchain.pem"
     SSL_KEY_PATH: str = "/etc/letsencrypt/live/srvnodes.peoplesainetwork.com/privkey.pem"
     SSL_VERIFY: bool = True
-    
-    # Security Configuration
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secure-secret-key-change-this")
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-jwt-secret-key-change-this")
-    ALLOWED_HOSTS: List[str] = ["srvnodes.peoplesainetwork.com", "127.0.0.1", "localhost"]
-    
-    # CORS Configuration
-    CORS_ORIGINS: List[str] = [
-        "https://srvnodes.peoplesainetwork.com",
-        "https://peoplesainetwork.com",
-        "https://www.peoplesainetwork.com"
-    ]
     
     # Agent Connection Settings
     AGENT_SSL_VERIFY: bool = True
@@ -62,17 +76,9 @@ class Settings(BaseSettings):
     COMMAND_SCHEDULER_INTERVAL: int = 10
     METRICS_PORT: int = 8091
     
-    # Rate Limiting
-    DEFAULT_RATE_LIMITS: List[str] = ["100 per hour", "10 per minute"]
-    
     # Security Features
     ENABLE_RATE_LIMITING: bool = True
     ENABLE_IP_WHITELIST: bool = False
-    IP_WHITELIST: List[str] = []
-    BLOCKED_IPS: List[str] = [
-        "122.150.158.121", "122.150.158.126", 
-        "122.150.158.138", "122.150.158.8"
-    ]  # Block the attacking IPs we identified
     
     class Config:
         env_file = ".env"
