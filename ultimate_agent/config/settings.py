@@ -66,7 +66,7 @@ def get_config() -> Dict[str, Any]:
         
         # Network settings
         'host': os.getenv('HOST', '0.0.0.0'),
-        'port': int(os.getenv('PORT', '5000')),
+        'port': int(os.getenv('PORT', '8080')),
         
         # Database settings
         'database_url': os.getenv('DATABASE_URL', 'sqlite:///ultimate_agent.db'),
