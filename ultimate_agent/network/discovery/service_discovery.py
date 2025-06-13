@@ -12,8 +12,8 @@ class DiscoveryClient:
     """Service discovery for agents and nodes."""
 
     def __init__(self,
-                 node_service: str = "http://srvnodes.peoplesainetwork.com",
-                 manager_service: str = "http://mannodes.peoplesainetwork.com"):
+                 node_service: str = "https://srvnodes.peoplesainetwork.com",
+                 manager_service: str = "https://mannodes.peoplesainetwork.com"):
         self.node_service = node_service.rstrip('/')
         self.manager_service = manager_service.rstrip('/')
         self.nodes_cache: List[Dict[str, str]] = []
