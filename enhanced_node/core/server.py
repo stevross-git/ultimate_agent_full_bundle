@@ -1,3 +1,4 @@
+
 import os
 import redis
 import statistics
@@ -650,23 +651,3 @@ def configure_ssl_context(self):
             self.logger.error(f"SSL configuration error: {e}")
             return None
     return None
-    """Setup security middleware for SSL/TLS"""
-    
-    @self.app.before_request
-    def security_checks():
-        # Block known attacking IPs
-        if request.remote_addr in self.settings.BLOCKED_IPS:
-            self.logger.warning(f"Blocked request from {request.remote_addr}")
-            abort(403)
-        
-        # Enforce HTTPS in production
-        if self.settings.USE_SSL and not request.is_secure and request.headers.get('X-Forwarded-Proto') != 'https':
-            if request.endpoint != 'health_check':  # Allow health checks over HTTP
-                return redirect(request.url.replace('http://', 'https://'))
-        
-        # Security headers (additional to Nginx)
-        @self.app.after_request
-        def add_security_headers(response):
-            response.headers['X-Robots-Tag'] = 'noindex, nofollow'
-            response.headers['X-Powered-By'] = 'Enhanced Node Server'
-            return response
