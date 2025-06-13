@@ -794,6 +794,7 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
                 .glow { animation: pulse 2s infinite; }
                 @keyframes pulse { 0% { box-shadow: 0 0 5px #00e0ff; } 50% { box-shadow: 0 0 15px #00e0ff; } 100% { box-shadow: 0 0 5px #00e0ff; } }
                 .port-display { text-align: center; background: rgba(0, 240, 255, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; }
+                .access-info { background: rgba(0, 255, 0, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; }
             </style>
         </head>
         <body>
@@ -801,7 +802,13 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
                 <h1>Ultimate Agent Control Room</h1>
                 <div class="port-display">
                     <h3>🌐 Dashboard Port: 8080</h3>
-                    <p>Access at: http://localhost:8080</p>
+                    <p>Listening on all interfaces (0.0.0.0:8080)</p>
+                </div>
+                <div class="access-info">
+                    <h4>🔗 Access URLs:</h4>
+                    <p>Local: http://localhost:8080</p>
+                    <p>External: http://[your-server-ip]:8080</p>
+                    <p><strong>Make sure port 8080 is open in your firewall!</strong></p>
                 </div>
                 <div class="screens">
                     <div class="screen glow">
@@ -829,8 +836,8 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
                     document.getElementById('monitoring').textContent = 'CPU ' + val + '%';
                 }, 500);
                 
-                document.getElementById('network').textContent = 'Connected - Port 8080';
-                document.getElementById('port').innerHTML = '<span style="color: #00ff00">●</span> Port 8080: Active';
+                document.getElementById('network').textContent = 'Connected - External Access Enabled';
+                document.getElementById('port').innerHTML = '<span style="color: #00ff00">●</span> Port 8080: Listening on 0.0.0.0';
             </script>
         </body>
         </html>
@@ -846,14 +853,14 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
                 name="DashboardServer"
             )
             self.server_thread.start()
-            print(f"🌐 Dashboard server starting on port {self.dashboard_port}")
+            print(f"🌐 Dashboard server starting on port {self.dashboard_port} (accessible externally)")
     
     def _run_server(self):
         """Run the dashboard server"""
         try:
             self.socketio.run(
                 self.app,
-                host='127.0.0.1',
+                host='0.0.0.0',  # Changed to accept external connections
                 port=self.dashboard_port,  # Now uses the fixed port 8080
                 debug=False,
                 use_reloader=False
