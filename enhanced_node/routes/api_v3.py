@@ -417,11 +417,8 @@ def register_api_v3_routes(server):
     
 
 def get_enhanced_dashboard_html_with_new_features():
-    """Serve enhanced dashboard from HTML file"""
-    html_path = os.path.join(os.path.dirname(__file__), '..', 'templates', 'enhanced_dashboard.html')
-    return render_template(html_path)
+    """Serve enhanced dashboard from templates/enhanced_dashboard.html"""
     try:
-            return render_template('enhanced_dashboard.html')
-    except Exception:
-            with open(html_path, 'r', encoding='utf-8') as f:
-                return f.read()
+        return render_template('enhanced_dashboard.html')
+    except Exception as e:
+        return f"Dashboard loading error: {str(e)}", 500
