@@ -9,7 +9,7 @@ from datetime import datetime
 import json
 import requests
 import time
-from flask import send_file  
+from flask import send_file, render_template  
 import os 
 from ..core.database import Agent, AgentHeartbeat
 from ..models.agents import EnhancedAgentInfo, EnhancedAgentStatus
@@ -392,15 +392,15 @@ def register_api_v3_routes(server):
         from core.health import HealthChecker
         health_checker = HealthChecker(server)
         health_status = health_checker.get_health_status()
-        
+
         status_code = 200
         if health_status["overall_status"] == "critical":
             status_code = 503
         elif health_status["overall_status"] == "warning":
-            status_code = 200  # Still serving but with warnings
-        
+            status_code = 200
+
         return jsonify(health_status), status_code
-        
+
     except Exception as e:
         return jsonify({
             "overall_status": "critical",
@@ -409,7 +409,8 @@ def register_api_v3_routes(server):
         }), 503
 
 
+
 def get_enhanced_dashboard_html_with_new_features():
     """Serve enhanced dashboard from HTML file"""
     html_path = os.path.join(os.path.dirname(__file__), '..', 'templates', 'enhanced_dashboard.html')
-    return send_file(html_path)
+    return render_template(html_path)
