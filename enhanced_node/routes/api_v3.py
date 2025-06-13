@@ -22,6 +22,7 @@ def register_api_v3_routes(server):
     
     @server.app.route('/')
     def enhanced_dashboard():
+        # Call the function that contains the new advanced HTML
         return get_enhanced_dashboard_html_with_new_features()
 
 #    def get_enhanced_dashboard_html_with_new_features():
@@ -392,19 +393,22 @@ def register_api_v3_routes(server):
     def comprehensive_health_check():
         """Comprehensive health check endpoint"""
     try:
-        from core.health import HealthChecker
+        from ..core.health import HealthChecker
         health_checker = HealthChecker(server)
         health_status = health_checker.get_health_status()
 
         status_code = 200
         if health_status["overall_status"] == "critical":
             status_code = 503
-        elif health_status["overall_status"] == "warning":
-            status_code = 200
+        # The original code had a potential issue where a "warning" status
+        # could still result in a 200 OK, which might be misleading.
+        # This is fine, but worth noting.
 
         return jsonify(health_status), status_code
 
     except Exception as e:
+        # It's good practice to log the error here as well
+        server.logger.error(f"Health check failed critically: {e}")
         return jsonify({
             "overall_status": "critical",
             "error": str(e),
@@ -412,7 +416,7 @@ def register_api_v3_routes(server):
         }), 503
     
 
-    def get_enhanced_dashboard_html_with_new_features():
+def get_enhanced_dashboard_html_with_new_features():
         return """<!DOCTYPE html>
 <html lang="en">
 <head>
