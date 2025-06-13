@@ -226,7 +226,7 @@ from ultimate_agent.config.settings import ConfigManager
 
 config = ConfigManager("custom_config.ini")
 ai_enabled = config.getboolean('AI_TRAINING', 'enabled')
-config.set('DEFAULT', 'dashboard_port', '9000')
+config.set('DEFAULT', 'dashboard_port', '8000')
 ```
 
 ### **🧠 AI & Training Modules**
