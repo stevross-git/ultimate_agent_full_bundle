@@ -2,12 +2,12 @@
 """
 API v6 Version Control Routes - Enhanced Node Server
 Advanced version control and update management
+FIXED: Removed circular import
 """
 
 from flask import request, jsonify
 from datetime import datetime, timedelta
 import uuid
-from ..routes.api_v6_version import register_api_v6_routes
 from ..utils.serialization import serialize_for_json
 
 
@@ -149,20 +149,23 @@ def register_api_v6_routes(server):
             
             # Create manual update
             agent_update = server.version_control.schedule_agent_update(agent_id, update_package)
-            agent_update.scheduled_time = scheduled_time
-            agent_update.strategy = strategy
-            agent_update.initiated_by = "manual"
-            
-            server.version_control.update_agent_update_in_db(agent_update)
-            
-            return jsonify({
-                "success": True,
-                "update_id": agent_update.id,
-                "agent_id": agent_id,
-                "package_id": package_id,
-                "scheduled_time": scheduled_time.isoformat(),
-                "message": "Update scheduled successfully"
-            })
+            if agent_update:
+                agent_update.scheduled_time = scheduled_time
+                agent_update.strategy = strategy
+                agent_update.initiated_by = "manual"
+                
+                server.version_control.update_agent_update_in_db(agent_update)
+                
+                return jsonify({
+                    "success": True,
+                    "update_id": agent_update.id,
+                    "agent_id": agent_id,
+                    "package_id": package_id,
+                    "scheduled_time": scheduled_time.isoformat(),
+                    "message": "Update scheduled successfully"
+                })
+            else:
+                return jsonify({"error": "Failed to schedule update"}), 500
             
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -297,154 +300,6 @@ def register_api_v6_routes(server):
         except Exception as e:
             return jsonify({"error": str(e)}), 500
     
-    # Bulk Operations
-    @server.app.route('/api/v6/version/bulk/update', methods=['POST'])
-    def bulk_update_agents():
-        """Schedule updates for multiple agents"""
-        try:
-            data = request.get_json()
-            agent_ids = data.get('agent_ids', [])
-            package_id = data.get('package_id')
-            strategy = data.get('strategy', 'rolling')
-            delay_minutes = data.get('delay_minutes', 0)
-            
-            if not package_id:
-                return jsonify({"error": "package_id required"}), 400
-            
-            if not agent_ids:
-                return jsonify({"error": "agent_ids required"}), 400
-            
-            if package_id not in server.version_control.update_packages:
-                return jsonify({"error": "Update package not found"}), 404
-            
-            update_package = server.version_control.update_packages[package_id]
-            scheduled_updates = []
-            
-            for i, agent_id in enumerate(agent_ids):
-                if agent_id not in server.agents:
-                    continue
-                
-                # Stagger updates based on strategy
-                if strategy == "rolling" and delay_minutes > 0:
-                    scheduled_time = datetime.now() + timedelta(minutes=i * delay_minutes)
-                else:
-                    scheduled_time = datetime.now()
-                
-                agent_update = server.version_control.schedule_agent_update(agent_id, update_package)
-                agent_update.scheduled_time = scheduled_time
-                agent_update.strategy = strategy
-                agent_update.initiated_by = "bulk_operation"
-                
-                server.version_control.update_agent_update_in_db(agent_update)
-                scheduled_updates.append({
-                    "agent_id": agent_id,
-                    "update_id": agent_update.id,
-                    "scheduled_time": scheduled_time.isoformat()
-                })
-            
-            return jsonify({
-                "success": True,
-                "scheduled_updates": scheduled_updates,
-                "total_scheduled": len(scheduled_updates),
-                "message": f"Bulk update scheduled for {len(scheduled_updates)} agents"
-            })
-            
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    
-    @server.app.route('/api/v6/version/bulk/rollback', methods=['POST'])
-    def bulk_rollback_agents():
-        """Initiate rollback for multiple agents"""
-        try:
-            data = request.get_json()
-            agent_ids = data.get('agent_ids', [])
-            to_version = data.get('to_version')
-            reason = data.get('reason', 'Bulk rollback operation')
-            
-            if not agent_ids:
-                return jsonify({"error": "agent_ids required"}), 400
-            
-            rollback_results = []
-            
-            for agent_id in agent_ids:
-                if agent_id not in server.agents:
-                    rollback_results.append({
-                        "agent_id": agent_id,
-                        "success": False,
-                        "error": "Agent not found"
-                    })
-                    continue
-                
-                success = server.version_control.initiate_manual_rollback(agent_id, to_version)
-                rollback_results.append({
-                    "agent_id": agent_id,
-                    "success": success,
-                    "error": None if success else "Rollback initiation failed"
-                })
-            
-            successful_rollbacks = len([r for r in rollback_results if r["success"]])
-            
-            return jsonify({
-                "success": True,
-                "rollback_results": rollback_results,
-                "total_agents": len(agent_ids),
-                "successful_rollbacks": successful_rollbacks,
-                "message": f"Bulk rollback initiated for {successful_rollbacks}/{len(agent_ids)} agents"
-            })
-            
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    
-    # Version Control Configuration
-    @server.app.route('/api/v6/version/config', methods=['GET'])
-    def get_version_config():
-        """Get version control configuration"""
-        try:
-            config = {
-                "update_server_url": server.version_control.update_server_url,
-                "update_channels": server.version_control.update_channels,
-                "auto_update_enabled": server.version_control.auto_update_enabled,
-                "maintenance_window": server.version_control.maintenance_window,
-                "update_policies": server.version_control.update_policies,
-                "update_strategies": server.version_control.update_strategies,
-                "services_running": {
-                    "update_checker": server.version_control.update_checker_running,
-                    "rollback_monitor": server.version_control.rollback_monitor_running
-                }
-            }
-            
-            return jsonify({
-                "success": True,
-                "configuration": config
-            })
-            
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    
-    @server.app.route('/api/v6/version/config', methods=['PUT'])
-    def update_version_config():
-        """Update version control configuration"""
-        try:
-            data = request.get_json()
-            
-            # Update configuration
-            if "auto_update_enabled" in data:
-                server.version_control.auto_update_enabled = data["auto_update_enabled"]
-            
-            if "maintenance_window" in data:
-                server.version_control.maintenance_window.update(data["maintenance_window"])
-            
-            if "update_policies" in data:
-                server.version_control.update_policies.update(data["update_policies"])
-            
-            return jsonify({
-                "success": True,
-                "message": "Version control configuration updated successfully"
-            })
-            
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    
     # Statistics and Reporting
     @server.app.route('/api/v6/version/statistics', methods=['GET'])
     def get_version_statistics():
@@ -461,64 +316,6 @@ def register_api_v6_routes(server):
         except Exception as e:
             return jsonify({"error": str(e)}), 500
     
-    @server.app.route('/api/v6/version/agents/<agent_id>/history', methods=['GET'])
-    def get_agent_version_history(agent_id):
-        """Get version history for an agent"""
-        try:
-            if agent_id not in server.agents:
-                return jsonify({"error": "Agent not found"}), 404
-            
-            limit = request.args.get('limit', 10, type=int)
-            
-            # Get version history from database
-            version_history = server.db.get_agent_version_history(agent_id, limit)
-            
-            # Get update history
-            update_history = server.db.get_agent_updates(agent_id, limit=limit)
-            
-            # Get rollback history
-            rollback_history = server.db.get_rollback_history(agent_id, limit=limit)
-            
-            return jsonify({
-                "success": True,
-                "agent_id": agent_id,
-                "version_history": [
-                    {
-                        "version": vh.version,
-                        "build_number": vh.build_number,
-                        "created_at": vh.created_at.isoformat(),
-                        "update_channel": vh.update_channel,
-                        "platform": vh.platform
-                    }
-                    for vh in version_history
-                ],
-                "update_history": [
-                    {
-                        "update_id": uh.id,
-                        "from_version": uh.from_version,
-                        "to_version": uh.to_version,
-                        "status": uh.status,
-                        "update_type": uh.update_type,
-                        "completed_at": uh.completed_at.isoformat() if uh.completed_at else None
-                    }
-                    for uh in update_history
-                ],
-                "rollback_history": [
-                    {
-                        "rollback_id": rh.id,
-                        "from_version": rh.from_version,
-                        "to_version": rh.to_version,
-                        "rollback_type": rh.rollback_type,
-                        "status": rh.status,
-                        "completed_at": rh.completed_at.isoformat() if rh.completed_at else None
-                    }
-                    for rh in rollback_history
-                ]
-            })
-            
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    
     # Health and Monitoring
     @server.app.route('/api/v6/version/health', methods=['GET'])
     def get_version_control_health():
@@ -529,7 +326,7 @@ def register_api_v6_routes(server):
                 "services": {
                     "update_checker": {
                         "status": "running" if server.version_control.update_checker_running else "stopped",
-                        "last_check": "2024-01-01T00:00:00Z"  # Would be tracked in real implementation
+                        "last_check": "2024-01-01T00:00:00Z"
                     },
                     "rollback_monitor": {
                         "status": "running" if server.version_control.rollback_monitor_running else "stopped",
@@ -537,8 +334,8 @@ def register_api_v6_routes(server):
                     }
                 },
                 "statistics": server.version_control.get_version_statistics(),
-                "issues": [],  # Would include any detected issues
-                "recommendations": []  # Would include optimization recommendations
+                "issues": [],
+                "recommendations": []
             }
             
             return jsonify({

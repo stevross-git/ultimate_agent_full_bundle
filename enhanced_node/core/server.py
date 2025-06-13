@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+"""
+Fixed Enhanced Node Server - Configure Template Folder
+Fix Flask template folder configuration
+"""
 
 import os
 import redis
@@ -10,6 +15,7 @@ import threading
 import time
 import requests
 import ssl
+from pathlib import Path
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -17,6 +23,10 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
 from flask import request, abort
+
+# Get the correct template folder path
+TEMPLATE_DIR = Path(__file__).parent.parent / 'templates'
+STATIC_DIR = Path(__file__).parent.parent / 'static'
 
 # Use try/except for imports to handle both relative and absolute imports
 try:
@@ -27,13 +37,13 @@ try:
     from core.database import EnhancedNodeDatabase
     from control.task_manager import TaskControlManager
     from control.remote_manager import AdvancedRemoteControlManager
-    from control.version_manager import VersionControlManager  # NEW: Version Control
+    from control.version_manager import VersionControlManager
     from models.agents import EnhancedAgentInfo, EnhancedAgentStatus
     from utils.logger import get_server_logger
     from utils.serialization import serialize_for_json
     from routes.api_v3 import register_api_v3_routes
     from routes.api_v5_remote import register_api_v5_routes
-    from routes.api_v6_version import register_api_v6_routes  # NEW: Version Control Routes
+    from routes.api_v6_version import register_api_v6_routes
     from websocket.events import register_websocket_events
 except ImportError:
     # Fallback to relative imports
@@ -45,13 +55,13 @@ except ImportError:
         from .database import EnhancedNodeDatabase
         from ..control.task_manager import TaskControlManager
         from ..control.remote_manager import AdvancedRemoteControlManager
-        from ..control.version_manager import VersionControlManager  # NEW: Version Control
+        from ..control.version_manager import VersionControlManager
         from ..models.agents import EnhancedAgentInfo, EnhancedAgentStatus
         from ..utils.logger import get_server_logger
         from ..utils.serialization import serialize_for_json
         from ..routes.api_v3 import register_api_v3_routes
         from ..routes.api_v5_remote import register_api_v5_routes
-        from ..routes.api_v6_version import register_api_v6_routes  # NEW: Version Control Routes
+        from ..routes.api_v6_version import register_api_v6_routes
         from ..websocket.events import register_websocket_events
     except ImportError as e:
         print(f"Import error: {e}")
@@ -62,7 +72,18 @@ class EnhancedNodeServer:
     """Enhanced Node Server with Advanced Remote Control and Version Management"""
     
     def __init__(self):
-        self.app = Flask(__name__)
+        # FIX: Configure Flask with correct template and static folders
+        self.app = Flask(
+            __name__,
+            template_folder=str(TEMPLATE_DIR),
+            static_folder=str(STATIC_DIR)
+        )
+        
+        # Debug template configuration
+        print(f"✅ Template folder configured: {TEMPLATE_DIR}")
+        print(f"✅ Template folder exists: {TEMPLATE_DIR.exists()}")
+        print(f"✅ Dashboard template exists: {(TEMPLATE_DIR / 'enhanced_dashboard.html').exists()}")
+        
         CORS(self.app)
         self.socketio = SocketIO(self.app, cors_allowed_origins="*", async_mode='threading')
         
@@ -86,13 +107,13 @@ class EnhancedNodeServer:
         # Control managers
         self.task_control = TaskControlManager(self)
         self.advanced_remote_control = AdvancedRemoteControlManager(self)
-        self.version_control = VersionControlManager(self)  # NEW: Version Control Manager
+        self.version_control = VersionControlManager(self)
         
         # Performance tracking
         self.performance_history = defaultdict(lambda: deque(maxlen=100))
         self.task_queue = deque()
         
-        # Prometheus metrics (updated with version control metrics)
+        # Prometheus metrics
         self.metrics = {
             'agents_total': Gauge('node_agents_total', 'Total agents connected'),
             'agents_online': Gauge('node_agents_online', 'Online agents'),
@@ -107,7 +128,7 @@ class EnhancedNodeServer:
             'health_checks_total': Counter('node_health_checks_total', 'Total health checks'),
             'scripts_deployed_total': Counter('node_scripts_deployed_total', 'Total scripts deployed'),
             
-            # NEW: Version Control Metrics
+            # Version Control Metrics
             'version_updates_total': Counter('node_version_updates_total', 'Total version updates'),
             'version_rollbacks_total': Counter('node_version_rollbacks_total', 'Total version rollbacks'),
             'version_deployments_active': Gauge('node_version_deployments_active', 'Active version deployments'),
@@ -132,14 +153,15 @@ class EnhancedNodeServer:
         self.logger.info(f"Enhanced Node Server {NODE_ID} v{NODE_VERSION} initialized")
         self.logger.info("✅ Modular architecture enabled")
         self.logger.info("🎮 Advanced remote control features available")
-        self.logger.info("🔄 Version control system enabled")  # NEW
+        self.logger.info("🔄 Version control system enabled")
+        self.logger.info(f"📁 Templates configured: {TEMPLATE_DIR}")
 
     def _register_routes(self):
         """Register all API routes and WebSocket events"""
         try:
             register_api_v3_routes(self)
             register_api_v5_routes(self)
-            register_api_v6_routes(self)  # NEW: Version Control Routes
+            register_api_v6_routes(self)
             register_websocket_events(self)
             self.logger.info("✅ All routes and WebSocket events registered")
         except Exception as e:
@@ -155,7 +177,7 @@ class EnhancedNodeServer:
             "version": NODE_VERSION,
             "features": [
                 "task_control", "remote_management", "advanced_control", 
-                "version_control"  # NEW: Version control feature
+                "version_control"
             ]
         }
         try:
@@ -169,16 +191,14 @@ class EnhancedNodeServer:
             self.logger.warning(f"Manager registration failed: {exc}")
         return False
 
-        
-
     def _manager_heartbeat_loop(self):
         """Send periodic heartbeat to the manager."""
         while self.running:
             try:
                 heartbeat_data = {
                     "node_id": NODE_ID,
-                    "version_control_enabled": True,  # NEW
-                    "version_statistics": self.version_control.get_version_statistics()  # NEW
+                    "version_control_enabled": True,
+                    "version_statistics": self.version_control.get_version_statistics()
                 }
                 requests.post(f"{self.manager_url}/api/nodes/heartbeat",
                               json=heartbeat_data, timeout=10)
@@ -241,7 +261,7 @@ class EnhancedNodeServer:
         # Advanced remote control metrics
         advanced_stats = self.advanced_remote_control.get_advanced_statistics()
         
-        # NEW: Version control metrics
+        # Version control metrics
         version_stats = self.version_control.get_version_statistics()
         
         return {
@@ -294,7 +314,7 @@ class EnhancedNodeServer:
             "advanced_control_enabled": True,
             "advanced_control": advanced_stats,
             
-            # NEW: Version control metrics
+            # Version control metrics
             "version_control_enabled": True,
             "version_control": version_stats
         }
@@ -367,7 +387,7 @@ class EnhancedNodeServer:
         self.metrics['blockchain_balance_total'].set(stats['total_blockchain_balance'])
         self.metrics['avg_efficiency'].set(stats['avg_efficiency_score'])
         
-        # NEW: Version control metrics
+        # Version control metrics
         if 'version_control' in stats:
             version_stats = stats['version_control']
             self.metrics['version_deployments_active'].set(version_stats.get('active_deployments', 0))
@@ -428,7 +448,7 @@ class EnhancedNodeServer:
         self.db.session.merge(db_agent)
         self.db.session.commit()
         
-        # NEW: Register agent version information
+        # Register agent version information
         version_info = agent_data.get('version_info', {})
         if version_info:
             version_info['version'] = agent_data.get('version', 'unknown')
@@ -449,7 +469,7 @@ class EnhancedNodeServer:
             'agent_id': agent_id,
             'agent_type': agent.agent_type,
             'features': agent.features,
-            'version_control_enabled': True,  # NEW
+            'version_control_enabled': True,
             'timestamp': current_time.isoformat()
         }, room='dashboard')
         
@@ -459,11 +479,11 @@ class EnhancedNodeServer:
             "node_id": NODE_ID,
             "node_version": NODE_VERSION,
             "message": "Agent registered successfully",
-            "features_supported": ["ai", "blockchain", "cloud", "security", "plugins", "version_control"],  # NEW: version_control
+            "features_supported": ["ai", "blockchain", "cloud", "security", "plugins", "version_control"],
             "task_control_available": True,
             "remote_management_available": True,
             "advanced_control_available": True,
-            "version_control_available": True  # NEW
+            "version_control_available": True
         }
     
     def process_agent_heartbeat(self, heartbeat_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -533,7 +553,7 @@ class EnhancedNodeServer:
         
         self.db.session.commit()
         
-        # NEW: Update version information if provided
+        # Update version information if provided
         version_info = heartbeat_data.get('version_info')
         if version_info:
             self.version_control.register_agent_version(agent_id, version_info)
@@ -565,11 +585,11 @@ class EnhancedNodeServer:
             "success": True,
             "node_id": NODE_ID,
             "next_heartbeat": 30,
-            "supported_features": ["ai", "blockchain", "cloud", "security", "version_control"],  # NEW
+            "supported_features": ["ai", "blockchain", "cloud", "security", "version_control"],
             "task_control_available": True,
             "remote_management_available": True,
             "advanced_control_available": True,
-            "version_control_available": True  # NEW
+            "version_control_available": True
         }
     
     def start(self):
@@ -584,10 +604,10 @@ class EnhancedNodeServer:
         # Start background services
         self.task_control.start_task_control_services()
         self.advanced_remote_control.start_advanced_services()
-        self.version_control.start_services()  # NEW: Start version control services
+        self.version_control.start_version_services()
 
         self.logger.info("Enhanced Node Server started with advanced capabilities")
-        self.logger.info("🔄 Version control system active")  # NEW
+        self.logger.info("🔄 Version control system active")
     
     def stop(self):
         """Stop the node server"""
@@ -595,10 +615,9 @@ class EnhancedNodeServer:
         self.advanced_remote_control.scheduler_running = False
         self.advanced_remote_control.health_monitor_running = False
         
-        # NEW: Stop version control services
-        self.version_control.update_service_running = False
-        self.version_control.health_monitor_running = False
-        self.version_control.package_scanner_running = False
+        # Stop version control services
+        self.version_control.update_checker_running = False
+        self.version_control.rollback_monitor_running = False
         
         if self.db:
             self.db.close()
