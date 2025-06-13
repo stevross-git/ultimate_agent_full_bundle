@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     
     # Node Configuration
     NODE_VERSION: str = "3.4.0-advanced-remote-control"
-    NODE_PORT: int = 443
+    NODE_PORT: int = 5000
     NODE_HOST: str = "127.0.0.1"
     MANAGER_HOST: str = "srvnodes.peoplesainetwork.com"
     MANAGER_PORT: int = 443

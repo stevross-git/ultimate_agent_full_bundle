@@ -118,10 +118,10 @@ python -m enhanced_node.main
 
 Once running, the server provides:
 
-- **Dashboard**: https://localhost:443
+- **Dashboard**: http://localhost:5000
 - **Metrics**: http://localhost:8091
-- **API v3**: https://localhost:443/api/v3/
-- **API v5**: https://localhost:443/api/v5/remote/
+- **API v3**: http://localhost:5000/api/v3/
+- **API v5**: http://localhost:5000/api/v5/remote/
 
 ## 📋 Dependencies
 

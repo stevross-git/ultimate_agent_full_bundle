@@ -797,7 +797,7 @@ def add_version_commands(cli_parser):
 class VersionControlCLI:
     """Version Control CLI Commands"""
     
-    def __init__(self, base_url='https://localhost:443'):
+    def __init__(self, base_url='http://localhost:5000'):
         self.base_url = base_url
         
     def handle_version_command(self, args):

@@ -141,7 +141,7 @@ curl -X POST http://localhost:8080/api/start_task \
 
 ```ini
 [DEFAULT]
-node_url = https://srvnodes.peoplesainetwork.com:443
+node_url = https://srvnodes.peoplesainetwork.com
 dashboard_port = 8080
 heartbeat_interval = 30
 auto_start_tasks = true
@@ -582,7 +582,7 @@ python main.py --monitor-memory
 #### **Blockchain Connection Issues**
 ```bash
 # Test network connectivity
-curl -X GET https://srvnodes.peoplesainetwork.com:443/api/health
+curl -X GET https://srvnodes.peoplesainetwork.com/api/health
 
 # Use demo mode
 python main.py --blockchain-demo-mode

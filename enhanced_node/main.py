@@ -238,11 +238,11 @@ if __name__ == "__main__":
             from config.settings import NODE_PORT
             port = NODE_PORT
         except ImportError:
-            port = 443
+            port = 5000
         
         print(f"\n🌐 Enhanced Node Server running on:")
-        print(f"   📱 Dashboard: https://localhost:{port}")
-        print(f"   📊 Health Check: https://localhost:{port}/health")
+        print(f"   📱 Dashboard: http://localhost:{port}")
+        print(f"   📊 Health Check: http://localhost:{port}/health")
         print(f"   🔍 Debug Info: http://localhost:{port}/debug")
         print(f"   🔌 WebSocket: ws://localhost:{port}/socket.io/")
         

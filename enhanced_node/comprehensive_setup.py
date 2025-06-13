@@ -199,7 +199,7 @@ def check_port_availability():
     import socket
     
     ports_to_check = [
-        (443, "Main server port"),
+        (5000, "Main server port"),
         (8091, "Metrics server port")
     ]
     
@@ -283,7 +283,7 @@ def main():
         print("=" * 90)
         print()
         print("🌟 Enhanced Node Server is ready to start!")
-        print("📡 Dashboard will be available at: https://localhost:443")
+        print("📡 Dashboard will be available at: http://localhost:5000")
         print("📊 Metrics will be available at: http://localhost:8091")
         print("🎮 Advanced Features: ✅ Enabled")
         print("🏗️ Modular Architecture: ✅ Enabled")
