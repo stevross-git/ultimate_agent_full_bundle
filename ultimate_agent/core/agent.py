@@ -25,6 +25,28 @@ class UltimateAgent:
         self.logger = setup_logging("UltimateAgent")
         self.running = False
         self.modules = {}
+
+        # ✅ Add these
+        self.agent_id = self.config.get("agent_id", "agent-001")
+        self.ai_manager = None
+        self.registered = False
+        self.stats = {
+            "start_time": time.time(),
+            "tasks_completed": 0,
+            "tasks_failed": 0
+        }
+        self.current_tasks = {}
+        self.completed_tasks = []
+
+        # Remote command handler
+        from ..remote.handler import RemoteCommandHandler
+        self._command_handler = RemoteCommandHandler()
+        self._command_handler.set_shutdown_callback(self.stop)
+
+        self.config = config or get_config()
+        self.logger = setup_logging("UltimateAgent")
+        self.running = False
+        self.modules = {}
         # Remote command handler provides basic commands like 'ping'
         from ..remote.handler import RemoteCommandHandler
         self._command_handler = RemoteCommandHandler()
