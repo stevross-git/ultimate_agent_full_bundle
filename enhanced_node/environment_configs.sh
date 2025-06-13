@@ -13,7 +13,7 @@ NODE_ID=enhanced-node-production-001
 NODE_VERSION=3.4.0-advanced-remote-control
 
 # Network configuration
-NODE_PORT=5000
+NODE_PORT=443
 METRICS_PORT=8091
 
 # Manager configuration

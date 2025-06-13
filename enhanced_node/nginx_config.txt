@@ -4,7 +4,7 @@
 # Main server configuration
 upstream enhanced_node_backend {
     # Multiple server instances for load balancing
-    server 127.0.0.1:5000 weight=3 max_fails=3 fail_timeout=30s;
+    server 127.0.0.1:443 weight=3 max_fails=3 fail_timeout=30s;
     server 127.0.0.1:5001 weight=2 max_fails=3 fail_timeout=30s backup;
     
     # Health check
@@ -19,7 +19,7 @@ upstream enhanced_node_metrics {
 
 upstream enhanced_node_websocket {
     # WebSocket-specific upstream
-    server 127.0.0.1:5000;
+    server 127.0.0.1:443;
     
     # WebSocket settings
     ip_hash;  # Ensure session persistence for WebSocket connections

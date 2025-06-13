@@ -176,9 +176,9 @@ python main.py
 ✅ **Direct run** - if dependencies already installed
 
 ### **Access Points Ready**
-- ✅ **Dashboard**: http://localhost:5000
+- ✅ **Dashboard**: https://localhost:443
 - ✅ **Metrics**: http://localhost:8091
-- ✅ **All APIs**: http://localhost:5000/api/...
+- ✅ **All APIs**: https://localhost:443/api/...
 
 ---
 

@@ -49,7 +49,8 @@ class NetworkManager:
         
         # Configure SSL if enabled
         if self.config.getboolean('NETWORK', 'use_ssl', fallback=True):
-            self.session.verify = True
+            verify_ssl = self.config.getboolean('NETWORK', 'verify_ssl', fallback=True)
+            self.session.verify = verify_ssl
         
         # Configure retries
         from requests.adapters import HTTPAdapter
