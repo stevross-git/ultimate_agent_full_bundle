@@ -1,4 +1,4 @@
-# config/settings.py - ALTERNATIVE VERSION with comma-separated value support
+# config/settings.py - FIXED VERSION that allows extra fields
 import os
 import uuid
 from pathlib import Path
@@ -6,11 +6,14 @@ from typing import List
 
 try:
     from pydantic_settings import BaseSettings
-    from pydantic import field_validator
+    from pydantic import ConfigDict
 except ImportError:
-    from pydantic import BaseSettings, validator as field_validator
+    from pydantic import BaseSettings
 
 class Settings(BaseSettings):
+    # Configuration to allow extra fields (fixes the debug error)
+    model_config = ConfigDict(extra='ignore')  # This allows extra fields in .env
+    
     # Node Configuration
     NODE_VERSION: str = "3.4.0-advanced-remote-control"
     NODE_PORT: int = 5000
@@ -23,7 +26,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secure-secret-key-change-this")
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-jwt-secret-key-change-this")
     
-    # Lists - can be comma-separated strings or JSON arrays
+    # Lists - JSON format expected
     ALLOWED_HOSTS: List[str] = ["srvnodes.peoplesainetwork.com", "127.0.0.1", "localhost"]
     CORS_ORIGINS: List[str] = [
         "https://srvnodes.peoplesainetwork.com",
@@ -36,15 +39,6 @@ class Settings(BaseSettings):
     ]
     IP_WHITELIST: List[str] = []
     DEFAULT_RATE_LIMITS: List[str] = ["100 per hour", "10 per minute"]
-    
-    # Validators to handle comma-separated strings
-    @field_validator('ALLOWED_HOSTS', 'CORS_ORIGINS', 'BLOCKED_IPS', 'IP_WHITELIST', 'DEFAULT_RATE_LIMITS', mode='before')
-    @classmethod
-    def parse_list_from_string(cls, v):
-        if isinstance(v, str):
-            # Handle comma-separated string
-            return [item.strip() for item in v.split(',') if item.strip()]
-        return v
     
     # SSL/TLS Configuration
     USE_SSL: bool = True
@@ -80,9 +74,14 @@ class Settings(BaseSettings):
     ENABLE_RATE_LIMITING: bool = True
     ENABLE_IP_WHITELIST: bool = False
     
+    # Optional debug field (now it won't cause errors)
+    DEBUG: bool = False
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        # For older pydantic versions:
+        extra = "ignore"  # This also allows extra fields
 
 # Create settings instance
 settings = Settings()
