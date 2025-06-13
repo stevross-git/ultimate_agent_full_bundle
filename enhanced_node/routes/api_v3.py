@@ -15,6 +15,11 @@ from ..core.database import Agent, AgentHeartbeat
 from ..models.agents import EnhancedAgentInfo, EnhancedAgentStatus
 from ..utils.serialization import serialize_for_json
 from ..config.settings import NODE_ID, NODE_VERSION
+import os
+print("Template dir:", os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates')))
+print("HTML file exists?", os.path.exists(os.path.join(os.path.dirname(__file__), '..', 'templates', 'enhanced_dashboard.html')))
+
+
 
 
 def register_api_v3_routes(server):
