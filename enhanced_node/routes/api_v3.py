@@ -22,8 +22,11 @@ def register_api_v3_routes(server):
     
     @server.app.route('/')
     def enhanced_dashboard():
-        """Serve enhanced node dashboard with comprehensive Ultimate Agent API integration"""
         return get_enhanced_dashboard_html_with_new_features()
+
+    def get_enhanced_dashboard_html_with_new_features():
+        html_path = os.path.join(os.path.dirname(__file__), '..', 'templates', 'enhanced_dashboard.html')
+        return send_file(html_path)
     
     @server.app.route('/api/v3/agents/register', methods=['POST'])
     @server.app.route('/api/agents/register', methods=['POST'])  # Legacy support
@@ -410,7 +413,3 @@ def register_api_v3_routes(server):
 
 
 
-def get_enhanced_dashboard_html_with_new_features():
-    """Serve enhanced dashboard from HTML file"""
-    html_path = os.path.join(os.path.dirname(__file__), '..', 'templates', 'enhanced_dashboard.html')
-    return render_template(html_path)
