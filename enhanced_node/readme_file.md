@@ -118,10 +118,10 @@ python -m enhanced_node.main
 
 Once running, the server provides:
 
-- **Dashboard**: http://localhost:5000
+- **Dashboard**: https://localhost:443
 - **Metrics**: http://localhost:8091
-- **API v3**: http://localhost:5000/api/v3/
-- **API v5**: http://localhost:5000/api/v5/remote/
+- **API v3**: https://localhost:443/api/v3/
+- **API v5**: https://localhost:443/api/v5/remote/
 
 ## 📋 Dependencies
 
@@ -188,7 +188,7 @@ All configuration is centralized in `config/settings.py`:
 ```python
 # Node Configuration
 NODE_VERSION = "3.4.0-advanced-remote-control"
-NODE_PORT = 5000
+NODE_PORT = 443
 NODE_ID = f"enhanced-node-{uuid.uuid4().hex[:12]}"
 
 # Directory Configuration  

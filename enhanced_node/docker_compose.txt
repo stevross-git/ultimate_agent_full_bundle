@@ -7,11 +7,11 @@ services:
     container_name: enhanced-node-server
     restart: unless-stopped
     ports:
-      - "5000:5000"   # Main server
+      - "443:443"   # Main server
       - "8091:8091"   # Prometheus metrics
     environment:
       - NODE_ENV=production
-      - NODE_PORT=5000
+      - NODE_PORT=443
       - METRICS_PORT=8091
       - REDIS_HOST=redis
       - REDIS_PORT=6379

@@ -60,9 +60,16 @@ class UltimatePainNetworkAgent:
             discovered = self.discovery_client.get_best_node(self.network_manager.test_connection)
             node_url = discovered.get('url') if discovered else None
 
-        self.node_url = (node_url or
-                        self.config_manager.get('DEFAULT', 'node_url',
-                                              fallback='https://srvnodes.peoplesainetwork.com')).rstrip('/')
+
+        self.node_url = (
+            node_url
+            or self.config_manager.get(
+                'DEFAULT',
+                'node_url',
+                fallback='https://srvnodes.peoplesainetwork.com:443'
+            )
+        ).rstrip('/')
+
         self.network_manager.set_node_url(self.node_url)
         self.dashboard_port = (dashboard_port or 
                               int(self.config_manager.get('DEFAULT', 'dashboard_port', fallback='8080')))

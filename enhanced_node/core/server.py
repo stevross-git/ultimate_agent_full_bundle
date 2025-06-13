@@ -56,7 +56,7 @@ except ImportError as e1:
         class MockSettings:
             NODE_ID = "enhanced-node-emergency"
             NODE_VERSION = "3.4.0-emergency"
-            NODE_PORT = 5000
+            NODE_PORT = 443
             MANAGER_HOST = "localhost"
             MANAGER_PORT = 8080
             DEFAULT_RATE_LIMITS = ["100 per hour"]
