@@ -40,16 +40,17 @@ def main():
 
         config = get_config()
         
-        print("🚀 Starting Ultimate Agent...again")
+        print("🚀 Starting Ultimate Agent...")
         agent = UltimateAgent(config)
         agent.start()
 
-        # ✅ START DASHBOARD WEB SERVER
-        if hasattr(agent, 'dashboard') and agent.dashboard:
-            print("🌐 Launching Dashboard Web Server on port 8080...")
+        # ✅ ADD THIS BLOCK
+        if hasattr(agent, "dashboard") and agent.dashboard:
+            print("🌐 Launching Dashboard Web Server on port", agent.dashboard.dashboard_port)
             agent.dashboard.start_server()
         else:
-            print("⚠️ Dashboard not available or not initialized")
+            print("⚠️ Dashboard not initialized or missing")
+
 
         
     except ImportError as e:
