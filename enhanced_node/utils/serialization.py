@@ -6,6 +6,14 @@ import json
 from datetime import datetime
 from typing import Any, Dict
 
+class DateTimeJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects"""
+    
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
 def serialize_for_json(obj: Any) -> Dict[str, Any]:
     """Serialize objects for JSON response"""
     if obj is None:
@@ -35,3 +43,11 @@ def safe_json_loads(data: str) -> Any:
         return json.loads(data)
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid JSON data: {e}")
+
+def safe_json_dumps(obj: Any, **kwargs) -> str:
+    """Safely dump JSON data with datetime support"""
+    try:
+        return json.dumps(obj, cls=DateTimeJSONEncoder, **kwargs)
+    except TypeError as e:
+        # Fallback to serializing the object first
+        return json.dumps(serialize_for_json(obj), **kwargs)

@@ -1,9 +1,15 @@
-# config/settings.py - SSL/TLS Configuration Updates
+# config/settings.py - FIXED VERSION with correct pydantic imports
 import os
 import uuid
 from pathlib import Path
 from typing import List
-from pydantic import BaseSettings
+
+# FIXED: Import BaseSettings from pydantic_settings instead of pydantic
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    # Fallback for older pydantic versions
+    from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     # Node Configuration
@@ -56,6 +62,9 @@ class Settings(BaseSettings):
     COMMAND_SCHEDULER_INTERVAL: int = 10
     METRICS_PORT: int = 8091
     
+    # Rate Limiting
+    DEFAULT_RATE_LIMITS: List[str] = ["100 per hour", "10 per minute"]
+    
     # Security Features
     ENABLE_RATE_LIMITING: bool = True
     ENABLE_IP_WHITELIST: bool = False
@@ -69,4 +78,5 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
 
+# Create settings instance
 settings = Settings()
