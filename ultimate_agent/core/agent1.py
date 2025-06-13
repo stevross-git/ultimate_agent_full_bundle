@@ -65,9 +65,10 @@ class UltimatePainNetworkAgent:
             or self.config_manager.get(
                 'DEFAULT',
                 'node_url',
-                fallback='https://srvnodes.peoplesainetwork.com:443'
+                fallback='https://srvnodes.peoplesainetwork.com'
             )
         ).rstrip('/')
+
         self.network_manager.set_node_url(self.node_url)
         self.dashboard_port = (dashboard_port or 
                               int(self.config_manager.get('DEFAULT', 'dashboard_port', fallback='8080')))
