@@ -440,6 +440,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/AdvancedStatistics'
 
+  # Version Control Endpoints
+  /api/v6/version/updates/check:
+    post:
+      tags: [Version Control]
+      summary: Manually check for updates
+      description: Trigger an immediate update check across agents
+      responses:
+        '200':
+          description: Update check initiated
+  /api/v6/version/updates/available:
+    get:
+      tags: [Version Control]
+      summary: Get available update packages
+      description: List update packages that can be installed
+      responses:
+        '200':
+          description: Available updates retrieved
+  /api/v6/version/updates/schedule:
+    post:
+      tags: [Version Control]
+      summary: Schedule update for an agent
+      description: Schedule a specific update package for an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleUpdateRequest'
+      responses:
+        '200':
+          description: Update scheduled successfully
+  /api/v6/version/statistics:
+    get:
+      tags: [Version Control]
+      summary: Get version control statistics
+      description: Retrieve aggregate version control stats
+      responses:
+        '200':
+          description: Version statistics retrieved
+  /api/v6/version/rollback/history:
+    get:
+      tags: [Version Control]
+      summary: Get rollback history
+      description: Retrieve rollback history for all agents
+      responses:
+        '200':
+          description: Rollback history retrieved
 components:
   schemas:
     # Agent Management Schemas
@@ -778,6 +825,29 @@ components:
         advanced_control_enabled:
           type: boolean
 
+
+    ScheduleUpdateRequest:
+      type: object
+      required: [agent_id, package_id]
+      properties:
+        agent_id:
+          type: string
+        package_id:
+          type: string
+        scheduled_time:
+          type: string
+          format: date-time
+        strategy:
+          type: string
+          default: rolling
+
+    VersionStatistics:
+      type: object
+      properties:
+        total_updates:
+          type: integer
+        successful_rollbacks:
+          type: integer
     ErrorResponse:
       type: object
       properties:
