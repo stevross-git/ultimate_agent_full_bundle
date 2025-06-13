@@ -40,7 +40,7 @@ def main():
 
         config = get_config()
         
-        print("🚀 Starting Ultimate Agent...")
+        print("🚀 Starting Ultimate Agent...again")
         agent = UltimateAgent(config)
         agent.start()
 
