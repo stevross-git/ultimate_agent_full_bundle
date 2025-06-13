@@ -450,7 +450,7 @@ remote_manager = AdvancedRemoteControlManager(mock_server)
 
 ```bash
 # Production configuration via environment variables
-export NODE_PORT=5000
+export NODE_PORT=443
 export DATABASE_URL="postgresql://user:pass@localhost/nodedb"
 export REDIS_URL="redis://localhost:6379"
 export LOG_LEVEL="INFO"
