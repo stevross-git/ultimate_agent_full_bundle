@@ -1417,6 +1417,28 @@ Content-Type: application/json
 GET /api/v4/performance/detailed?component=all&timeframe=1h
 ```
 
+### Node Version Control API (v6)
+
+The Ultimate Agent can interact with the node's version control endpoints to manage software updates and rollbacks.
+
+```http
+POST /api/v6/version/updates/check
+```
+
+```http
+POST /api/v6/version/updates/schedule
+Content-Type: application/json
+
+{
+  "agent_id": "ultimate-agent-001",
+  "package_id": "update-2025-06-10",
+  "scheduled_time": "2025-06-11T03:00:00Z"
+}
+```
+
+```http
+GET /api/v6/version/statistics
+```
 ---
 
 ## 🚀 Future Roadmap (v4.2+)
