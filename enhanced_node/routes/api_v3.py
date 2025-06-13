@@ -412,608 +412,1426 @@ def get_enhanced_dashboard_html_with_new_features():
     """Generate the enhanced dashboard HTML with all new Ultimate Agent features"""
     return f"""
     <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Enhanced Node Server v{NODE_VERSION} - ULTIMATE AGENT COMMAND CENTER</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
-        <style>
-            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-            body {{
-                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                background: radial-gradient(circle at 25% 25%, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-                color: white;
-                min-height: 100vh;
-                padding: 20px;
-            }}
-            .container {{ max-width: 2000px; margin: 0 auto; }}
-            
-            /* Header Styles */
-            .header {{
-                text-align: center;
-                margin-bottom: 30px;
-                padding: 40px;
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 25px;
-                backdrop-filter: blur(30px);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                position: relative;
-                overflow: hidden;
-            }}
-            .header::before {{
-                content: '';
-                position: absolute;
-                top: -50%;
-                left: -50%;
-                width: 200%;
-                height: 200%;
-                background: conic-gradient(transparent, rgba(255, 255, 255, 0.1), transparent);
-                animation: rotate 10s linear infinite;
-            }}
-            @keyframes rotate {{ to {{ transform: rotate(360deg); }} }}
-            
-            .header h1 {{
-                font-size: 3rem;
-                font-weight: 900;
-                background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f093fb);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                margin-bottom: 15px;
-                position: relative;
-                z-index: 1;
-            }}
-            
-            .ultimate-api-badge {{
-                display: inline-block;
-                background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-                padding: 10px 25px;
-                border-radius: 25px;
-                font-size: 1rem;
-                font-weight: 700;
-                margin: 10px 8px;
-                position: relative;
-                z-index: 1;
-                animation: ultimatePulse 3s infinite;
-                box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
-            }}
-            @keyframes ultimatePulse {{
-                0%, 100% {{ box-shadow: 0 0 15px rgba(255, 107, 107, 0.3), 0 0 30px rgba(78, 205, 196, 0.2); }}
-                50% {{ box-shadow: 0 0 25px rgba(78, 205, 196, 0.6), 0 0 50px rgba(255, 107, 107, 0.4); }}
-            }}
-            
-            .feature-badge {{
-                background: rgba(255, 255, 255, 0.15);
-                padding: 8px 12px;
-                border-radius: 12px;
-                text-align: center;
-                font-weight: 600;
-                backdrop-filter: blur(10px);
-                font-size: 0.85rem;
-                transition: all 0.3s ease;
-                margin: 5px;
-                display: inline-block;
-            }}
-            .feature-badge:hover {{
-                background: rgba(255, 255, 255, 0.25);
-                transform: translateY(-2px);
-            }}
-            
-            /* Main Grid and responsive styles continue... */
-            .main-grid {{
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-                margin-bottom: 30px;
-            }}
-            
-            .section {{
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 20px;
-                padding: 25px;
-                backdrop-filter: blur(20px);
-                border: 2px solid rgba(78, 205, 196, 0.3);
-                margin-bottom: 20px;
-            }}
-            
-            .control-button {{
-                background: linear-gradient(45deg, #667eea, #764ba2);
-                color: white;
-                border: none;
-                padding: 15px 20px;
-                border-radius: 15px;
-                cursor: pointer;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                font-size: 0.9rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-            }}
-            
-            .api-button {{ background: linear-gradient(45deg, #ff6b6b, #4ecdc4); }}
-            .ai-button {{ background: linear-gradient(45deg, #9c27b0, #673ab7); }}
-            .blockchain-button {{ background: linear-gradient(45deg, #ff9800, #ff5722); }}
-            .system-button {{ background: linear-gradient(45deg, #2196f3, #03a9f4); }}
-            
-            .loading {{
-                text-align: center;
-                opacity: 0.7;
-                padding: 40px;
-                font-style: italic;
-            }}
-            
-            .spinner {{
-                display: inline-block;
-                width: 20px;
-                height: 20px;
-                border: 3px solid rgba(255, 255, 255, 0.3);
-                border-radius: 50%;
-                border-top-color: #4ecdc4;
-                animation: spin 1s ease-in-out infinite;
-                margin-right: 10px;
-            }}
-            
-            @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <!-- Header -->
-            <div class="header">
-                <h1><i class="fas fa-robot"></i> Enhanced Node Server</h1>
-                <div class="ultimate-api-badge">
-                    <i class="fas fa-rocket"></i> ULTIMATE AGENT COMMAND CENTER
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Node Server - Complete Command Center</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at 25% 25%, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container { max-width: 2000px; margin: 0 auto; }
+        
+        /* Header with Animation */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            backdrop-filter: blur(30px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: rotate 10s linear infinite;
+        }
+        
+        @keyframes rotate { to { transform: rotate(360deg); } }
+        
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-badges {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            animation: ultimatePulse 3s infinite;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-badge:hover { transform: scale(1.05); }
+        
+        @keyframes ultimatePulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(102, 126, 234, 0.3), 0 0 30px rgba(78, 205, 196, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(78, 205, 196, 0.6), 0 0 50px rgba(102, 126, 234, 0.4); }
+        }
+        
+        /* Navigation */
+        .nav-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(20px);
+        }
+        
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .nav-tab {
+            padding: 12px 20px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Section Styles */
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(78, 205, 196, 0.3);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-3px);
+            border-color: rgba(78, 205, 196, 0.5);
+        }
+        
+        .section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4ecdc4;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .stat-card:hover::before { left: 100%; }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-5px);
+            border-color: #4ecdc4;
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #4ecdc4;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* Control Buttons */
+        .control-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 5px;
+        }
+        
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-button:active {
+            transform: translateY(0);
+        }
+        
+        /* Button Variants */
+        .ai-button { background: linear-gradient(45deg, #9c27b0, #673ab7); }
+        .blockchain-button { background: linear-gradient(45deg, #ff9800, #ff5722); }
+        .system-button { background: linear-gradient(45deg, #2196f3, #03a9f4); }
+        .version-button { background: linear-gradient(45deg, #4caf50, #8bc34a); }
+        .remote-button { background: linear-gradient(45deg, #e91e63, #f06292); }
+        .danger-button { background: linear-gradient(45deg, #f44336, #e53935); }
+        
+        /* Agent Grid */
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .agent-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .agent-card:hover::before { opacity: 1; }
+        
+        .agent-card:hover {
+            transform: translateY(-5px);
+            border-color: #4ecdc4;
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.2);
+        }
+        
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .agent-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4ecdc4;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-online { background: #4caf50; animation: pulse 2s infinite; }
+        .status-offline { background: #f44336; }
+        .status-busy { background: #ff9800; animation: pulse 1s infinite; }
+        .status-updating { background: #2196f3; animation: pulse 0.5s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Operations Grid */
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .operation-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .operation-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+        }
+        
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4caf50, #8bc34a);
+            border-radius: 4px;
+            transition: width 1s ease;
+            position: relative;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active { display: flex; }
+        
+        .modal-content {
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid rgba(78, 205, 196, 0.3);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            color: #4ecdc4;
+            font-size: 1.5rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4ecdc4;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Loading Animation */
+        .loading {
+            text-align: center;
+            opacity: 0.7;
+            padding: 40px;
+            font-style: italic;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4ecdc4;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1100;
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .notification.success { background: linear-gradient(45deg, #4caf50, #8bc34a); }
+        .notification.error { background: linear-gradient(45deg, #f44336, #e91e63); }
+        .notification.warning { background: linear-gradient(45deg, #ff9800, #ffc107); }
+        .notification.info { background: linear-gradient(45deg, #2196f3, #03a9f4); }
+        
+        /* Real-time Data Updates */
+        .live-data {
+            position: relative;
+        }
+        
+        .live-data::after {
+            content: '●';
+            color: #4caf50;
+            font-size: 0.8rem;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            animation: livePulse 2s infinite;
+        }
+        
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .agents-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+            .stats-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.5rem; }
+            .nav-tabs { flex-direction: column; }
+            .agents-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .operations-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 999;
+        }
+        
+        .connection-status.connected {
+            border-color: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+        
+        .connection-status.disconnected {
+            border-color: #f44336;
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Connection Status -->
+        <div id="connectionStatus" class="connection-status">
+            <i class="fas fa-circle"></i> <span id="connectionText">Connecting...</span>
+        </div>
+        
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-rocket"></i> Enhanced Node Server</h1>
+            <div class="feature-badges">
+                <div class="feature-badge">
+                    <i class="fas fa-brain"></i> AI Operations Center
                 </div>
-                <div class="ultimate-api-badge">
-                    <i class="fas fa-brain"></i> AI POWERED
+                <div class="feature-badge">
+                    <i class="fas fa-coins"></i> Blockchain Integration
                 </div>
-                <div class="ultimate-api-badge">
-                    <i class="fas fa-coins"></i> BLOCKCHAIN INTEGRATED
+                <div class="feature-badge">
+                    <i class="fas fa-code-branch"></i> Version Control
                 </div>
-                
-                <p style="font-size: 1.1rem; margin: 15px 0; position: relative; z-index: 1;">
-                    v{NODE_VERSION} - Ultimate Agent API Integration with Advanced Features
-                </p>
-                
-                <div style="margin-top: 20px;">
-                    <div class="feature-badge"><i class="fas fa-brain"></i> Neural Networks</div>
-                    <div class="feature-badge"><i class="fas fa-eye"></i> Computer Vision</div>
-                    <div class="feature-badge"><i class="fas fa-language"></i> NLP & Transformers</div>
-                    <div class="feature-badge"><i class="fas fa-gamepad"></i> Reinforcement Learning</div>
-                    <div class="feature-badge"><i class="fas fa-coins"></i> Multi-Currency Wallets</div>
-                    <div class="feature-badge"><i class="fas fa-file-contract"></i> Smart Contracts</div>
-                    <div class="feature-badge"><i class="fas fa-network-wired"></i> Multi-Network</div>
-                    <div class="feature-badge"><i class="fas fa-tasks"></i> Advanced Task Control</div>
-                    <div class="feature-badge"><i class="fas fa-satellite-dish"></i> Real-time Monitoring</div>
-                    <div class="feature-badge"><i class="fas fa-shield-alt"></i> Health & Recovery</div>
+                <div class="feature-badge">
+                    <i class="fas fa-satellite-dish"></i> Remote Control
                 </div>
-                
-                <p style="position: relative; z-index: 1; opacity: 0.8; font-size: 0.9rem; margin-top: 15px;">
-                    Node ID: {NODE_ID} | Enhanced Features Active | Ultimate Agent API Integration Online
-                </p>
+                <div class="feature-badge">
+                    <i class="fas fa-tasks"></i> Task Management
+                </div>
+                <div class="feature-badge">
+                    <i class="fas fa-heartbeat"></i> Health Monitoring
+                </div>
+                <div class="feature-badge">
+                    <i class="fas fa-shield-alt"></i> Enterprise Security
+                </div>
+                <div class="feature-badge">
+                    <i class="fas fa-chart-line"></i> Real-time Analytics
+                </div>
             </div>
-            
-            <!-- Quick Stats -->
-            <div id="quickStats" class="section">
-                <h2><i class="fas fa-chart-bar"></i> System Overview</h2>
-                <div id="statsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
-                    <div class="loading">
-                        <span class="spinner"></span>Loading comprehensive agent data...
-                    </div>
-                </div>
+            <p style="font-size: 1.1rem; margin: 15px 0; position: relative; z-index: 1; opacity: 0.9;">
+                🚀 Modular Architecture v3.4.0 | 🌐 SSL Enabled | ⚡ Real-time Operations
+            </p>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="nav-container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </button>
+                <button class="nav-tab" onclick="showTab('agents')">
+                    <i class="fas fa-robot"></i> Agents
+                </button>
+                <button class="nav-tab" onclick="showTab('ai-ops')">
+                    <i class="fas fa-brain"></i> AI Operations
+                </button>
+                <button class="nav-tab" onclick="showTab('blockchain')">
+                    <i class="fas fa-coins"></i> Blockchain
+                </button>
+                <button class="nav-tab" onclick="showTab('tasks')">
+                    <i class="fas fa-tasks"></i> Task Control
+                </button>
+                <button class="nav-tab" onclick="showTab('remote')">
+                    <i class="fas fa-satellite-dish"></i> Remote Control
+                </button>
+                <button class="nav-tab" onclick="showTab('version')">
+                    <i class="fas fa-code-branch"></i> Version Control
+                </button>
+                <button class="nav-tab" onclick="showTab('monitoring')">
+                    <i class="fas fa-heartbeat"></i> Monitoring
+                </button>
+                <button class="nav-tab" onclick="showTab('analytics')">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </button>
             </div>
-            
-            <!-- Enhanced Features Grid -->
-            <div class="main-grid">
-                <!-- AI Operations -->
-                <div class="section">
-                    <h2><i class="fas fa-brain"></i> AI Operations Center</h2>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 15px 0;" id="aiModelsGrid">
-                        <div class="loading">Loading AI models...</div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                        <button class="control-button ai-button" onclick="runAdvancedInference()">
-                            <i class="fas fa-play"></i> Run AI Inference
-                        </button>
-                        <button class="control-button ai-button" onclick="startNeuralTraining()">
-                            <i class="fas fa-graduation-cap"></i> Start Training
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Blockchain Operations -->
-                <div class="section">
-                    <h2><i class="fas fa-coins"></i> Blockchain Operations</h2>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 15px 0;" id="currencyGrid">
-                        <div class="loading">Loading wallet balances...</div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                        <button class="control-button blockchain-button" onclick="executeSmartContract()">
-                            <i class="fas fa-file-contract"></i> Execute Contract
-                        </button>
-                        <button class="control-button blockchain-button" onclick="manageWallets()">
-                            <i class="fas fa-wallet"></i> Manage Wallets
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Agents Grid -->
+        </div>
+        
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <!-- System Overview -->
             <div class="section">
-                <h2><i class="fas fa-robot"></i> Ultimate Agents Command Center
-                    <button class="control-button api-button" onclick="refreshAgents()" style="margin-left: auto; padding: 8px 15px; font-size: 0.8rem;">
+                <h2><i class="fas fa-chart-bar"></i> System Overview</h2>
+                <div id="systemStats" class="stats-grid">
+                    <div class="loading">
+                        <span class="spinner"></span>Loading system statistics...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="section">
+                <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                <div class="operations-grid">
+                    <button class="control-button ai-button" onclick="showTab('ai-ops')">
+                        <i class="fas fa-brain"></i> AI Operations
+                    </button>
+                    <button class="control-button blockchain-button" onclick="showTab('blockchain')">
+                        <i class="fas fa-coins"></i> Blockchain Hub
+                    </button>
+                    <button class="control-button system-button" onclick="bulkAgentOperation()">
+                        <i class="fas fa-layer-group"></i> Bulk Operations
+                    </button>
+                    <button class="control-button version-button" onclick="showTab('version')">
+                        <i class="fas fa-code-branch"></i> Version Control
+                    </button>
+                    <button class="control-button remote-button" onclick="showTab('remote')">
+                        <i class="fas fa-satellite-dish"></i> Remote Control
+                    </button>
+                    <button class="control-button danger-button" onclick="emergencyActions()">
+                        <i class="fas fa-exclamation-triangle"></i> Emergency
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="section">
+                <h2><i class="fas fa-clock"></i> Recent Activity</h2>
+                <div id="recentActivity">
+                    <div class="loading">Loading recent activity...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Agents Tab -->
+        <div id="agents" class="tab-content">
+            <div class="section">
+                <h2>
+                    <i class="fas fa-robot"></i> Ultimate Agents
+                    <button class="control-button system-button" onclick="refreshAgents()" style="margin-left: auto; padding: 8px 15px; font-size: 0.8rem;">
                         <i class="fas fa-sync"></i> Refresh
                     </button>
                 </h2>
-                
-                <div id="agentsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin: 20px 0;">
+                <div id="agentsGrid" class="agents-grid">
                     <div class="loading">
                         <span class="spinner"></span>Loading Ultimate Agents...
                     </div>
                 </div>
             </div>
-            
-            <!-- Advanced Control Center -->
+        </div>
+        
+        <!-- AI Operations Tab -->
+        <div id="ai-ops" class="tab-content">
             <div class="section">
-                <h2><i class="fas fa-satellite-dish"></i> Advanced Control Center</h2>
+                <h2><i class="fas fa-brain"></i> AI Operations Center</h2>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
-                    <button class="control-button api-button" onclick="bulkAgentOperations()">
-                        <i class="fas fa-layer-group"></i> Bulk Operations
+                <!-- AI Models Status -->
+                <div class="section">
+                    <h3><i class="fas fa-microchip"></i> AI Models Status</h3>
+                    <div id="aiModelsGrid" class="operations-grid">
+                        <div class="loading">Loading AI models...</div>
+                    </div>
+                </div>
+                
+                <!-- AI Operations -->
+                <div class="operations-grid">
+                    <button class="control-button ai-button" onclick="runBulkInference()">
+                        <i class="fas fa-play"></i> Bulk AI Inference
                     </button>
-                    <button class="control-button ai-button" onclick="distributedTraining()">
-                        <i class="fas fa-share-alt"></i> Distributed Training
+                    <button class="control-button ai-button" onclick="startDistributedTraining()">
+                        <i class="fas fa-graduation-cap"></i> Distributed Training
                     </button>
-                    <button class="control-button blockchain-button" onclick="multiAgentContracts()">
-                        <i class="fas fa-handshake"></i> Multi-Agent Contracts
+                    <button class="control-button ai-button" onclick="deployAIModel()">
+                        <i class="fas fa-upload"></i> Deploy Model
                     </button>
-                    <button class="control-button system-button" onclick="systemMonitoring()">
-                        <i class="fas fa-heartbeat"></i> System Monitoring
+                    <button class="control-button ai-button" onclick="optimizePerformance()">
+                        <i class="fas fa-tachometer-alt"></i> Optimize Performance
                     </button>
+                </div>
+                
+                <!-- AI Analytics -->
+                <div class="section">
+                    <h3><i class="fas fa-chart-line"></i> AI Performance Analytics</h3>
+                    <div class="chart-container">
+                        <canvas id="aiPerformanceChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <script>
-            let socket;
-            let agentsData = [];
-            
-            // Initialize dashboard
-            document.addEventListener('DOMContentLoaded', () => {{
-                initSocket();
-                refreshData();
-                setInterval(refreshData, 10000); // Update every 10 seconds
-            }});
-            
-            function initSocket() {{
-                try {{
-                    socket = io();
-                    socket.on('connect', () => {{
-                        console.log('Connected to Enhanced Node Server');
-                        showNotification('Connected to Enhanced Node Server with Ultimate Agent Features', 'success');
-                    }});
-                    
-                    socket.on('ultimate_agent_registered', (data) => {{
-                        console.log('Ultimate Agent registered:', data);
-                        refreshData();
-                        showNotification(`Ultimate Agent ${{data.agent_id}} registered with enhanced features`, 'success');
-                    }});
-                    
-                    socket.on('ultimate_agent_status_update', (data) => {{
-                        updateAgentStatus(data);
-                    }});
-                    
-                }} catch (e) {{
-                    console.log('WebSocket not available');
-                }}
-            }}
-            
-            async function refreshData() {{
-                try {{
-                    const response = await fetch('/api/v3/agents');
-                    const data = await response.json();
-                    
-                    agentsData = data.agents || [];
-                    updateStats(data.stats);
-                    updateAgentsList(data.agents);
-                    updateAIModels(data.agents);
-                    updateCurrencyGrid(data.agents);
-                    
-                }} catch (error) {{
-                    console.error('Failed to refresh data:', error);
-                    showNotification('Failed to refresh data', 'error');
-                }}
-            }}
-            
-            function updateStats(stats) {{
-                const statsGrid = document.getElementById('statsGrid');
-                statsGrid.innerHTML = `
-                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; text-align: center;">
-                        <div style="font-size: 2.2em; font-weight: 700; color: #4ecdc4;">${{stats.total_agents}}</div>
-                        <div style="font-size: 0.9em; opacity: 0.9;"><i class="fas fa-robot"></i> Total Agents</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; text-align: center;">
-                        <div style="font-size: 2.2em; font-weight: 700; color: #4ecdc4;">${{stats.online_agents}}</div>
-                        <div style="font-size: 0.9em; opacity: 0.9;"><i class="fas fa-circle" style="color: #4caf50;"></i> Online</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; text-align: center;">
-                        <div style="font-size: 2.2em; font-weight: 700; color: #4ecdc4;">${{stats.total_ai_models}}</div>
-                        <div style="font-size: 0.9em; opacity: 0.9;"><i class="fas fa-brain"></i> AI Models</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; text-align: center;">
-                        <div style="font-size: 2.2em; font-weight: 700; color: #4ecdc4;">${{stats.total_blockchain_balance.toFixed(3)}}</div>
-                        <div style="font-size: 0.9em; opacity: 0.9;"><i class="fas fa-coins"></i> Total ETH</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; text-align: center;">
-                        <div style="font-size: 2.2em; font-weight: 700; color: #4ecdc4;">${{stats.health_score.toFixed(0)}}%</div>
-                        <div style="font-size: 0.9em; opacity: 0.9;"><i class="fas fa-heartbeat"></i> Health</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; text-align: center;">
-                        <div style="font-size: 2.2em; font-weight: 700; color: #4ecdc4;">API</div>
-                        <div style="font-size: 0.9em; opacity: 0.9;"><i class="fas fa-plug"></i> Enhanced</div>
-                    </div>
-                `;
-            }}
-            
-            function updateAgentsList(agents) {{
-                const agentsGrid = document.getElementById('agentsGrid');
+        <!-- Blockchain Tab -->
+        <div id="blockchain" class="tab-content">
+            <div class="section">
+                <h2><i class="fas fa-coins"></i> Blockchain Operations</h2>
                 
-                if (!agents || agents.length === 0) {{
-                    agentsGrid.innerHTML = '<div class="loading">No agents registered</div>';
-                    return;
-                }}
+                <!-- Wallet Overview -->
+                <div class="section">
+                    <h3><i class="fas fa-wallet"></i> Multi-Currency Wallets</h3>
+                    <div id="walletsGrid" class="stats-grid">
+                        <div class="loading">Loading wallet data...</div>
+                    </div>
+                </div>
                 
-                agentsGrid.innerHTML = agents.map(agent => {{
-                    const apiData = agent.ultimate_agent_api || {{}};
-                    const hasApi = apiData.api_endpoints ? true : false;
-                    
-                    return `
-                        <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; border: 1px solid rgba(255,255,255,0.2);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <div style="font-size: 1.2rem; font-weight: 600;">
-                                    <i class="fas fa-robot"></i> ${{agent.name || agent.id}}
-                                </div>
-                                <div>
-                                    <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${{hasApi ? '#4caf50' : '#f44336'}}; margin-right: 8px;"></span>
-                                    <span style="font-size: 0.8rem; opacity: 0.8;">
-                                        ${{hasApi ? 'API Online' : 'API Offline'}}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <div><strong>Host:</strong> ${{agent.host}}:${{apiData.dashboard_port || 8080}}</div>
-                                <div><strong>Status:</strong> 
-                                    <span style="color: ${{agent.status === 'online' ? '#4caf50' : '#f44336'}};">
-                                        ${{agent.status || 'unknown'}}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
-                                <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 8px;">
-                                    <div style="font-size: 1.2rem; font-weight: 600; color: #4ecdc4;">${{(agent.cpu_percent || 0).toFixed(1)}}%</div>
-                                    <div style="font-size: 0.8rem; opacity: 0.8;">CPU</div>
-                                </div>
-                                <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 8px;">
-                                    <div style="font-size: 1.2rem; font-weight: 600; color: #4ecdc4;">${{agent.tasks_running || 0}}</div>
-                                    <div style="font-size: 0.8rem; opacity: 0.8;">Tasks</div>
-                                </div>
-                            </div>
-                            
-                            ${{hasApi ? `
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;">
-                                    <button class="control-button ai-button" style="padding: 8px; font-size: 0.8em;" 
-                                            onclick="testAgentAPI('${{agent.id}}')">
-                                        <i class="fas fa-vial"></i> Test API
-                                    </button>
-                                    <button class="control-button system-button" style="padding: 8px; font-size: 0.8em;" 
-                                            onclick="openAgentDashboard('${{agent.host}}', ${{apiData.dashboard_port || 8080}})">
-                                        <i class="fas fa-external-link-alt"></i> Dashboard
-                                    </button>
-                                </div>
-                            ` : `
-                                <div style="color: #ff9800; font-style: italic; text-align: center; margin: 15px 0;">
-                                    <i class="fas fa-exclamation-triangle"></i> Ultimate Agent API not available
-                                </div>
-                            `}}
+                <!-- Blockchain Operations -->
+                <div class="operations-grid">
+                    <button class="control-button blockchain-button" onclick="executeSmartContract()">
+                        <i class="fas fa-file-contract"></i> Execute Smart Contract
+                    </button>
+                    <button class="control-button blockchain-button" onclick="distributedRewards()">
+                        <i class="fas fa-gift"></i> Distribute Rewards
+                    </button>
+                    <button class="control-button blockchain-button" onclick="manageWallets()">
+                        <i class="fas fa-cog"></i> Manage Wallets
+                    </button>
+                    <button class="control-button blockchain-button" onclick="blockchainAnalytics()">
+                        <i class="fas fa-chart-bar"></i> Analytics
+                    </button>
+                </div>
+                
+                <!-- Transaction History -->
+                <div class="section">
+                    <h3><i class="fas fa-history"></i> Recent Transactions</h3>
+                    <div id="transactionHistory">
+                        <div class="loading">Loading transaction history...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Task Control Tab -->
+        <div id="tasks" class="tab-content">
+            <div class="section">
+                <h2><i class="fas fa-tasks"></i> Central Task Control</h2>
+                
+                <!-- Task Statistics -->
+                <div id="taskStats" class="stats-grid">
+                    <div class="loading">Loading task statistics...</div>
+                </div>
+                
+                <!-- Task Operations -->
+                <div class="operations-grid">
+                    <button class="control-button system-button" onclick="createCentralTask()">
+                        <i class="fas fa-plus"></i> Create Task
+                    </button>
+                    <button class="control-button system-button" onclick="bulkTaskAssignment()">
+                        <i class="fas fa-layer-group"></i> Bulk Assignment
+                    </button>
+                    <button class="control-button system-button" onclick="taskPriorityManager()">
+                        <i class="fas fa-sort-numeric-up"></i> Priority Manager
+                    </button>
+                    <button class="control-button system-button" onclick="taskAnalytics()">
+                        <i class="fas fa-chart-pie"></i> Task Analytics
+                    </button>
+                </div>
+                
+                <!-- Active Tasks -->
+                <div class="section">
+                    <h3><i class="fas fa-play"></i> Active Tasks</h3>
+                    <div id="activeTasks">
+                        <div class="loading">Loading active tasks...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Remote Control Tab -->
+        <div id="remote" class="tab-content">
+            <div class="section">
+                <h2><i class="fas fa-satellite-dish"></i> Advanced Remote Control</h2>
+                
+                <!-- Remote Operations -->
+                <div class="operations-grid">
+                    <button class="control-button remote-button" onclick="bulkRemoteCommand()">
+                        <i class="fas fa-terminal"></i> Bulk Commands
+                    </button>
+                    <button class="control-button remote-button" onclick="scheduleCommand()">
+                        <i class="fas fa-clock"></i> Schedule Commands
+                    </button>
+                    <button class="control-button remote-button" onclick="deployScript()">
+                        <i class="fas fa-file-code"></i> Deploy Scripts
+                    </button>
+                    <button class="control-button remote-button" onclick="healthCheck()">
+                        <i class="fas fa-heartbeat"></i> Health Check
+                    </button>
+                </div>
+                
+                <!-- Command History -->
+                <div class="section">
+                    <h3><i class="fas fa-history"></i> Command History</h3>
+                    <div id="commandHistory">
+                        <div class="loading">Loading command history...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Version Control Tab -->
+        <div id="version" class="tab-content">
+            <div class="section">
+                <h2><i class="fas fa-code-branch"></i> Version Control System</h2>
+                
+                <!-- Version Statistics -->
+                <div id="versionStats" class="stats-grid">
+                    <div class="loading">Loading version statistics...</div>
+                </div>
+                
+                <!-- Version Operations -->
+                <div class="operations-grid">
+                    <button class="control-button version-button" onclick="checkUpdates()">
+                        <i class="fas fa-download"></i> Check Updates
+                    </button>
+                    <button class="control-button version-button" onclick="bulkUpdate()">
+                        <i class="fas fa-layer-group"></i> Bulk Update
+                    </button>
+                    <button class="control-button version-button" onclick="scheduleUpdate()">
+                        <i class="fas fa-calendar"></i> Schedule Update
+                    </button>
+                    <button class="control-button danger-button" onclick="emergencyRollback()">
+                        <i class="fas fa-undo"></i> Emergency Rollback
+                    </button>
+                </div>
+                
+                <!-- Version Chart -->
+                <div class="section">
+                    <h3><i class="fas fa-chart-pie"></i> Version Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="versionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monitoring Tab -->
+        <div id="monitoring" class="tab-content">
+            <div class="section">
+                <h2><i class="fas fa-heartbeat"></i> System Health Monitoring</h2>
+                
+                <!-- Health Overview -->
+                <div id="healthStats" class="stats-grid">
+                    <div class="loading">Loading health statistics...</div>
+                </div>
+                
+                <!-- Real-time Charts -->
+                <div class="section">
+                    <h3><i class="fas fa-chart-line"></i> Real-time Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Alert Center -->
+                <div class="section">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Alert Center</h3>
+                    <div id="alertCenter">
+                        <div class="loading">Loading alerts...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="section">
+                <h2><i class="fas fa-chart-line"></i> Advanced Analytics</h2>
+                
+                <!-- Analytics Dashboard -->
+                <div class="section">
+                    <h3><i class="fas fa-chart-bar"></i> Performance Metrics</h3>
+                    <div class="chart-container">
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Data Export -->
+                <div class="operations-grid">
+                    <button class="control-button system-button" onclick="exportData()">
+                        <i class="fas fa-download"></i> Export Data
+                    </button>
+                    <button class="control-button system-button" onclick="generateReport()">
+                        <i class="fas fa-file-pdf"></i> Generate Report
+                    </button>
+                    <button class="control-button system-button" onclick="predictiveAnalysis()">
+                        <i class="fas fa-crystal-ball"></i> Predictive Analysis
+                    </button>
+                    <button class="control-button system-button" onclick="customQuery()">
+                        <i class="fas fa-search"></i> Custom Query
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals will be added here -->
+    
+    <script>
+        let socket;
+        let dashboardData = {
+            agents: {},
+            tasks: {},
+            system: {},
+            blockchain: {},
+            version: {},
+            health: {}
+        };
+        let charts = {};
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            initSocket();
+            initCharts();
+            refreshAllData();
+            setInterval(refreshAllData, 15000); // Refresh every 15 seconds
+        });
+        
+        // WebSocket initialization
+        function initSocket() {
+            try {
+                socket = io();
+                
+                socket.on('connect', () => {
+                    updateConnectionStatus(true);
+                    socket.emit('request_system_info');
+                    showNotification('Connected to Enhanced Node Server', 'success');
+                });
+                
+                socket.on('disconnect', () => {
+                    updateConnectionStatus(false);
+                    showNotification('Disconnected from server', 'error');
+                });
+                
+                // Real-time event handlers
+                socket.on('ultimate_agent_registered', (data) => {
+                    showNotification(`Agent ${data.agent_id} registered`, 'success');
+                    refreshAgents();
+                });
+                
+                socket.on('ultimate_agent_status_update', (data) => {
+                    updateAgentStatus(data);
+                });
+                
+                socket.on('task_completed', (data) => {
+                    showNotification(`Task completed: ${data.task_id}`, 'success');
+                    refreshTasks();
+                });
+                
+                socket.on('command_completed', (data) => {
+                    showNotification(`Command executed on ${data.agent_id}`, 'success');
+                });
+                
+                socket.on('bulk_operation_completed', (data) => {
+                    showNotification(`Bulk operation completed: ${data.successful}/${data.total}`, 'info');
+                });
+                
+            } catch (e) {
+                console.log('WebSocket not available');
+                updateConnectionStatus(false);
+            }
+        }
+        
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            const text = document.getElementById('connectionText');
+            
+            if (connected) {
+                status.className = 'connection-status connected';
+                text.innerHTML = '<i class="fas fa-circle" style="color: #4caf50;"></i> Connected';
+            } else {
+                status.className = 'connection-status disconnected';
+                text.innerHTML = '<i class="fas fa-circle" style="color: #f44336;"></i> Disconnected';
+            }
+        }
+        
+        // Tab switching
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from all nav buttons
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Load tab-specific data
+            loadTabData(tabId);
+        }
+        
+        // Load tab-specific data
+        function loadTabData(tabId) {
+            switch(tabId) {
+                case 'agents':
+                    refreshAgents();
+                    break;
+                case 'ai-ops':
+                    loadAIOperations();
+                    break;
+                case 'blockchain':
+                    loadBlockchainData();
+                    break;
+                case 'tasks':
+                    loadTaskData();
+                    break;
+                case 'remote':
+                    loadRemoteData();
+                    break;
+                case 'version':
+                    loadVersionData();
+                    break;
+                case 'monitoring':
+                    loadMonitoringData();
+                    break;
+                case 'analytics':
+                    loadAnalyticsData();
+                    break;
+            }
+        }
+        
+        // Refresh all data
+        async function refreshAllData() {
+            try {
+                await Promise.all([
+                    loadSystemStats(),
+                    loadRecentActivity(),
+                    refreshAgents()
+                ]);
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+            }
+        }
+        
+        // Load system statistics
+        async function loadSystemStats() {
+            try {
+                const response = await fetch('/api/v3/node/stats');
+                const data = await response.json();
+                
+                dashboardData.system = data;
+                updateSystemStats(data);
+                
+            } catch (error) {
+                console.error('Failed to load system stats:', error);
+            }
+        }
+        
+        // Update system statistics display
+        function updateSystemStats(stats) {
+            const statsGrid = document.getElementById('systemStats');
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card live-data">
+                    <div class="stat-value">${stats.total_agents || 0}</div>
+                    <div class="stat-label"><i class="fas fa-robot"></i> Total Agents</div>
+                </div>
+                <div class="stat-card live-data">
+                    <div class="stat-value">${stats.online_agents || 0}</div>
+                    <div class="stat-label"><i class="fas fa-circle" style="color: #4caf50;"></i> Online</div>
+                </div>
+                <div class="stat-card live-data">
+                    <div class="stat-value">${stats.total_tasks_running || 0}</div>
+                    <div class="stat-label"><i class="fas fa-tasks"></i> Active Tasks</div>
+                </div>
+                <div class="stat-card live-data">
+                    <div class="stat-value">${stats.total_ai_models || 0}</div>
+                    <div class="stat-label"><i class="fas fa-brain"></i> AI Models</div>
+                </div>
+                <div class="stat-card live-data">
+                    <div class="stat-value">${(stats.total_blockchain_balance || 0).toFixed(3)}</div>
+                    <div class="stat-label"><i class="fas fa-coins"></i> Total ETH</div>
+                </div>
+                <div class="stat-card live-data">
+                    <div class="stat-value">${(stats.health_score || 0).toFixed(0)}%</div>
+                    <div class="stat-label"><i class="fas fa-heartbeat"></i> Health</div>
+                </div>
+                <div class="stat-card live-data">
+                    <div class="stat-value">${(stats.success_rate || 100).toFixed(1)}%</div>
+                    <div class="stat-label"><i class="fas fa-check-circle"></i> Success Rate</div>
+                </div>
+                <div class="stat-card live-data">
+                    <div class="stat-value">${(stats.avg_efficiency_score || 0).toFixed(0)}%</div>
+                    <div class="stat-label"><i class="fas fa-tachometer-alt"></i> Efficiency</div>
+                </div>
+            `;
+        }
+        
+        // Load recent activity
+        async function loadRecentActivity() {
+            const activityDiv = document.getElementById('recentActivity');
+            
+            // Simulate recent activity data
+            const activities = [
+                { type: 'agent', message: 'Agent ultimate-001 registered', time: '2 minutes ago', icon: 'robot' },
+                { type: 'task', message: 'Neural training task completed', time: '5 minutes ago', icon: 'brain' },
+                { type: 'blockchain', message: 'Smart contract executed', time: '8 minutes ago', icon: 'file-contract' },
+                { type: 'update', message: 'System update deployed', time: '15 minutes ago', icon: 'download' },
+                { type: 'health', message: 'Health check completed', time: '20 minutes ago', icon: 'heartbeat' }
+            ];
+            
+            activityDiv.innerHTML = activities.map(activity => `
+                <div class="operation-card" style="margin: 10px 0;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-${activity.icon}" style="color: #4ecdc4; font-size: 1.2rem;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">${activity.message}</div>
+                            <div style="font-size: 0.8rem; opacity: 0.7;">${activity.time}</div>
                         </div>
-                    `;
-                }}).join('');
-            }}
-            
-            function updateAIModels(agents) {{
-                const aiModelsGrid = document.getElementById('aiModelsGrid');
-                
-                const models = ['Sentiment', 'Classification', 'Transformer', 'CNN', 'Reinforcement', 'Regression'];
-                
-                aiModelsGrid.innerHTML = models.map(model => `
-                    <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; text-align: center; font-size: 0.85rem;">
-                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4caf50; margin-right: 5px;"></span>
-                        <div style="font-weight: 600;">${{model}}</div>
-                        <div style="font-size: 0.7rem; margin-top: 3px;">Active</div>
                     </div>
-                `).join('');
-            }}
+                </div>
+            `).join('');
+        }
+        
+        // Refresh agents data
+        async function refreshAgents() {
+            try {
+                const response = await fetch('/api/v3/agents');
+                const data = await response.json();
+                
+                dashboardData.agents = data.agents || [];
+                updateAgentsDisplay(data.agents || []);
+                
+            } catch (error) {
+                console.error('Failed to refresh agents:', error);
+                showNotification('Failed to load agents data', 'error');
+            }
+        }
+        
+        // Update agents display
+        function updateAgentsDisplay(agents) {
+            const agentsGrid = document.getElementById('agentsGrid');
             
-            function updateCurrencyGrid(agents) {{
-                const currencyGrid = document.getElementById('currencyGrid');
-                
-                // Simulate currency data
-                const currencies = [
-                    {{symbol: 'ETH', balance: '0.245', value: '$441.00'}},
-                    {{symbol: 'PAIN', balance: '122.5', value: '$6.13'}},
-                    {{symbol: 'AI', balance: '49.2', value: '$123.00'}},
-                    {{symbol: 'BTC', balance: '0.001', value: '$45.00'}}
-                ];
-                
-                currencyGrid.innerHTML = currencies.map(currency => `
-                    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; text-align: center; cursor: pointer;" onclick="manageCurrency('${{currency.symbol}}')">
-                        <div style="font-weight: bold; color: #4ecdc4; font-size: 0.9rem;">${{currency.symbol}}</div>
-                        <div style="font-size: 1.1rem; margin: 5px 0;">${{currency.balance}}</div>
-                        <div style="font-size: 0.8rem; opacity: 0.8;">${{currency.value}}</div>
+            if (!agents || agents.length === 0) {
+                agentsGrid.innerHTML = `
+                    <div class="operation-card" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-robot" style="font-size: 3rem; opacity: 0.3; margin-bottom: 20px;"></i>
+                        <h3>No Agents Connected</h3>
+                        <p style="opacity: 0.7;">Waiting for Ultimate Agents to register...</p>
                     </div>
-                `).join('');
-            }}
-            
-            // AI Operations
-            function runAdvancedInference() {{
-                if (agentsData.length === 0) {{
-                    showNotification('No agents available for AI inference', 'warning');
-                    return;
-                }}
-                
-                const text = prompt('Enter text for sentiment analysis:', 'This Ultimate Agent integration is amazing!');
-                if (!text) return;
-                
-                showNotification('Running AI inference with enhanced features...', 'info');
-                // Simulate processing
-                setTimeout(() => {{
-                    showNotification('AI inference completed with 94.2% confidence!', 'success');
-                }}, 2000);
-            }}
-            
-            function startNeuralTraining() {{
-                if (agentsData.length === 0) {{
-                    showNotification('No agents available for neural training', 'warning');
-                    return;
-                }}
-                
-                showNotification('Starting neural network training across agents...', 'info');
-                setTimeout(() => {{
-                    showNotification('Neural training initiated successfully!', 'success');
-                }}, 1500);
-            }}
-            
-            // Blockchain Operations
-            function executeSmartContract() {{
-                if (agentsData.length === 0) {{
-                    showNotification('No agents available for smart contract execution', 'warning');
-                    return;
-                }}
-                
-                const amount = prompt('Enter reward amount (ETH):', '0.1');
-                if (!amount) return;
-                
-                showNotification('Executing smart contract...', 'info');
-                setTimeout(() => {{
-                    showNotification(`Smart contract executed! Reward: ${{amount}} ETH`, 'success');
-                }}, 3000);
-            }}
-            
-            function manageWallets() {{
-                showNotification('Multi-currency wallet management coming soon!', 'info');
-            }}
-            
-            function manageCurrency(currency) {{
-                showNotification(`${{currency}} advanced management interface coming soon!`, 'info');
-            }}
-            
-            // Agent Operations
-            async function testAgentAPI(agentId) {{
-                try {{
-                    showNotification(`Testing Ultimate API for ${{agentId}}...`, 'info');
-                    
-                    const response = await fetch(`/api/v3/agents/${{agentId}}`);
-                    const data = await response.json();
-                    
-                    const apiData = data.ultimate_agent_api;
-                    if (apiData && !apiData.api_error) {{
-                        showNotification(`${{agentId}} Ultimate API test successful!`, 'success');
-                    }} else {{
-                        throw new Error(apiData.api_error || 'API not available');
-                    }}
-                    
-                }} catch (error) {{
-                    console.error(`API test failed for ${{agentId}}:`, error);
-                    showNotification(`API test failed for ${{agentId}}!`, 'error');
-                }}
-            }}
-            
-            function openAgentDashboard(host, port) {{
-                const url = `http://${{host}}:${{port}}`;
-                window.open(url, '_blank');
-            }}
-            
-            // Advanced Operations
-            function bulkAgentOperations() {{
-                showNotification('Bulk agent operations with Ultimate API coming soon!', 'info');
-            }}
-            
-            function distributedTraining() {{
-                showNotification('Distributed training across Ultimate Agents coming soon!', 'info');
-            }}
-            
-            function multiAgentContracts() {{
-                showNotification('Multi-agent smart contract coordination coming soon!', 'info');
-            }}
-            
-            function systemMonitoring() {{
-                showNotification('Advanced system monitoring dashboard coming soon!', 'info');
-            }}
-            
-            // Utility Functions
-            function refreshAgents() {{
-                refreshData();
-                showNotification('Ultimate Agent data refreshed', 'info');
-            }}
-            
-            function updateAgentStatus(data) {{
-                const agentIndex = agentsData.findIndex(agent => agent.id === data.agent_id);
-                if (agentIndex !== -1) {{
-                    agentsData[agentIndex] = {{ ...agentsData[agentIndex], ...data.status }};
-                    updateAgentsList(agentsData);
-                }}
-            }}
-            
-            function showNotification(message, type) {{
-                const notification = document.createElement('div');
-                notification.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    padding: 15px 20px;
-                    border-radius: 10px;
-                    color: white;
-                    font-weight: 600;
-                    z-index: 1000;
-                    max-width: 400px;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                    background: ${{type === 'success' ? 'linear-gradient(45deg, #4caf50, #8bc34a)' : 
-                                   type === 'error' ? 'linear-gradient(45deg, #f44336, #e91e63)' : 
-                                   type === 'warning' ? 'linear-gradient(45deg, #ff9800, #ffc107)' : 
-                                   'linear-gradient(45deg, #2196f3, #03a9f4)'}};
-                    animation: slideIn 0.3s ease;
                 `;
-                notification.innerHTML = `
-                    <i class="fas fa-${{type === 'success' ? 'check-circle' : 
-                                        type === 'error' ? 'exclamation-circle' : 
-                                        type === 'warning' ? 'exclamation-triangle' : 
-                                        'info-circle'}}"></i>
-                    ${{message}}
-                `;
-                document.body.appendChild(notification);
-                
-                setTimeout(() => {{
-                    notification.remove();
-                }}, 4000);
-                
-                console.log(`[${{type.toUpperCase()}}] ${{message}}`);
-            }}
+                return;
+            }
             
-            console.log('Enhanced Node Server Dashboard with Ultimate Agent Features Ready');
-            console.log('New Features: Neural Networks, Computer Vision, NLP, Reinforcement Learning');
-            console.log('Blockchain: Multi-Currency Wallets, Smart Contracts, Multi-Network Support');
-            console.log('Advanced: Health Monitoring, Recovery Systems, Remote Commands');
-        </script>
-    </body>
-    </html>
-    """
+            agentsGrid.innerHTML = agents.map(agent => {
+                const statusClass = agent.status === 'online' ? 'status-online' : 
+                                  agent.status === 'busy' ? 'status-busy' : 'status-offline';
+                const apiUrl = `http://${agent.host}:8080`;
+                
+                return `
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-name">
+                                <i class="fas fa-robot"></i> ${agent.name || agent.id}
+                            </div>
+                            <div>
+                                <span class="status-indicator ${statusClass}"></span>
+                                <span style="font-size: 0.9rem;">${agent.status || 'unknown'}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 15px 0;">
+                            <div><strong>Host:</strong> ${agent.host}:8080</div>
+                            <div><strong>Version:</strong> ${agent.version || 'unknown'}</div>
+                            <div><strong>Type:</strong> ${agent.agent_type || 'ultimate'}</div>
+                        </div>
+                        
+                        <div class="stats-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
+                            <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                                <div style="font-size: 1.2rem; font-weight: 600; color: #4ecdc4;">${(agent.cpu_percent || 0).toFixed(1)}%</div>
+                                <div style="font-size: 0.8rem;">CPU</div>
+                            </div>
+                            <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                                <div style="font-size: 1.2rem; font-weight: 600; color: #4ecdc4;">${agent.tasks_running || 0}</div>
+                                <div style="font-size: 0.8rem;">Tasks</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;">
+                            <button class="control-button ai-button" style="padding: 8px; font-size: 0.8em;" 
+                                    onclick="testAgentAPI('${agent.id}')">
+                                <i class="fas fa-vial"></i> Test API
+                            </button>
+                            <button class="control-button system-button" style="padding: 8px; font-size: 0.8em;" 
+                                    onclick="openAgentDashboard('${apiUrl}')">
+                                <i class="fas fa-external-link-alt"></i> Dashboard
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // AI Operations functions
+        function loadAIOperations() {
+            const aiModelsGrid = document.getElementById('aiModelsGrid');
+            
+            // Simulate AI models data
+            const models = [
+                { name: 'GPT-4', status: 'active', agents: 3 },
+                { name: 'BERT', status: 'active', agents: 2 },
+                { name: 'ResNet', status: 'loading', agents: 1 },
+                { name: 'Transformer', status: 'active', agents: 4 }
+            ];
+            
+            aiModelsGrid.innerHTML = models.map(model => `
+                <div class="operation-card">
+                    <h4 style="color: #4ecdc4; margin-bottom: 10px;">${model.name}</h4>
+                    <div>Status: <span style="color: ${model.status === 'active' ? '#4caf50' : '#ff9800'};">${model.status}</span></div>
+                    <div>Agents: ${model.agents}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Blockchain operations functions
+        function loadBlockchainData() {
+            const walletsGrid = document.getElementById('walletsGrid');
+            
+            // Simulate wallet data
+            const wallets = [
+                { currency: 'ETH', balance: '12.45', value: '$24,567' },
+                { currency: 'BTC', balance: '0.1234', value: '$3,456' },
+                { currency: 'PAIN', balance: '1,234.56', value: '$2,469' },
+                { currency: 'AI', balance: '567.89', value: '$1,135' }
+            ];
+            
+            walletsGrid.innerHTML = wallets.map(wallet => `
+                <div class="stat-card">
+                    <div class="stat-value">${wallet.balance}</div>
+                    <div class="stat-label">
+                        <i class="fas fa-coins"></i> ${wallet.currency}
+                        <div style="font-size: 0.8rem; margin-top: 5px;">${wallet.value}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Initialize charts
+        function initCharts() {
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart');
+            if (performanceCtx) {
+                charts.performance = new Chart(performanceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1h', '45m', '30m', '15m', '5m', 'Now'],
+                        datasets: [{
+                            label: 'CPU Usage',
+                            data: [65, 72, 68, 75, 70, 73],
+                            borderColor: '#4ecdc4',
+                            backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                            tension: 0.4
+                        }, {
+                            label: 'Memory Usage',
+                            data: [45, 48, 52, 49, 55, 51],
+                            borderColor: '#45b7d1',
+                            backgroundColor: 'rgba(69, 183, 209, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: 'white' } }
+                        },
+                        scales: {
+                            x: { ticks: { color: 'white' } },
+                            y: { ticks: { color: 'white' } }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Action functions
+        function testAgentAPI(agentId) {
+            if (socket) {
+                socket.emit('test_agent_api', { agent_id: agentId });
+                showNotification(`Testing API for ${agentId}...`, 'info');
+            }
+        }
+        
+        function openAgentDashboard(url) {
+            window.open(url, '_blank');
+        }
+        
+        function bulkAgentOperation() {
+            showNotification('Bulk operation feature coming soon!', 'info');
+        }
+        
+        function emergencyActions() {
+            if (confirm('Are you sure you want to access emergency actions?')) {
+                showNotification('Emergency actions panel opened', 'warning');
+            }
+        }
+        
+        // Additional action functions
+        function runBulkInference() {
+            showNotification('Bulk AI inference initiated', 'info');
+        }
+        
+        function startDistributedTraining() {
+            showNotification('Distributed training started', 'success');
+        }
+        
+        function executeSmartContract() {
+            showNotification('Smart contract execution initiated', 'info');
+        }
+        
+        function createCentralTask() {
+            showNotification('Central task creation panel opened', 'info');
+        }
+        
+        function bulkRemoteCommand() {
+            showNotification('Bulk remote command panel opened', 'info');
+        }
+        
+        function checkUpdates() {
+            showNotification('Checking for updates...', 'info');
+        }
+        
+        // Utility functions
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                   type === 'error' ? 'exclamation-circle' : 
+                                   type === 'warning' ? 'exclamation-triangle' : 
+                                   'info-circle'}"></i>
+                ${message}
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+        
+        // Update agent status in real-time
+        function updateAgentStatus(data) {
+            // Update agent status in the UI
+            const agentCards = document.querySelectorAll('.agent-card');
+            agentCards.forEach(card => {
+                if (card.innerHTML.includes(data.agent_id)) {
+                    // Update the agent card with new status
+                    refreshAgents();
+                }
+            });
+        }
+        
+        console.log('Enhanced Node Server Dashboard Loaded');
+        console.log('Features: AI Operations, Blockchain, Version Control, Remote Management');
+        console.log('Real-time: WebSocket connected, Live updates enabled');
+    </script>
+</body>
+</html>
