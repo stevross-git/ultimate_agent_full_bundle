@@ -29,7 +29,9 @@ class ConfigManager:
         """Create default configuration sections"""
         # Main settings
         self.config['DEFAULT'] = {
+
             'node_url': 'https://srvnodes.peoplesainetwork.com:443',
+
             'dashboard_port': '8080',
             'heartbeat_interval': '30',
             'auto_start_tasks': 'true',

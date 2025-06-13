@@ -11,11 +11,13 @@ except Exception:  # pragma: no cover - optional dependency
 class DiscoveryClient:
     """Service discovery for agents and nodes."""
 
+
     def __init__(
         self,
         node_service: str = "https://srvnodes.peoplesainetwork.com:443",
         manager_service: str = "http://mannodes.peoplesainetwork.com",
     ):
+
         self.node_service = node_service.rstrip('/')
         self.manager_service = manager_service.rstrip('/')
         self.nodes_cache: List[Dict[str, str]] = []
