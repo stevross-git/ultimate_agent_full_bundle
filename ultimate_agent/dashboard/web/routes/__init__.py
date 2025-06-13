@@ -79,10 +79,11 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         def get_enhanced_stats():
             """Get enhanced statistics with additional info"""
             enhanced_stats = self.agent.get_status()
+            blockchain_mgr = getattr(self.agent, 'blockchain_manager', None)
             enhanced_stats.update({
                 'ai_training_enabled': hasattr(self.agent.ai_manager, 'training_engine'),
                 'task_control_enabled': hasattr(self.agent, 'task_control_client'),
-                'blockchain_enhanced': hasattr(self.agent.blockchain_manager, 'smart_contract_manager'),
+                'blockchain_enhanced': hasattr(blockchain_mgr, 'smart_contract_manager'),
                 'advanced_features': True,
                 'modular_architecture': True
             })
@@ -209,8 +210,12 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         def get_blockchain_enhanced():
             """Get enhanced blockchain information"""
             try:
-                blockchain_status = self.agent.blockchain_manager.get_status()
-                return jsonify(blockchain_status)
+                blockchain_mgr = getattr(self.agent, 'blockchain_manager', None)
+                if blockchain_mgr:
+                    blockchain_status = blockchain_mgr.get_status()
+                    return jsonify(blockchain_status)
+                else:
+                    return jsonify({'error': 'Blockchain manager not available'})
             except Exception as e:
                 return jsonify({'error': f'Blockchain error: {str(e)}'})
         
