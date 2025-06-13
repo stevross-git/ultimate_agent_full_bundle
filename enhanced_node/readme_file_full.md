@@ -404,7 +404,7 @@ kubectl autoscale deployment enhanced-node --cpu-percent=50 --min=2 --max=10
 ```bash
 # Core Configuration
 NODE_ENV=production
-NODE_PORT=443
+NODE_PORT=5000
 NODE_ID=enhanced-node-production-001
 
 # Database Configuration  
@@ -541,7 +541,7 @@ export PYTHONPATH=/path/to/enhanced_node:$PYTHONPATH
 **Port Conflicts**
 ```bash
 # Check port usage
-sudo netstat -tulpn | grep :443
+sudo netstat -tulpn | grep :5000
 
 # Change port in .env
 echo "NODE_PORT=5001" >> .env

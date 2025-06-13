@@ -11,7 +11,7 @@ echo "=============================================="
 # Environment setup
 export PYTHONPATH="/app:$PYTHONPATH"
 export NODE_ENV=${NODE_ENV:-production}
-export NODE_PORT=${NODE_PORT:-443}
+export NODE_PORT=${NODE_PORT:-5000}
 export METRICS_PORT=${METRICS_PORT:-8091}
 
 # Function to wait for service
