@@ -11,6 +11,29 @@ from typing import List
 from pydantic import BaseSettings, Field
 
 class Settings(BaseSettings):
+    class Settings(BaseSettings):
+    debug: bool = Field(default=False)
+    log_level: str = Field(default="INFO")
+
+    ai_enabled: bool = Field(default=True)
+    tasks_enabled: bool = Field(default=True)
+    dashboard_enabled: bool = Field(default=True)
+    blockchain_enabled: bool = Field(default=False)
+
+    host: str = Field(default="0.0.0.0")
+    port: int = Field(default=5000)
+
+    database_url: str = Field(default="sqlite:///ultimate_agent.db")
+
+    ai_model_path: str = Field(default="./models")
+    max_ai_workers: int = Field(default=4)
+
+    max_concurrent_tasks: int = Field(default=10)
+    task_timeout: int = Field(default=300)
+
+    api_key: str | None = Field(default=None)
+    secret_key: str = Field(default="dev-secret-key")
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
