@@ -8,10 +8,11 @@ import os
 import uuid
 from pathlib import Path
 from typing import List
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from pydantic import Field
+
 
 class Settings(BaseSettings):
-    class Settings(BaseSettings):
     debug: bool = Field(default=False)
     log_level: str = Field(default="INFO")
 
