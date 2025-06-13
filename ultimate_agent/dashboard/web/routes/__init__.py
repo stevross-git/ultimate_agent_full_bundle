@@ -7,6 +7,7 @@ Web dashboard and API routes
 import threading
 import secrets
 import time
+import os
 try:
     from flask import Flask, jsonify, request, send_from_directory
     from flask_cors import CORS
@@ -44,6 +45,16 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
     def _setup_api_routes(self):
         """Setup API routes"""
         
+
+        @self.app.route('/favicon.ico')
+        def favicon():
+            return send_from_directory(
+                os.path.join(os.path.dirname(__file__), 'static'),
+                'favicon.ico',
+                mimetype='image/vnd.microsoft.icon'
+            )
+
+
         @self.app.route('/')
         def dashboard():
             """Main dashboard page"""
@@ -275,7 +286,7 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         """Setup WebSocket event handlers"""
         
         @self.socketio.on('connect')
-        def handle_connect():
+        def handle_connect(auth=None): 
             """Handle client connection"""
             emit('connected', {
                 'agent_id': self.agent.agent_id,

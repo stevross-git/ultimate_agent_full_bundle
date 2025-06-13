@@ -72,6 +72,7 @@ class UltimateAgent:
             
         if self.config.get('dashboard_enabled', True):
             self._initialize_dashboard()
+            
     
     def _initialize_ai_modules(self):
         """Initialize AI-related modules"""
