@@ -8,8 +8,16 @@ import os
 import uuid
 from pathlib import Path
 from typing import List
-from pydantic_settings import BaseSettings
-from pydantic import Field
+try:
+    from pydantic_settings import BaseSettings
+    from pydantic import Field
+except ImportError:  # Graceful fallback if pydantic_settings isn't installed
+    class BaseSettings:  # type: ignore[misc]
+        """Fallback base class providing no functionality."""
+        pass
+
+    def Field(default=None, **kwargs):  # type: ignore[misc]
+        return default
 
 
 class Settings(BaseSettings):
