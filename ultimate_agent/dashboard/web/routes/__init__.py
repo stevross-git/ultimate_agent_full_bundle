@@ -18,7 +18,7 @@ except Exception:  # pragma: no cover - optional dependency
 from typing import Dict, Any
 
 
-class DashboardManager:
+class DashboardServer:  # Changed from DashboardManager to DashboardServer
     """Manages web dashboard and API routes"""
     
     def __init__(self, agent):
@@ -33,6 +33,7 @@ class DashboardManager:
         # Dashboard state
         self.running = False
         self.server_thread = None
+        self.dashboard_port = 8080  # Fixed port to 8080
         
         # Setup routes and WebSocket events
         self._setup_api_routes()
@@ -421,6 +422,7 @@ class DashboardManager:
                 .status-online {{ background: #28a745; }}
                 .status-offline {{ background: #dc3545; }}
                 .real-time-data {{ background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 10px 0; }}
+                .port-display {{ background: rgba(255, 255, 255, 0.3); padding: 5px 10px; border-radius: 15px; font-size: 0.9em; }}
             </style>
         </head>
         <body>
@@ -432,6 +434,7 @@ class DashboardManager:
                     <div class="modular-badge">💰 Smart Contracts</div>
                     <div class="modular-badge">🎯 Task Control</div>
                     <div class="modular-badge">📊 Real-time Monitoring</div>
+                    <div class="port-display">🌐 Port: 8080</div>
                     <p>Agent ID: {agent_id}</p>
                     <p>Connected to: {node_url}</p>
                 </div>
@@ -516,7 +519,7 @@ class DashboardManager:
                         <div class="feature-card">
                             <h4>🌐 Dashboard Manager</h4>
                             <p>Web interface and real-time updates</p>
-                            <div id="dashboardStatus"><span class="status-indicator status-online"></span>Active</div>
+                            <div id="dashboardStatus"><span class="status-indicator status-online"></span>Active on Port 8080</div>
                         </div>
                     </div>
                 </div>
@@ -539,7 +542,7 @@ class DashboardManager:
                     try {{
                         socket = io();
                         socket.on('connect', () => {{
-                            console.log('Connected to modular agent dashboard');
+                            console.log('Connected to modular agent dashboard on port 8080');
                             socket.emit('request_enhanced_stats');
                         }});
                         socket.on('stats_update', updateStats);
@@ -605,8 +608,8 @@ class DashboardManager:
                             <div>Architecture</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value">${{stats.advanced_features ? '✨ Enhanced' : '📦 Basic'}}</div>
-                            <div>Feature Set</div>
+                            <div class="stat-value">🌐 8080</div>
+                            <div>Dashboard Port</div>
                         </div>
                     `;
                 }}
@@ -617,6 +620,7 @@ class DashboardManager:
                             <div><strong>CPU:</strong> ${{data.cpu_percent?.toFixed(1) || 0}}%</div>
                             <div><strong>Memory:</strong> ${{data.memory_percent?.toFixed(1) || 0}}%</div>
                             <div><strong>Tasks:</strong> ${{data.tasks_running || 0}}</div>
+                            <div><strong>Port:</strong> 8080</div>
                             <div><strong>Updated:</strong> ${{new Date().toLocaleTimeString()}}</div>
                         </div>
                     `;
@@ -768,6 +772,7 @@ class DashboardManager:
                 
                 console.log('🏗️ Enhanced Modular Agent Dashboard Ready');
                 console.log('✨ Features: Modular Architecture, Real-time Updates, Advanced Monitoring');
+                console.log('🌐 Running on Port 8080');
             </script>
         </body>
         </html>
@@ -779,7 +784,7 @@ class DashboardManager:
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Ultimate Agent Control Room</title>
+            <title>Ultimate Agent Control Room - Port 8080</title>
             <style>
                 body { font-family: Arial, sans-serif; background: radial-gradient(circle at center, #1e1e2f, #0d0d15); color: #e0e0ff; height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; }
                 .panel { background: rgba(20,20,40,0.8); border: 1px solid #555; border-radius: 10px; padding: 40px; box-shadow: 0 0 15px #00f0ff; width: 80%; max-width: 900px; }
@@ -788,11 +793,16 @@ class DashboardManager:
                 .screen h2 { margin-top: 0; font-size: 1.1em; }
                 .glow { animation: pulse 2s infinite; }
                 @keyframes pulse { 0% { box-shadow: 0 0 5px #00e0ff; } 50% { box-shadow: 0 0 15px #00e0ff; } 100% { box-shadow: 0 0 5px #00e0ff; } }
+                .port-display { text-align: center; background: rgba(0, 240, 255, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; }
             </style>
         </head>
         <body>
             <div class="panel">
                 <h1>Ultimate Agent Control Room</h1>
+                <div class="port-display">
+                    <h3>🌐 Dashboard Port: 8080</h3>
+                    <p>Access at: http://localhost:8080</p>
+                </div>
                 <div class="screens">
                     <div class="screen glow">
                         <h2>Network</h2>
@@ -806,6 +816,10 @@ class DashboardManager:
                         <h2>Real-Time Monitoring</h2>
                         <p id="monitoring">CPU 0%</p>
                     </div>
+                    <div class="screen glow">
+                        <h2>Port Status</h2>
+                        <p id="port">Port 8080: Active</p>
+                    </div>
                 </div>
             </div>
             <script>
@@ -814,6 +828,9 @@ class DashboardManager:
                     val = (val + 5) % 100;
                     document.getElementById('monitoring').textContent = 'CPU ' + val + '%';
                 }, 500);
+                
+                document.getElementById('network').textContent = 'Connected - Port 8080';
+                document.getElementById('port').innerHTML = '<span style="color: #00ff00">●</span> Port 8080: Active';
             </script>
         </body>
         </html>
@@ -829,7 +846,7 @@ class DashboardManager:
                 name="DashboardServer"
             )
             self.server_thread.start()
-            print(f"🌐 Dashboard server starting on port {self.agent.dashboard_port}")
+            print(f"🌐 Dashboard server starting on port {self.dashboard_port}")
     
     def _run_server(self):
         """Run the dashboard server"""
@@ -837,7 +854,7 @@ class DashboardManager:
             self.socketio.run(
                 self.app,
                 host='127.0.0.1',
-                port=self.agent.dashboard_port,
+                port=self.dashboard_port,  # Now uses the fixed port 8080
                 debug=False,
                 use_reloader=False
             )
@@ -848,3 +865,7 @@ class DashboardManager:
         """Stop dashboard server"""
         self.running = False
         print("🌐 Dashboard server stopped")
+
+
+# For backward compatibility, create an alias
+DashboardManager = DashboardServer
