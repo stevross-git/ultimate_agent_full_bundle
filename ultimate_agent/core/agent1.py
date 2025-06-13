@@ -60,13 +60,12 @@ class UltimatePainNetworkAgent:
             discovered = self.discovery_client.get_best_node(self.network_manager.test_connection)
             node_url = discovered.get('url') if discovered else None
 
-
         self.node_url = (
             node_url
             or self.config_manager.get(
                 'DEFAULT',
                 'node_url',
-                fallback='https://srvnodes.peoplesainetwork.com:443'
+                fallback='https://srvnodes.peoplesainetwork.com'
             )
         ).rstrip('/')
 

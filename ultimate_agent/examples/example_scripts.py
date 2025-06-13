@@ -30,8 +30,11 @@ def basic_agent_example():
     # Create agent with custom configuration
     agent = create_agent(
 
-        node_url="https://srvnodes.peoplesainetwork.com:443",
+        node_url="https://srvnodes.peoplesainetwork.com",
         dashboard_port=8080,
+
+
+
 
     )
     

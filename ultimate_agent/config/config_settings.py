@@ -30,7 +30,8 @@ class ConfigManager:
         # Main settings
         self.config['DEFAULT'] = {
 
-            'node_url': 'https://srvnodes.peoplesainetwork.com:443',
+
+            'node_url': 'https://srvnodes.peoplesainetwork.com',
 
             'dashboard_port': '8080',
             'heartbeat_interval': '30',
@@ -96,6 +97,7 @@ class ConfigManager:
             'connection_timeout': '30',
             'retry_attempts': '3',
             'use_ssl': 'true',
+            'verify_ssl': 'true',
             'compression_enabled': 'true'
         }
         

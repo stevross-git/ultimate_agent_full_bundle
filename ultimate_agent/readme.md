@@ -146,6 +146,8 @@ dashboard_port = 8080
 heartbeat_interval = 30
 auto_start_tasks = true
 max_concurrent_tasks = 3
+[NETWORK]
+verify_ssl = true
 
 [AI_TRAINING]
 enabled = true

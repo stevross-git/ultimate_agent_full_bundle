@@ -14,7 +14,7 @@ class DiscoveryClient:
 
     def __init__(
         self,
-        node_service: str = "https://srvnodes.peoplesainetwork.com:443",
+        node_service: str = "https://srvnodes.peoplesainetwork.com",
         manager_service: str = "http://mannodes.peoplesainetwork.com",
     ):
 
