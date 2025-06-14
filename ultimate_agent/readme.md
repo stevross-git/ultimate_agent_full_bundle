@@ -127,10 +127,11 @@ python main.py
 # Open dashboard
 # Navigate to: http://localhost:8080
 
-# Start a sample AI training task
-curl -X POST http://localhost:8080/api/start_task \
+# Start a sample task
+curl -X POST http://localhost:8080/task \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{"type": "neural_network_training"}'
+  -d '{"type": "neural_network_training", "job": "demo"}'
 ```
 
 ---
@@ -361,54 +362,20 @@ events = security_manager.get_security_events(limit=50, category='auth')
 
 ## 🌐 **API Documentation**
 
-### **REST API Endpoints**
+The current API only exposes a few endpoints and uses JWT authentication.
 
-#### **Agent Status**
+### **Authentication**
+
 ```http
-GET /api/stats
-GET /api/v3/stats/enhanced
-GET /api/system
-GET /api/capabilities
+POST /auth/token
+POST /auth/revoke
 ```
 
-#### **Task Management**
-```http
-POST /api/start_task
-{
-  "type": "neural_network_training",
-  "config": {
-    "epochs": 10,
-    "batch_size": 32
-  }
-}
+### **Task Submission**
 
-GET /api/tasks
-POST /api/cancel_task/<task_id>
-```
-
-#### **AI Operations**
 ```http
-GET /api/v3/ai/capabilities
-GET /api/training
-POST /api/ai/inference
-{
-  "model": "sentiment",
-  "input": "This is amazing!"
-}
-```
-
-#### **Blockchain Operations**
-```http
-GET /api/v3/blockchain/enhanced
-GET /api/blockchain/balance
-GET /api/blockchain/transactions
-```
-
-#### **Monitoring**
-```http
-GET /api/performance/metrics
-GET /api/database/stats
-GET /api/health
+POST /task
+POST /command
 ```
 
 ### **WebSocket Events**
@@ -596,8 +563,11 @@ python main.py --validate-wallet
 # Check if port is in use
 python main.py --dashboard-port 9000
 
-# Test API endpoints
-curl http://localhost:8080/api/stats
+# Test API endpoint
+curl -X POST http://localhost:8080/task \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "diagnostic", "job": "ping"}'
 
 # Check WebSocket connection
 python main.py --debug-websocket

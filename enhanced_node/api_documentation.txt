@@ -1,3 +1,6 @@
+# NOTE: This OpenAPI specification describes a future version of the
+# Enhanced Node Server. The implementation in this repository does not
+# currently provide these endpoints.
 openapi: 3.0.3
 info:
   title: Enhanced Node Server API

@@ -1,5 +1,8 @@
 # Enhanced Node Server - Complete Modular Architecture
 
+> **Note**: This document describes an advanced server layout with many
+> API endpoints. The repository does not currently implement these APIs.
+
 ## 🏗️ Full Modularization - Production Ready
 
 This is the **complete modular implementation** of Enhanced Node Server v3.4.0-advanced-remote-control, transformed from a monolithic script into a professional, enterprise-grade modular architecture.
