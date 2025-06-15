@@ -28,6 +28,7 @@ class AIModelManager:
         self.gpu_available = self.check_gpu_availability()
         self.training_engine = None
         self.inference_engine = None
+        self.swarm_coordinator = None
         self.model_cache = {}
         self.training_sessions = {}
 
@@ -64,6 +65,8 @@ class AIModelManager:
             # Initialize training and inference engines
             self.training_engine = AITrainingEngine(self)
             self.inference_engine = InferenceEngine(self)
+            from ..swarm import SwarmCoordinator
+            self.swarm_coordinator = SwarmCoordinator()
 
             print(f"🧐 AI models loaded: {len(self.models)} models")
             print(f"🎓 Training engine initialized: {len(self.training_engine.training_tasks)} task types")

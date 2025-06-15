@@ -35,10 +35,13 @@ except Exception as e:
 try:
     from .blockchain.wallet.security import BlockchainManager
     from .blockchain.contracts import SmartContractManager
+    from .blockchain.incentives import EconomyManager, TokenFiatExchange
 except Exception as e:
     print(f"⚠️ Blockchain modules not available: {e}")
     BlockchainManager = None
     SmartContractManager = None
+    EconomyManager = None
+    TokenFiatExchange = None
 
 try:
     from .tasks.execution.scheduler import TaskScheduler
@@ -265,6 +268,8 @@ __all__ = [
     # Blockchain
     'BlockchainManager',
     'SmartContractManager',
+    'EconomyManager',
+    'TokenFiatExchange',
     
     # Tasks
     'TaskScheduler',
