@@ -32,6 +32,7 @@ class AITrainingEngine:
             "gradient_computation": self.compute_gradients,
             "federated_learning": self.federated_learning_step,
             "secure_federated_learning": self.federated_learning_step,
+            "knowledge_distillation": self.knowledge_distillation,
             "hyperparameter_optimization": self.optimize_hyperparameters,
             "model_inference_batch": self.run_batch_inference,
             "data_preprocessing": self.preprocess_data,
@@ -410,7 +411,84 @@ class AITrainingEngine:
             
         except Exception as e:
             return {'success': False, 'error': str(e)}
-    
+
+    def knowledge_distillation(self, config: Dict, progress_callback: Callable) -> Dict:
+        """Perform advanced knowledge distillation with optional mutual update."""
+        try:
+            epochs = int(config.get('epochs', 1))
+            temperature = float(config.get('temperature', 2.0))
+            alpha = float(config.get('alpha', 0.5))
+            num_samples = int(config.get('num_samples', 100))
+            num_classes = int(config.get('num_classes', 10))
+            mutual = bool(config.get('mutual', False))
+            method = config.get('method', 'soft')
+            early_stop = config.get('early_stop_threshold')
+
+            if method not in ('soft', 'hard'):
+                raise ValueError('method must be "soft" or "hard"')
+            if not 1 <= epochs <= 1000:
+                raise ValueError('Epochs must be between 1 and 1000')
+
+            student_loss = None
+            teacher_loss = None
+
+            for epoch in range(epochs):
+                teacher_logits = np.random.randn(num_samples, num_classes)
+                student_logits = np.random.randn(num_samples, num_classes)
+
+                teacher_probs = np.exp(teacher_logits / temperature)
+                teacher_probs /= np.sum(teacher_probs, axis=1, keepdims=True)
+
+                student_probs = np.exp(student_logits)
+                student_probs /= np.sum(student_probs, axis=1, keepdims=True)
+
+                if method == 'hard':
+                    labels = np.argmax(teacher_logits, axis=1)
+                    target_probs = np.eye(num_classes)[labels]
+                else:
+                    target_probs = teacher_probs
+
+                dist_loss = -np.mean(np.sum(target_probs * np.log(student_probs + 1e-15), axis=1))
+
+                labels = np.random.randint(0, num_classes, size=num_samples)
+                ce_probs = student_probs[np.arange(num_samples), labels]
+                cls_loss = -np.mean(np.log(ce_probs + 1e-15))
+
+                student_loss = alpha * dist_loss + (1 - alpha) * cls_loss
+
+                if mutual:
+                    teacher_ce = -np.mean(np.log(teacher_probs[np.arange(num_samples), np.argmax(student_logits, axis=1)] + 1e-15))
+                    teacher_loss = alpha * teacher_ce
+
+                progress = ((epoch + 1) / epochs) * 100
+                if not progress_callback(progress, {
+                    'epoch': epoch + 1,
+                    'student_loss': float(student_loss),
+                    'teacher_loss': float(teacher_loss) if mutual else None
+                }):
+                    return {'success': False, 'error': 'Distillation cancelled'}
+
+                if early_stop is not None and student_loss < float(early_stop):
+                    return {
+                        'success': True,
+                        'epochs': epoch + 1,
+                        'early_stopped': True,
+                        'distillation_method': method,
+                        'final_student_loss': float(student_loss),
+                        'final_teacher_loss': float(teacher_loss) if mutual else None
+                    }
+
+            return {
+                'success': True,
+                'epochs': epochs,
+                'distillation_method': method,
+                'final_student_loss': float(student_loss),
+                'final_teacher_loss': float(teacher_loss) if mutual else None
+            }
+
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
     def federated_learning_step(self, config: Dict, progress_callback: Callable) -> Dict:
         """Perform federated learning step with optional privacy mechanisms."""
         try:
@@ -418,9 +496,12 @@ class AITrainingEngine:
             aggregation_rounds = config.get('aggregation_rounds', 5)
             enable_dp = config.get('differential_privacy', False)
             enable_encryption = config.get('encrypted_updates', False)
+            scheme = config.get('encryption_scheme', 'simple')
             noise_scale = float(config.get('dp_noise_scale', 0.01))
 
-            from .federated_privacy import SimpleEncryptor
+            from .federated_privacy import SimpleEncryptor, CKKSApproxEncryptor
+
+            encryptor = CKKSApproxEncryptor if scheme == 'ckks' else SimpleEncryptor
 
             client_updates = []
 
@@ -434,8 +515,8 @@ class AITrainingEngine:
 
                     key = None
                     if enable_encryption:
-                        key = SimpleEncryptor.generate_key(local_weights.shape)
-                        enc_weights = SimpleEncryptor.encrypt(local_weights, key)
+                        key = encryptor.generate_key(local_weights.shape)
+                        enc_weights = encryptor.encrypt(local_weights, key)
                     else:
                         enc_weights = local_weights
 
@@ -459,7 +540,7 @@ class AITrainingEngine:
                         agg_key += weight * update['key']
 
                 if enable_encryption:
-                    averaged_weights = SimpleEncryptor.decrypt(aggregated, agg_key)
+                    averaged_weights = encryptor.decrypt(aggregated, agg_key)
                 else:
                     averaged_weights = aggregated
 
@@ -486,7 +567,8 @@ class AITrainingEngine:
                 'final_loss': float(client_updates[-1]),
                 'convergence_improvement': float(client_updates[0] - client_updates[-1]),
                 'differential_privacy': enable_dp,
-                'encrypted_updates': enable_encryption
+                'encrypted_updates': enable_encryption,
+                'encryption_scheme': scheme if enable_encryption else None
             }
 
         except Exception as e:

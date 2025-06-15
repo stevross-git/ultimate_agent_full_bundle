@@ -17,6 +17,7 @@ A next-generation, modular agent system for distributed AI training, blockchain 
 - CNN training for computer vision
 - Reinforcement Learning agents
 - Federated Learning support
+- Knowledge Distillation for model compression
 - Hyperparameter optimization
 - GPU/CPU adaptive processing
 - Download models from Hugging Face
@@ -39,6 +40,7 @@ A next-generation, modular agent system for distributed AI training, blockchain 
 🔒 **Enterprise Security**
 - Advanced authentication and authorization
 - End-to-end encryption
+- Optional CKKS-based homomorphic encryption for federated updates
 - Security audit logging
 - Rate limiting and attack prevention
 - Token-based API access control

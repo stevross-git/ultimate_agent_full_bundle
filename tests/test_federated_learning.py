@@ -33,3 +33,22 @@ def test_privacy_preserving_federated_learning():
     assert result['differential_privacy'] is True
     assert result['encrypted_updates'] is True
     assert len(progress_calls) == 2
+
+
+def test_ckks_encryption_scheme():
+    manager = AIModelManager(DummyConfig())
+    engine = manager.training_engine
+
+    result = engine.federated_learning_step(
+        {
+            'num_clients': 2,
+            'aggregation_rounds': 1,
+            'encrypted_updates': True,
+            'encryption_scheme': 'ckks',
+        },
+        lambda p, i: True,
+    )
+
+    assert result['success'] is True
+    assert result['encrypted_updates'] is True
+    assert result['encryption_scheme'] == 'ckks'
