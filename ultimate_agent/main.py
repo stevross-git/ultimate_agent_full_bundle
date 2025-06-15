@@ -5,8 +5,8 @@ Simple launcher script that handles import path issues
 """
 
 import sys
-
 from pathlib import Path
+import argparse
 
 # Allow running directly via `python main.py`
 if __package__ in (None, ""):
@@ -31,23 +31,26 @@ def main():
         print(f"❌ Error: {ultimate_agent_dir} not found")
         sys.exit(1)
     
+    parser = argparse.ArgumentParser(description="Launch the Ultimate Agent")
+    parser.add_argument("--node-url", help="Node URL for registration", default=None)
+    parser.add_argument("--dashboard-port", type=int, help="Dashboard port", default=None)
+    args = parser.parse_args()
+
     try:
 
-        from ultimate_agent.core.agent import UltimateAgent
-        from ultimate_agent.config.settings import get_config
+        from ultimate_agent import create_agent
 
         print("🤖 Initializing Ultimate Agent...")
 
-        config = get_config()
-        
+        agent = create_agent(node_url=args.node_url, dashboard_port=args.dashboard_port)
+
         print("🚀 Starting Ultimate Agent...")
-        agent = UltimateAgent(config)
         agent.start()
 
         # ✅ ADD THIS BLOCK
-        if hasattr(agent, "dashboard") and agent.dashboard:
-            print("🌐 Launching Dashboard Web Server on port", agent.dashboard.dashboard_port)
-            agent.dashboard.start_server()
+        if hasattr(agent, "dashboard_manager") and agent.dashboard_manager:
+            print("🌐 Launching Dashboard Web Server on port", agent.dashboard_port)
+            agent.dashboard_manager.start_server()
         else:
             print("⚠️ Dashboard not initialized or missing")
 
