@@ -20,6 +20,13 @@ class NetworkManager:
     
     def __init__(self, config_manager):
         self.config = config_manager
+
+        if requests is None:
+            raise ImportError(
+                "The 'requests' library is required for network communication."
+                " Please install dependencies with `pip install -r ultimate_agent/requirements.txt`."
+            )
+
         self.session = requests.Session()
         self.connected_nodes = {}
         self.connection_stats = {
