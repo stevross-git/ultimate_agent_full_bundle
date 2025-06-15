@@ -21,8 +21,15 @@ from typing import Dict, Any
 
 class DashboardServer:  # Changed from DashboardManager to DashboardServer
     """Manages web dashboard and API routes"""
-    
+
     def __init__(self, agent):
+        if Flask is None:
+            raise ImportError(
+                "The 'flask' package is required for the dashboard. "
+                "Please install dependencies with `pip install -r "
+                "ultimate_agent/requirements.txt`."
+            )
+
         self.agent = agent
         self.app = Flask(__name__)
         self.app.secret_key = secrets.token_hex(16)

@@ -45,7 +45,8 @@ class UltimatePainNetworkAgent:
         # Initialize all managers
         self.security_manager = SecurityManager(self.config_manager)
         self.blockchain_manager = BlockchainManager(self.config_manager)
-        self.ai_manager = AIModelManager()
+        # Pass configuration manager so AIModelManager can access settings
+        self.ai_manager = AIModelManager(self.config_manager)
         self.monitoring_manager = MonitoringManager()
         self.plugin_manager = PluginManager()
         self.database_manager = DatabaseManager()
