@@ -320,6 +320,7 @@ class NetworkManager:
                 'sent': self.connection_stats['total_bytes_sent'],
                 'received': self.connection_stats['total_bytes_received']
             },
+
             # Determine when the last network activity occurred. Filter out
             # ``None`` values so ``max`` doesn't raise a comparison error and
             # simply return ``None`` when no timestamps have been recorded.
@@ -333,6 +334,7 @@ class NetworkManager:
                     if t is not None
                 ],
                 default=None,
+
             )
         }
     
