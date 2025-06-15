@@ -31,6 +31,7 @@ class AITrainingEngine:
             "neural_network_training": self.train_neural_network,
             "gradient_computation": self.compute_gradients,
             "federated_learning": self.federated_learning_step,
+            "secure_federated_learning": self.federated_learning_step,
             "hyperparameter_optimization": self.optimize_hyperparameters,
             "model_inference_batch": self.run_batch_inference,
             "data_preprocessing": self.preprocess_data,
@@ -411,39 +412,63 @@ class AITrainingEngine:
             return {'success': False, 'error': str(e)}
     
     def federated_learning_step(self, config: Dict, progress_callback: Callable) -> Dict:
-        """Perform federated learning step"""
+        """Perform federated learning step with optional privacy mechanisms."""
         try:
             num_clients = config.get('num_clients', 10)
             aggregation_rounds = config.get('aggregation_rounds', 5)
-            
+            enable_dp = config.get('differential_privacy', False)
+            enable_encryption = config.get('encrypted_updates', False)
+            noise_scale = float(config.get('dp_noise_scale', 0.01))
+
+            from .federated_privacy import SimpleEncryptor
+
             client_updates = []
-            
+
             for round_num in range(aggregation_rounds):
                 round_updates = []
-                
+
                 # Simulate client updates
                 for client in range(num_clients):
                     local_weights = np.random.randn(1000) * 0.1
                     local_loss = np.random.uniform(0.1, 1.0)
-                    
+
+                    key = None
+                    if enable_encryption:
+                        key = SimpleEncryptor.generate_key(local_weights.shape)
+                        enc_weights = SimpleEncryptor.encrypt(local_weights, key)
+                    else:
+                        enc_weights = local_weights
+
                     round_updates.append({
                         'client_id': client,
-                        'weights': local_weights,
+                        'weights': enc_weights,
                         'loss': local_loss,
-                        'samples': np.random.randint(100, 1000)
+                        'samples': np.random.randint(100, 1000),
+                        'key': key
                     })
-                
-                # Federated averaging
+
+                # Federated averaging on encrypted data
                 total_samples = sum(update['samples'] for update in round_updates)
-                averaged_weights = np.zeros(1000)
-                
+                aggregated = np.zeros(1000)
+                agg_key = np.zeros(1000) if enable_encryption else None
+
                 for update in round_updates:
                     weight = update['samples'] / total_samples
-                    averaged_weights += weight * update['weights']
-                
+                    aggregated += weight * update['weights']
+                    if enable_encryption:
+                        agg_key += weight * update['key']
+
+                if enable_encryption:
+                    averaged_weights = SimpleEncryptor.decrypt(aggregated, agg_key)
+                else:
+                    averaged_weights = aggregated
+
+                if enable_dp:
+                    averaged_weights += np.random.normal(0, noise_scale, size=averaged_weights.shape)
+
                 avg_loss = np.mean([update['loss'] for update in round_updates])
                 client_updates.append(avg_loss)
-                
+
                 progress = ((round_num + 1) / aggregation_rounds) * 100
                 if not progress_callback(progress, {
                     'round': round_num + 1,
@@ -452,17 +477,18 @@ class AITrainingEngine:
                     'convergence': float(1.0 / (avg_loss + 0.1))
                 }):
                     return {'success': False, 'error': 'Federated learning cancelled'}
-            
+
             return {
                 'success': True,
-                'learning_type': 'federated',
+                'learning_type': 'federated_privacy',
                 'total_rounds': aggregation_rounds,
                 'participating_clients': num_clients,
                 'final_loss': float(client_updates[-1]),
                 'convergence_improvement': float(client_updates[0] - client_updates[-1]),
-                'federation_efficiency': 0.85
+                'differential_privacy': enable_dp,
+                'encrypted_updates': enable_encryption
             }
-            
+
         except Exception as e:
             return {'success': False, 'error': str(e)}
     
