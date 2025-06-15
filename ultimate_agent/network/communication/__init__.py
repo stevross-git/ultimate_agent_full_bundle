@@ -320,13 +320,20 @@ class NetworkManager:
                 'sent': self.connection_stats['total_bytes_sent'],
                 'received': self.connection_stats['total_bytes_received']
             },
+            # Determine when the last network activity occurred. Filter out
+            # ``None`` values so ``max`` doesn't raise a comparison error and
+            # simply return ``None`` when no timestamps have been recorded.
             'last_activity': max(
-                self.connection_stats.get('last_successful_connection', 0),
-                self.connection_stats.get('last_failed_connection', 0)
-            ) if any([
-                self.connection_stats.get('last_successful_connection'),
-                self.connection_stats.get('last_failed_connection')
-            ]) else None
+                [
+                    t
+                    for t in (
+                        self.connection_stats.get('last_successful_connection'),
+                        self.connection_stats.get('last_failed_connection'),
+                    )
+                    if t is not None
+                ],
+                default=None,
+            )
         }
     
     def optimize_connections(self) -> Dict[str, Any]:
