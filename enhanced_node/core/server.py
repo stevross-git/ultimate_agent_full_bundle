@@ -54,7 +54,7 @@ except ImportError as e1:
         print(f"❌ All imports failed: {e2}")
         # Create minimal implementations
         class MockSettings:
-            NODE_ID = "enhanced-node-emergency"
+            NODE_ID = "enhanced-node"
             NODE_VERSION = "3.4.0-emergency"
             NODE_PORT = 5000
             MANAGER_HOST = "localhost"
@@ -167,7 +167,7 @@ class EnhancedNodeServer:
         # Register routes
         self._register_routes()
         
-        self.logger.info(f"Enhanced Node Server {getattr(settings, 'NODE_ID', 'emergency')} v{getattr(settings, 'NODE_VERSION', '3.4.0')} initialized")
+        self.logger.info(f"Enhanced Node Server {getattr(settings, 'NODE_ID', 'enhanced')} v{getattr(settings, 'NODE_VERSION', '3.4.0')} initialized")
     
     def _init_advanced_components(self):
         """Initialize advanced components with error handling"""
@@ -242,7 +242,12 @@ class EnhancedNodeServer:
             routes_registered = 0
             
             try:
-                from routes.api_v3 import register_api_v3_routes
+                # Prefer absolute import to ensure relative imports in the
+                # module resolve correctly
+                try:
+                    from enhanced_node.routes.api_v3 import register_api_v3_routes
+                except ImportError:
+                    from routes.api_v3 import register_api_v3_routes
                 register_api_v3_routes(self)
                 routes_registered += 1
                 print("✅ API v3 routes registered")
@@ -251,7 +256,10 @@ class EnhancedNodeServer:
                 self._register_basic_api_routes()
             
             try:
-                from routes.api_v5_remote import register_api_v5_routes
+                try:
+                    from enhanced_node.routes.api_v5_remote import register_api_v5_routes
+                except ImportError:
+                    from routes.api_v5_remote import register_api_v5_routes
                 register_api_v5_routes(self)
                 routes_registered += 1
                 print("✅ API v5 remote routes registered")
@@ -259,7 +267,10 @@ class EnhancedNodeServer:
                 print("⚠️  API v5 remote routes not available")
             
             try:
-                from routes.api_v6_version import register_api_v6_routes
+                try:
+                    from enhanced_node.routes.api_v6_version import register_api_v6_routes
+                except ImportError:
+                    from routes.api_v6_version import register_api_v6_routes
                 register_api_v6_routes(self)
                 routes_registered += 1
                 print("✅ API v6 version routes registered")
@@ -267,7 +278,10 @@ class EnhancedNodeServer:
                 print("⚠️  API v6 version routes not available")
             
             try:
-                from websocket.events import register_websocket_events
+                try:
+                    from enhanced_node.websocket.events import register_websocket_events
+                except ImportError:
+                    from websocket.events import register_websocket_events
                 register_websocket_events(self)
                 routes_registered += 1
                 print("✅ WebSocket events registered")
@@ -336,13 +350,22 @@ class EnhancedNodeServer:
                 })
             except Exception as e:
                 return jsonify({"success": False, "error": str(e)}), 500
+
+        @self.app.route('/api/v3/node/stats', methods=['GET'])
+        def node_stats():
+            """Return basic node statistics"""
+            try:
+                stats = self.get_enhanced_node_stats()
+                return jsonify(stats)
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
         
         @self.app.route('/api/health', methods=['GET'])
         def health_check():
             """Health check"""
             return jsonify({
                 "status": "healthy",
-                "node_id": getattr(settings, 'NODE_ID', 'emergency'),
+                "node_id": getattr(settings, 'NODE_ID', 'enhanced'),
                 "version": getattr(settings, 'NODE_VERSION', '3.4.0'),
                 "agents": len(self.agents),
                 "features": {
@@ -480,7 +503,7 @@ class EnhancedNodeServer:
                     <h1>🚀 Enhanced Node Server</h1>
                     <p>Advanced AI & Blockchain Operations Center</p>
                     <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 10px;">
-                        Node ID: {getattr(settings, 'NODE_ID', 'emergency')} | 
+                        Node ID: {getattr(settings, 'NODE_ID', 'enhanced')} |
                         Version: {getattr(settings, 'NODE_VERSION', '3.4.0')}
                     </p>
                 </div>
@@ -677,7 +700,7 @@ class EnhancedNodeServer:
                 function showInfo() {{
                     alert(`Enhanced Node Server Information:
                     
-Node ID: {getattr(settings, 'NODE_ID', 'emergency')}
+Node ID: {getattr(settings, 'NODE_ID', 'enhanced')}
 Version: {getattr(settings, 'NODE_VERSION', '3.4.0')}
 Task Control: {'Available' if self.task_control else 'Not Available'}
 Remote Control: {'Available' if self.advanced_remote_control else 'Not Available'}
@@ -735,7 +758,7 @@ WebSocket: ${{socket && socket.connected ? 'Connected' : 'Disconnected'}}
         return {
             "success": True,
             "agent_id": agent_id,
-            "node_id": getattr(settings, 'NODE_ID', 'emergency'),
+            "node_id": getattr(settings, 'NODE_ID', 'enhanced'),
             "node_version": getattr(settings, 'NODE_VERSION', '3.4.0'),
             "message": "Agent registered successfully"
         }
@@ -761,27 +784,111 @@ WebSocket: ${{socket && socket.connected ? 'Connected' : 'Disconnected'}}
         
         return {
             "success": True,
-            "node_id": getattr(settings, 'NODE_ID', 'emergency'),
+            "node_id": getattr(settings, 'NODE_ID', 'enhanced'),
             "next_heartbeat": 30
         }
     
     def get_enhanced_node_stats(self) -> Dict[str, Any]:
-        """Get node statistics"""
+        """Return advanced node statistics"""
         total_agents = len(self.agents)
-        online_agents = sum(1 for s in self.agent_status.values() 
-                           if s.status == "online" and s.last_heartbeat and 
-                           (datetime.now() - s.last_heartbeat).seconds < 120)
-        
+        online_agents = sum(
+            1
+            for s in self.agent_status.values()
+            if s.status == "online" and s.last_heartbeat and (datetime.now() - s.last_heartbeat).seconds < 120
+        )
+
+        offline_agents = total_agents - online_agents
+
+        # Task metrics
+        total_tasks_running = sum(getattr(s, "tasks_running", 0) for s in self.agent_status.values())
+        total_tasks_completed = sum(getattr(s, "tasks_completed", 0) for s in self.agent_status.values())
+        total_tasks_failed = sum(getattr(s, "tasks_failed", 0) for s in self.agent_status.values())
+        success_rate = round((total_tasks_completed / max(total_tasks_completed + total_tasks_failed, 1)) * 100, 2)
+
+        # System metrics
+        avg_cpu = sum(getattr(s, "cpu_percent", 0.0) for s in self.agent_status.values()) / max(total_agents, 1)
+        avg_memory = sum(getattr(s, "memory_percent", 0.0) for s in self.agent_status.values()) / max(total_agents, 1)
+        avg_gpu = sum(getattr(s, "gpu_percent", 0.0) for s in self.agent_status.values()) / max(total_agents, 1)
+
+        # AI metrics
+        total_ai_models = sum(getattr(s, "ai_models_loaded", 0) for s in self.agent_status.values())
+        total_ai_inferences = sum(getattr(s, "ai_inference_count", 0) for s in self.agent_status.values())
+        agents_with_gpu = sum(1 for a in self.agents.values() if getattr(a, "gpu_available", False))
+
+        # Blockchain metrics
+        total_blockchain_balance = sum(getattr(s, "blockchain_balance", 0.0) for s in self.agent_status.values())
+        total_blockchain_txs = sum(getattr(s, "blockchain_transactions", 0) for s in self.agent_status.values())
+        blockchain_enabled_agents = sum(1 for a in self.agents.values() if getattr(a, "blockchain_enabled", False))
+
+        # Performance metrics
+        avg_efficiency = sum(getattr(s, "efficiency_score", 100.0) for s in self.agent_status.values()) / max(total_agents, 1)
+
+        # Task control statistics
+        mgmt_stats = self.task_control.get_task_statistics() if self.task_control else {}
+
+        # Advanced remote control metrics
+        advanced_stats = (
+            self.advanced_remote_control.get_advanced_statistics() if self.advanced_remote_control else {}
+        )
+
+        def calculate_health_score() -> float:
+            if total_agents == 0:
+                return 100.0
+            online_ratio = online_agents / total_agents
+            success_ratio = total_tasks_completed / max(total_tasks_completed + total_tasks_failed, 1)
+            health = (online_ratio * 40) + (avg_efficiency / 100.0 * 0.4) + (success_ratio * 20)
+            return max(0.0, min(100.0, health))
+
         return {
-            "node_id": getattr(settings, 'NODE_ID', 'emergency'),
-            "node_version": getattr(settings, 'NODE_VERSION', '3.4.0'),
+            "node_id": getattr(settings, "NODE_ID", "enhanced"),
+            "node_version": getattr(settings, "NODE_VERSION", "3.4.0"),
             "timestamp": datetime.now().isoformat(),
+
+            # Agent statistics
             "total_agents": total_agents,
             "online_agents": online_agents,
-            "total_tasks_running": sum(s.tasks_running for s in self.agent_status.values()),
+            "offline_agents": offline_agents,
+
+            # Task statistics
+            "total_tasks_running": total_tasks_running,
+            "total_tasks_completed": total_tasks_completed,
+            "total_tasks_failed": total_tasks_failed,
+            "success_rate": success_rate,
+
+            # System metrics
+            "avg_cpu_percent": round(avg_cpu, 2),
+            "avg_memory_percent": round(avg_memory, 2),
+            "avg_gpu_percent": round(avg_gpu, 2),
+
+            # AI metrics
+            "total_ai_models": total_ai_models,
+            "total_ai_inferences": total_ai_inferences,
+            "agents_with_gpu": agents_with_gpu,
+            "gpu_utilization": round(avg_gpu, 2),
+
+            # Blockchain metrics
+            "total_blockchain_balance": round(total_blockchain_balance, 6),
+            "total_blockchain_transactions": total_blockchain_txs,
+            "blockchain_enabled_agents": blockchain_enabled_agents,
+
+            # Performance metrics
+            "avg_efficiency_score": round(avg_efficiency, 2),
+
+            # Health
+            "health_score": calculate_health_score(),
+            "manager_connected": self.registered_with_manager,
+
+            # Task control
             "task_control_enabled": self.task_control is not None,
+            "central_tasks": mgmt_stats,
+
+            # Remote management
             "remote_management_enabled": self.advanced_remote_control is not None,
-            "version_control_enabled": self.version_control is not None
+            "advanced_control_enabled": self.advanced_remote_control is not None,
+            "advanced_control": advanced_stats,
+
+            # Version control
+            "version_control_enabled": self.version_control is not None,
         }
     
     def start(self):
