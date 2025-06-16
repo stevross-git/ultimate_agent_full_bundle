@@ -8,11 +8,16 @@ import sys
 import os
 from pathlib import Path
 import traceback
+from integrations.orchestrator_client import add_orchestrator_integration
+orchestrator_client = add_orchestrator_integration(node_server)
+orchestrator_client.register_with_orchestrator()
 
 # Add current directory to sys.path for imports
 ROOT_DIR = Path(__file__).parent.absolute()
 sys.path.insert(0, str(ROOT_DIR))
 sys.path.insert(0, str(ROOT_DIR.parent))
+
+
 
 def debug_environment():
     """Debug the environment setup"""
