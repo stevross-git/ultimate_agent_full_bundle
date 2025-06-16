@@ -46,7 +46,7 @@ class UltimatePainNetworkAgent:
     
     def __init__(self, *args, **kwargs):
     # Your existing __init__ code
-    super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
     
     # Add Local AI initialization
     self._initialize_local_ai()
