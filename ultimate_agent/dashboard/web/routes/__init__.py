@@ -4,7 +4,8 @@ ultimate_agent/dashboard/web/routes/__init__.py
 Web dashboard and API routes
 """
 
-import threading
+from .local_ai_routes import add_local_ai_routes
+    import threading
 import secrets
 import time
 import os
@@ -409,6 +410,481 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         agent_id = getattr(self.agent, 'agent_id', 'unknown')
         node_url = getattr(self.agent, 'node_url', 'unknown')
         version = getattr(self.agent, 'VERSION', '3.0.0-modular')
+        
+    def add_local_ai_routes(app, agent):
+        """Add Local AI API routes to the dashboard"""
+    
+    from flask import request, jsonify, Response
+    import json
+    import asyncio
+    
+    @app.route('/api/v4/local-ai/status')
+    def local_ai_status():
+        """Get local AI system status"""
+        try:
+            if hasattr(agent, 'local_ai_manager'):
+                status = agent.local_ai_manager.get_status()
+                hardware_info = agent.local_ai_manager.get_hardware_info()
+                stats = agent.local_ai_manager.get_stats()
+                
+                return jsonify({
+                    'success': True,
+                    'status': status,
+                    'hardware': hardware_info,
+                    'performance': stats,
+                    'api_version': '4.1'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Local AI not initialized',
+                    'available': False
+                })
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+    
+    @app.route('/api/v4/local-ai/models')
+    def list_local_models():
+        """List available local AI models"""
+        try:
+            if hasattr(agent, 'local_ai_manager'):
+                models = agent.local_ai_manager.list_available_models()
+                return jsonify({
+                    'success': True,
+                    'models': models
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Local AI not available'
+                })
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+    
+    @app.route('/api/v4/local-ai/models/download', methods=['POST'])
+    def download_local_model():
+        """Download a local AI model"""
+        try:
+            data = request.get_json() or {}
+            model_name = data.get('model_name')
+            
+            if not model_name:
+                return jsonify({
+                    'success': False,
+                    'error': 'model_name is required'
+                })
+            
+            if not hasattr(agent, 'local_ai_manager'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Local AI not available'
+                })
+            
+            # Start download asynchronously
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            result = loop.run_until_complete(
+                agent.local_ai_manager.download_model(model_name)
+            )
+            
+            return jsonify(result)
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+    
+    @app.route('/api/v4/local-ai/inference', methods=['POST'])
+    def local_ai_inference():
+        """Run inference using local AI"""
+        try:
+            data = request.get_json() or {}
+            prompt = data.get('prompt', data.get('input', ''))
+            
+            if not prompt:
+                return jsonify({
+                    'success': False,
+                    'error': 'prompt or input is required'
+                })
+            
+            if not hasattr(agent, 'local_ai_manager'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Local AI not available'
+                })
+            
+            # Extract options
+            options = {
+                'task_type': data.get('task_type', 'general'),
+                'temperature': data.get('temperature', 0.7),
+                'max_tokens': data.get('max_tokens', 1000),
+                'top_p': data.get('top_p', 0.9)
+            }
+            
+            # Run inference
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            result = loop.run_until_complete(
+                agent.local_ai_manager.generate_response(prompt, **options)
+            )
+            
+            return jsonify(result)
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+    
+    @app.route('/api/v4/local-ai/inference/stream', methods=['POST'])
+    def local_ai_inference_stream():
+        """Stream inference using local AI"""
+        try:
+            data = request.get_json() or {}
+            prompt = data.get('prompt', data.get('input', ''))
+            
+            if not prompt:
+                return jsonify({
+                    'success': False,
+                    'error': 'prompt or input is required'
+                })
+            
+            if not hasattr(agent, 'local_ai_manager'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Local AI not available'
+                })
+            
+            # Extract options
+            options = {
+                'task_type': data.get('task_type', 'general'),
+                'temperature': data.get('temperature', 0.7),
+                'max_tokens': data.get('max_tokens', 1000)
+            }
+            
+            async def generate():
+                try:
+                    async for chunk in agent.local_ai_manager.generate_stream(prompt, **options):
+                        yield f"data: {json.dumps(chunk)}\n\n"
+                        if chunk.get('done'):
+                            break
+                except Exception as e:
+                    yield f"data: {json.dumps({'error': str(e), 'done': True})}\n\n"
+            
+            # Run generator
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            def run_async_generator():
+                async def async_gen():
+                    async for item in generate():
+                        yield item
+                
+                gen = async_gen()
+                try:
+                    while True:
+                        yield loop.run_until_complete(gen.__anext__())
+                except StopAsyncIteration:
+                    pass
+            
+            return Response(
+                run_async_generator(),
+                mimetype='text/event-stream',
+                headers={
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                    'Access-Control-Allow-Origin': '*'
+                }
+            )
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+        
+    
+    
+    @app.route('/api/v4/local-ai/chat', methods=['POST'])
+    def local_ai_chat():
+        """Enhanced chat endpoint using local AI"""
+        try:
+            data = request.get_json() or {}
+            message = data.get('input', data.get('message', ''))
+            conversation_id = data.get('conversation_id')
+            
+            if not message:
+                return jsonify({
+                    'success': False,
+                    'error': 'message is required'
+                })
+            
+            if not hasattr(agent, 'local_ai_conversation_manager'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Local AI chat not available'
+                })
+            
+            # Generate conversation ID if needed
+            if not conversation_id:
+                import uuid
+                conversation_id = f"local_conv_{uuid.uuid4().hex[:12]}"
+            
+            # Process message
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            result = loop.run_until_complete(
+                agent.local_ai_conversation_manager.process_message(
+                    conversation_id=conversation_id,
+                    message=message,
+                    context_aware=data.get('context_aware', True),
+                    temperature=data.get('temperature', 0.7),
+                    max_tokens=data.get('max_tokens', 1000)
+                )
+            )
+            
+            return jsonify(result)
+            
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+    
+    @app.route('/api/v4/local-ai/hardware')
+    def local_ai_hardware():
+        """Get detailed hardware information"""
+        try:
+            if hasattr(agent, 'local_ai_manager'):
+                hardware_info = agent.local_ai_manager.get_hardware_info()
+                return jsonify({
+                    'success': True,
+                    'hardware': hardware_info
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Local AI not available'
+                })
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+        
+    class EnhancedAIModelManager:
+    """Enhanced AI Model Manager with Local AI integration"""
+    
+    def __init__(self, config, local_ai_manager=None):
+        # Initialize existing AI manager
+        from ..models.ai_models import AIModelManager
+        self.base_ai_manager = AIModelManager(config)
+        
+        # Add local AI capabilities
+        self.local_ai_manager = local_ai_manager
+        self.local_ai_enabled = local_ai_manager is not None
+        
+        # Combine model lists
+        self._update_combined_models()
+    
+    def _update_combined_models(self):
+        """Update combined model list with local AI models"""
+        if self.local_ai_enabled:
+            # Add local AI models to the model registry
+            local_models = self.local_ai_manager.list_available_models()
+            
+            for model_info in local_models.get('recommended_models', []):
+                model_name = f"local_{model_info['name'].lower().replace(' ', '_')}"
+                self.base_ai_manager.models[model_name] = {
+                    'type': 'local_llm',
+                    'status': 'available' if model_info['available'] else 'needs_download',
+                    'size': 'variable',
+                    'accuracy': 0.90,
+                    'local_ai': True,
+                    'display_name': model_info['name'],
+                    'full_name': model_info['full_name'],
+                    'memory_gb': model_info['memory_gb'],
+                    'tags': model_info['tags']
+                }
+    
+    async def run_inference(self, model_name: str, input_data: Any, **kwargs) -> Dict[str, Any]:
+        """Enhanced inference with local AI support"""
+        try:
+            # Check if it's a local AI model
+            if model_name.startswith('local_') and self.local_ai_enabled:
+                # Use local AI for inference
+                task_type = kwargs.get('task_type', 'general')
+                result = await self.local_ai_manager.generate_response(
+                    str(input_data),
+                    task_type=task_type,
+                    **kwargs
+                )
+                
+                if result['success']:
+                    return {
+                        'success': True,
+                        'prediction': result['response'],
+                        'confidence': 0.90,  # Local AI confidence
+                        'model_used': result['model_used'],
+                        'processing_time': result['processing_time'],
+                        'tokens_per_second': result.get('tokens_per_second', 0),
+                        'inference_type': 'local_ai',
+                        'hardware_type': result.get('hardware_type'),
+                        'local_ai': True
+                    }
+                else:
+                    # Fallback to base AI manager
+                    return self.base_ai_manager.run_inference(model_name, input_data)
+            
+            # Use base AI manager for traditional models
+            return self.base_ai_manager.run_inference(model_name, input_data)
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'model_attempted': model_name
+            }
+    
+    def list_models(self) -> List[str]:
+        """List all available models including local AI"""
+        models = self.base_ai_manager.list_models()
+        
+        if self.local_ai_enabled:
+            local_models = self.local_ai_manager.list_available_models()
+            for model_info in local_models.get('recommended_models', []):
+                model_name = f"local_{model_info['name'].lower().replace(' ', '_')}"
+                if model_name not in models:
+                    models.append(model_name)
+        
+        return models
+    
+    def get_model_info(self, model_name: str) -> Dict[str, Any]:
+        """Get detailed model information"""
+        if model_name.startswith('local_') and self.local_ai_enabled:
+            # Get local AI model info
+            local_models = self.local_ai_manager.list_available_models()
+            for model_info in local_models.get('recommended_models', []):
+                if f"local_{model_info['name'].lower().replace(' ', '_')}" == model_name:
+                    return {
+                        'name': model_info['name'],
+                        'type': 'local_llm',
+                        'memory_gb': model_info['memory_gb'],
+                        'tags': model_info['tags'],
+                        'description': model_info['description'],
+                        'available': model_info['available'],
+                        'hardware_compatible': True,
+                        'local_ai': True
+                    }
+        
+        return self.base_ai_manager.get_model(model_name)
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Enhanced status with local AI information"""
+        base_status = self.base_ai_manager.get_status()
+        
+        if self.local_ai_enabled:
+            local_status = self.local_ai_manager.get_status()
+            local_stats = self.local_ai_manager.get_stats()
+            
+            base_status.update({
+                'local_ai_enabled': True,
+                'local_ai_status': local_status,
+                'local_ai_performance': local_stats['inference_stats'],
+                'hardware_type': local_stats['hardware_info']['type'],
+                'local_models_available': local_status.get('models_loaded', 0)
+            })
+        else:
+            base_status['local_ai_enabled'] = False
+        
+        return base_status
+
+
+# ============================================================================
+# 3. Enhanced Conversation Manager Integration
+# ============================================================================
+
+class EnhancedConversationManager:
+    """Enhanced conversation manager with local AI support"""
+    
+    def __init__(self, ai_manager, config_manager, local_ai_conversation_manager=None):
+        # Initialize base conversation manager
+        from ..chat.conversation_manager import ConversationManager
+        self.base_conversation_manager = ConversationManager(ai_manager, config_manager)
+        
+        # Add local AI conversation support
+        self.local_ai_conversation_manager = local_ai_conversation_manager
+        self.local_ai_enabled = local_ai_conversation_manager is not None
+        
+        # Configuration
+        self.prefer_local_ai = True  # Prefer local AI when available
+        self.fallback_enabled = True  # Fallback to base AI if local fails
+    
+    async def process_message(self, conversation_id: str, user_message: str,
+                            context_aware: bool = True, use_local_ai: bool = None) -> Dict[str, Any]:
+        """Process message with local AI preference"""
+        
+        # Determine whether to use local AI
+        should_use_local = (
+            use_local_ai if use_local_ai is not None 
+            else (self.prefer_local_ai and self.local_ai_enabled)
+        )
+        
+        if should_use_local and self.local_ai_enabled:
+            try:
+                # Try local AI first
+                result = await self.local_ai_conversation_manager.process_message(
+                    conversation_id=conversation_id,
+                    message=user_message,
+                    context_aware=context_aware
+                )
+                
+                if result['success']:
+                    result['ai_type'] = 'local'
+                    return result
+                
+                # Log local AI failure
+                print(f"⚠️ Local AI failed: {result.get('error')}")
+                
+            except Exception as e:
+                print(f"⚠️ Local AI error: {e}")
+        
+        # Fallback to base conversation manager
+        if self.fallback_enabled:
+            try:
+                result = await self.base_conversation_manager.process_message(
+                    conversation_id, user_message, context_aware
+                )
+                result['ai_type'] = 'cloud'
+                result['local_ai_attempted'] = should_use_local
+                return result
+                
+            except Exception as e:
+                return {
+                    'success': False,
+                    'error': str(e),
+                    'conversation_id': conversation_id,
+                    'local_ai_attempted': should_use_local
+                }
+        else:
+            return {
+                'success': False,
+                'error': 'Local AI failed and fallback disabled',
+                'conversation_id': conversation_id
+            }
+    
+    def get_conversation_stats(self) -> Dict[str, Any]:
+        """Get enhanced conversation statistics"""
+        base_stats = self.base_conversation_manager.get_chat_statistics()
+        
+        enhanced_stats = {
+            **base_stats,
+            'local_ai_enabled': self.local_ai_enabled,
+            'prefer_local_ai': self.prefer_local_ai,
+            'fallback_enabled': self.fallback_enabled
+        }
+        
+        if self.local_ai_enabled:
+            # Add local AI specific stats
+            local_stats = self.local_ai_conversation_manager.local_ai.get_stats()
+            enhanced_stats.update({
+                'local_ai_performance': local_stats['inference_stats'],
+                'local_ai_hardware': local_stats['hardware_info'],
+                'local_ai_model': local_stats['current_model']
+            })
+        
+        return enhanced_stats
+
+
         
         return f"""
         <!DOCTYPE html>

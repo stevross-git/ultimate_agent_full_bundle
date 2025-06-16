@@ -3,7 +3,16 @@
 ultimate_agent/core/agent.py
 Main agent class - coordinates all modules
 """
-
+# Local AI Integration
+try:
+    from ..ai.local_models.local_ai_manager import (
+        create_local_ai_manager,
+        create_local_ai_conversation_manager
+    )
+    LOCAL_AI_AVAILABLE = True
+except ImportError:
+    LOCAL_AI_AVAILABLE = False
+    print("⚠️ Local AI not available")
 import time
 import threading
 import platform
@@ -34,6 +43,103 @@ from ..remote.command_handler import RemoteCommandHandler
 
 class UltimatePainNetworkAgent:
     """Main agent class that coordinates all modules"""
+    
+    def __init__(self, *args, **kwargs):
+    # Your existing __init__ code
+    super().__init__(*args, **kwargs)
+    
+    # Add Local AI initialization
+    self._initialize_local_ai()
+
+def _initialize_local_ai(self):
+    """Initialize Local AI components"""
+    if not LOCAL_AI_AVAILABLE:
+        self.local_ai_manager = None
+        self.local_ai_conversation_manager = None
+        return
+    
+    try:
+        print("🧠 Initializing Local AI...")
+        
+        # Create Local AI Manager
+        self.local_ai_manager = create_local_ai_manager(self.config_manager)
+        self.local_ai_conversation_manager = create_local_ai_conversation_manager(self.config_manager)
+        
+        # Enhance existing AI manager if available
+        if hasattr(self, 'ai_manager'):
+            self._enhance_ai_manager_with_local_ai()
+        
+        print("✅ Local AI initialized successfully")
+        
+        # Log hardware info
+        hw_info = self.local_ai_manager.get_hardware_info()
+        print(f"🖥️ Hardware detected: {hw_info['hardware_type']}")
+        
+    except Exception as e:
+        print(f"⚠️ Local AI initialization failed: {e}")
+        self.local_ai_manager = None
+        self.local_ai_conversation_manager = None
+
+def _enhance_ai_manager_with_local_ai(self):
+    """Enhance existing AI manager with Local AI capabilities"""
+    original_run_inference = self.ai_manager.run_inference
+    
+    async def enhanced_run_inference(model_name: str, input_data, **kwargs):
+        # Try Local AI first for certain models or requests
+        if (kwargs.get('use_local_ai', True) and 
+            self.local_ai_manager and 
+            (model_name.startswith('local_') or kwargs.get('prefer_local', False))):
+            
+            try:
+                result = await self.local_ai_manager.generate_response(
+                    str(input_data),
+                    task_type=kwargs.get('task_type', 'general'),
+                    **kwargs
+                )
+                
+                if result['success']:
+                    return {
+                        'success': True,
+                        'prediction': result['response'],
+                        'confidence': 0.90,
+                        'model_used': result['model_used'],
+                        'processing_time': result['processing_time'],
+                        'inference_type': 'local_ai',
+                        'local_ai': True
+                    }
+            except Exception as e:
+                print(f"Local AI inference failed, falling back: {e}")
+        
+        # Fallback to original method
+        return original_run_inference(model_name, input_data)
+    
+    # Replace the method
+    self.ai_manager.run_inference = enhanced_run_inference
+
+def get_local_ai_status(self) -> Dict[str, Any]:
+    """Get Local AI status for API endpoints"""
+    if not self.local_ai_manager:
+        return {'enabled': False, 'error': 'Local AI not available'}
+    
+    try:
+        status = self.local_ai_manager.get_status()
+        stats = self.local_ai_manager.get_stats()
+        hardware = self.local_ai_manager.get_hardware_info()
+        
+        return {
+            'enabled': True,
+            'status': status,
+            'performance': stats['inference_stats'],
+            'hardware': {
+                'type': hardware['hardware_type'],
+                'memory_gb': round(hardware['system_info']['memory_gb'], 1),
+                'gpu_available': hardware['system_info']['gpu_info']['available'],
+            },
+            'current_model': hardware.get('current_model')
+        }
+        
+    except Exception as e:
+        return {'enabled': True, 'error': str(e)}
     
     def __init__(self, node_url: str = None, dashboard_port: int = None):
         print(f"🚀 Initializing Enhanced Ultimate Pain Network Agent")
@@ -185,6 +291,8 @@ class UltimatePainNetworkAgent:
             except Exception as e:
                 print(f"❌ Auto task loop error: {e}")
                 time.sleep(60)
+                
+    
     
     def start(self):
         """Start the agent"""
@@ -231,3 +339,79 @@ class UltimatePainNetworkAgent:
         self.dashboard_manager.stop()
         
         print("🎯 Agent stopped successfully")
+        
+    def integrate_local_ai_with_agent(agent_class):
+        """Decorator to integrate Local AI with the main agent"""
+    
+    def __init_enhanced__(self, *args, **kwargs):
+        # Call original __init__
+        original_init = agent_class.__init__
+        original_init(self, *args, **kwargs)
+        
+        # Initialize Local AI components
+        self._initialize_local_ai()
+    
+    def _initialize_local_ai(self):
+        """Initialize Local AI components"""
+        try:
+            # Create Local AI Manager
+            from ..ai.local_models.local_ai_manager import (
+                create_local_ai_manager,
+                create_local_ai_conversation_manager
+            )
+            
+            self.local_ai_manager = create_local_ai_manager(self.config_manager)
+            self.local_ai_conversation_manager = create_local_ai_conversation_manager(self.config_manager)
+            
+            # Enhance existing AI manager
+            if hasattr(self, 'ai_manager'):
+                self.ai_manager = EnhancedAIModelManager(
+                    self.config_manager,
+                    self.local_ai_manager
+                )
+            
+            # Enhance conversation manager
+            if hasattr(self, 'conversation_manager'):
+                self.conversation_manager = EnhancedConversationManager(
+                    self.ai_manager,
+                    self.config_manager,
+                    self.local_ai_conversation_manager
+                )
+            
+            print("✅ Local AI integration completed successfully")
+            
+        except Exception as e:
+            print(f"⚠️ Local AI integration failed: {e}")
+            # Continue without local AI
+            self.local_ai_manager = None
+            self.local_ai_conversation_manager = None
+    
+    def get_enhanced_status(self):
+        """Get enhanced status with Local AI information"""
+        status = self.get_status()  # Original status method
+        
+        if hasattr(self, 'local_ai_manager') and self.local_ai_manager:
+            local_ai_status = self.local_ai_manager.get_status()
+            local_ai_stats = self.local_ai_manager.get_stats()
+            
+            status.update({
+                'local_ai': {
+                    'enabled': True,
+                    'status': local_ai_status,
+                    'performance': local_ai_stats['inference_stats'],
+                    'hardware': local_ai_stats['hardware_info'],
+                    'current_model': local_ai_stats['current_model']
+                }
+            })
+        else:
+            status['local_ai'] = {'enabled': False}
+        
+        return status
+    
+    # Replace methods
+    agent_class.__init__ = __init_enhanced__
+    agent_class._initialize_local_ai = _initialize_local_ai
+    agent_class.get_enhanced_status = get_enhanced_status
+    
+    return agent_class
+
