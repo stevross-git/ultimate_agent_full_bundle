@@ -1,5 +1,5 @@
 """Hierarchical mesh networking utilities."""
 
-from .hierarchical import HierarchicalMeshNetwork
+from .hierarchical import HierarchicalMeshNetwork, BackhaulLink
 
-__all__ = ["HierarchicalMeshNetwork"]
+__all__ = ["HierarchicalMeshNetwork", "BackhaulLink"]

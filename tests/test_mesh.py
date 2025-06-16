@@ -37,3 +37,29 @@ def test_rebalance_and_broadcast():
 
     total = mesh.broadcast("b", 100)
     assert total > 0
+
+
+def test_latency_optimization_with_backhaul():
+    mesh = HierarchicalMeshNetwork()
+    mesh.add_node("a", "c1", bandwidth_mbps=50.0, is_leader=True)
+    mesh.add_node("b", "c2", bandwidth_mbps=50.0, is_leader=True)
+
+    no_backhaul = mesh.estimate_latency("a", "b")
+    assert no_backhaul >= 100
+
+    mesh.add_backhaul_link("c1", "c2", bandwidth_mbps=500.0, latency_ms=5.0)
+    with_backhaul = mesh.estimate_latency("a", "b")
+    assert with_backhaul < no_backhaul
+
+
+def test_dynamic_topology_optimization():
+    mesh = HierarchicalMeshNetwork()
+    mesh.add_node("a", "c1", bandwidth_mbps=20.0, is_leader=True)
+    mesh.add_node("b", "c2", bandwidth_mbps=20.0, is_leader=True)
+
+    before = mesh.estimate_latency("a", "b")
+    assert before > 100
+
+    mesh.optimize_topology(latency_threshold_ms=100)
+    after = mesh.estimate_latency("a", "b")
+    assert after <= 100

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 
 @dataclass
@@ -26,12 +26,23 @@ class MeshCluster:
             self.leader = node
 
 
+@dataclass
+class BackhaulLink:
+    """Dedicated high-bandwidth, low-latency connection between clusters."""
+
+    cluster_a: str
+    cluster_b: str
+    bandwidth_mbps: float = 1000.0
+    latency_ms: float = 10.0
+
+
 class HierarchicalMeshNetwork:
     """Coordinate nodes in a hierarchical mesh."""
 
     def __init__(self) -> None:
         self.nodes: Dict[str, MeshNode] = {}
         self.clusters: Dict[str, MeshCluster] = {}
+        self.backhaul: Dict[Tuple[str, str], BackhaulLink] = {}
 
     def add_node(self, node_id: str, cluster_id: str,
                  bandwidth_mbps: float = 100.0, *, is_leader: bool = False) -> None:
@@ -85,3 +96,51 @@ class HierarchicalMeshNetwork:
                 continue
             total += self.estimate_transfer_time(src_id, dst_id, size_mb, optimize=optimize)
         return total
+
+    # ------------------------------------------------------------------
+    # Advanced features
+    # ------------------------------------------------------------------
+
+    def add_backhaul_link(self, cluster_a: str, cluster_b: str,
+                          bandwidth_mbps: float = 1000.0,
+                          latency_ms: float = 10.0) -> None:
+        """Add a dedicated backhaul channel between two clusters."""
+        key = tuple(sorted((cluster_a, cluster_b)))
+        self.backhaul[key] = BackhaulLink(cluster_a, cluster_b,
+                                         bandwidth_mbps=bandwidth_mbps,
+                                         latency_ms=latency_ms)
+
+    def estimate_latency(self, src_id: str, dst_id: str,
+                         size_mb: float = 1.0) -> float:
+        """Estimate latency in milliseconds for a transfer."""
+        path = self.route_path(src_id, dst_id)
+        total = 0.0
+        for a, b in zip(path, path[1:]):
+            a_cluster = self.nodes[a].cluster_id
+            b_cluster = self.nodes[b].cluster_id
+            if a_cluster != b_cluster:
+                key = tuple(sorted((a_cluster, b_cluster)))
+                link = self.backhaul.get(key)
+                if link:
+                    bw = link.bandwidth_mbps
+                    total += link.latency_ms
+                else:
+                    bw = min(self.nodes[a].bandwidth_mbps,
+                             self.nodes[b].bandwidth_mbps)
+                    total += 80  # base inter-cluster delay
+            else:
+                bw = min(self.nodes[a].bandwidth_mbps,
+                         self.nodes[b].bandwidth_mbps)
+                total += 5  # base intra-cluster delay
+            total += (size_mb / (bw or 1.0)) * 1000
+        return total
+
+    def optimize_topology(self, latency_threshold_ms: float = 100.0) -> None:
+        """Ensure backhaul links between clusters to keep latency under threshold."""
+        clusters = list(self.clusters.keys())
+        for i, c1 in enumerate(clusters):
+            for c2 in clusters[i + 1:]:
+                leader_a = self.clusters[c1].leader.node_id
+                leader_b = self.clusters[c2].leader.node_id
+                if self.estimate_latency(leader_a, leader_b) > latency_threshold_ms:
+                    self.add_backhaul_link(c1, c2)
