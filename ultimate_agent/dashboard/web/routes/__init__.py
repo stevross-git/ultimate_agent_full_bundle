@@ -738,7 +738,7 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
                 'model_attempted': model_name
             }
     
-    def list_models(self) -> List[str]:
+    def list_models(self) -> list[str]:
         """List all available models including local AI"""
         models = self.base_ai_manager.list_models()
         
