@@ -5,7 +5,7 @@ Web dashboard and API routes
 """
 
 from .local_ai_routes import add_local_ai_routes
-    import threading
+import threading
 import secrets
 import time
 import os
@@ -662,7 +662,7 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
             return jsonify({'success': False, 'error': str(e)})
         
     class EnhancedAIModelManager:
-    """Enhanced AI Model Manager with Local AI integration"""
+        """Enhanced AI Model Manager with Local AI integration"""
     
     def __init__(self, config, local_ai_manager=None):
         # Initialize existing AI manager
