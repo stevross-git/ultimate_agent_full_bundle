@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import traceback
 from integrations.orchestrator_client import add_orchestrator_integration
-x
+
 # Add current directory to sys.path for imports
 ROOT_DIR = Path(__file__).parent.absolute()
 sys.path.insert(0, str(ROOT_DIR))
