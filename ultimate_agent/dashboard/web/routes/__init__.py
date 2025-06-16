@@ -4,7 +4,7 @@ ultimate_agent/dashboard/web/routes/__init__.py
 Web dashboard and API routes
 """
 
-from .local_ai_routes import add_local_ai_routes
+# from .local_ai_routes import add_local_ai_routes
 import threading
 import secrets
 import time
@@ -35,6 +35,9 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         self.app = Flask(__name__)
         self.app.secret_key = secrets.token_hex(16)
         CORS(self.app)
+        
+        add_local_ai_routes(self.app, self.agent)
+
         
         # WebSocket setup
         self.socketio = SocketIO(self.app, cors_allowed_origins="*", async_mode='threading')
@@ -414,13 +417,13 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
     def add_local_ai_routes(app, agent):
         """Add Local AI API routes to the dashboard"""
     
-    from flask import request, jsonify, Response
-    import json
-    import asyncio
+        from flask import request, jsonify, Response
+        import json
+        import asyncio
     
-    @app.route('/api/v4/local-ai/status')
-    def local_ai_status():
-        """Get local AI system status"""
+        @app.route('/api/v4/local-ai/status')
+        def local_ai_status():
+            """Get local AI system status"""
         try:
             if hasattr(agent, 'local_ai_manager'):
                 status = agent.local_ai_manager.get_status()
@@ -443,9 +446,9 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
     
-    @app.route('/api/v4/local-ai/models')
-    def list_local_models():
-        """List available local AI models"""
+        @app.route('/api/v4/local-ai/models')
+        def list_local_models():
+            """List available local AI models"""
         try:
             if hasattr(agent, 'local_ai_manager'):
                 models = agent.local_ai_manager.list_available_models()
@@ -461,9 +464,9 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
     
-    @app.route('/api/v4/local-ai/models/download', methods=['POST'])
-    def download_local_model():
-        """Download a local AI model"""
+        @app.route('/api/v4/local-ai/models/download', methods=['POST'])
+        def download_local_model():
+            """Download a local AI model"""
         try:
             data = request.get_json() or {}
             model_name = data.get('model_name')
@@ -493,9 +496,9 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
     
-    @app.route('/api/v4/local-ai/inference', methods=['POST'])
-    def local_ai_inference():
-        """Run inference using local AI"""
+        @app.route('/api/v4/local-ai/inference', methods=['POST'])
+        def local_ai_inference():
+            """Run inference using local AI"""
         try:
             data = request.get_json() or {}
             prompt = data.get('prompt', data.get('input', ''))
@@ -533,9 +536,9 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
     
-    @app.route('/api/v4/local-ai/inference/stream', methods=['POST'])
-    def local_ai_inference_stream():
-        """Stream inference using local AI"""
+        @app.route('/api/v4/local-ai/inference/stream', methods=['POST'])
+        def local_ai_inference_stream():
+            """Stream inference using local AI"""
         try:
             data = request.get_json() or {}
             prompt = data.get('prompt', data.get('input', ''))
@@ -599,9 +602,9 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         
     
     
-    @app.route('/api/v4/local-ai/chat', methods=['POST'])
-    def local_ai_chat():
-        """Enhanced chat endpoint using local AI"""
+        @app.route('/api/v4/local-ai/chat', methods=['POST'])
+        def local_ai_chat():
+            """Enhanced chat endpoint using local AI"""
         try:
             data = request.get_json() or {}
             message = data.get('input', data.get('message', ''))
@@ -643,9 +646,9 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
     
-    @app.route('/api/v4/local-ai/hardware')
-    def local_ai_hardware():
-        """Get detailed hardware information"""
+        @app.route('/api/v4/local-ai/hardware')
+        def local_ai_hardware():
+            """Get detailed hardware information"""
         try:
             if hasattr(agent, 'local_ai_manager'):
                 hardware_info = agent.local_ai_manager.get_hardware_info()
