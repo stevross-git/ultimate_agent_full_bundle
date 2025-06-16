@@ -60,7 +60,7 @@ except Exception as e:
     DatabaseManager = None
 
 try:
-    from .dashboard.web.routes import DashboardManager
+    from .dashboard.web.routes import DashboardServer as DashboardManager  # Fixed import
 except Exception as e:
     print(f"⚠️ Dashboard module not available: {e}")
     DashboardManager = None
