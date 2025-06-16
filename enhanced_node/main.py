@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced Node Server - Fixed Main Entry Point
+Enhanced Node Server - Fixed Main Entry Point with Orchestrator Integration
 Fixed import paths and better error handling
 """
 
@@ -8,14 +8,11 @@ import sys
 import os
 from pathlib import Path
 import traceback
-from integrations.orchestrator_client import add_orchestrator_integration
 
 # Add current directory to sys.path for imports
 ROOT_DIR = Path(__file__).parent.absolute()
 sys.path.insert(0, str(ROOT_DIR))
 sys.path.insert(0, str(ROOT_DIR.parent))
-
-
 
 def debug_environment():
     """Debug the environment setup"""
@@ -102,8 +99,6 @@ def create_basic_server():
     
     app = Flask(__name__)
     socketio = SocketIO(app, cors_allowed_origins="*")
-    orchestrator_client = add_orchestrator_integration(node_server)
-    orchestrator_client.register_with_orchestrator()
     
     @app.route('/')
     def dashboard():
@@ -203,6 +198,202 @@ def create_basic_server():
     
     return BasicServer()
 
+def setup_orchestrator_integration(server):
+    """Setup orchestrator integration with the node server"""
+    try:
+        print("\n🔗 Setting up Orchestrator Integration...")
+        print("=" * 50)
+        
+        import requests
+        import json
+        import time
+        import threading
+        import uuid
+        from datetime import datetime
+        
+        node_id = f"enhanced_node_{uuid.uuid4().hex[:8]}"
+        orchestrator_url = "https://orc.peoplesainetwork.com"
+        node_host = "172.31.8.129"  # Your server IP from the logs
+        node_port = 5000
+        registered = False
+        
+        print(f"🆔 Node ID: {node_id}")
+        print(f"🌐 Node Address: {node_host}:{node_port}")
+        print(f"🎯 Orchestrator: {orchestrator_url}")
+        
+        def register_with_orchestrator():
+            """Register this node with the orchestrator"""
+            nonlocal registered
+            try:
+                registration_data = {
+                    'node_id': node_id,
+                    'host': node_host,
+                    'port': node_port,
+                    'capabilities': [
+                        "agent_management",
+                        "task_control", 
+                        "remote_management",
+                        "websocket_communication",
+                        "real_time_monitoring",
+                        "enhanced_node_v2",
+                        "dashboard_support"
+                    ],
+                    'agents': [],
+                    'node_type': 'enhanced_node',
+                    'version': '2.0.0',
+                    'api_versions': ['v3', 'v4', 'v5'],
+                    'features': {
+                        'websocket_support': True,
+                        'monitoring': True,
+                        'dashboard': True,
+                        'task_control': hasattr(server, 'task_control'),
+                        'remote_management': hasattr(server, 'advanced_remote_control')
+                    },
+                    'registration_time': datetime.now().isoformat(),
+                    'external_url': f"http://{node_host}:{node_port}",
+                    'health_status': 'healthy'
+                }
+                
+                print(f"📡 Attempting registration...")
+                
+                response = requests.post(
+                    f"{orchestrator_url}/api/v1/nodes/{node_id}/register",
+                    json=registration_data,
+                    timeout=15,
+                    headers={'Content-Type': 'application/json'}
+                )
+                
+                print(f"📡 Response: {response.status_code}")
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get('success', False):
+                        registered = True
+                        print("✅ Successfully registered with orchestrator!")
+                        print(f"   Registration confirmed for {node_id}")
+                        start_heartbeat()
+                        return True
+                    else:
+                        error_msg = result.get('error', 'Unknown error')
+                        print(f"❌ Registration failed: {error_msg}")
+                        return False
+                else:
+                    print(f"❌ HTTP Error: {response.status_code}")
+                    if response.text:
+                        print(f"   Response: {response.text[:200]}...")
+                    return False
+                    
+            except requests.exceptions.ConnectionError:
+                print("❌ Cannot connect to orchestrator")
+                print("   Make sure https://orc.peoplesainetwork.com is accessible")
+                return False
+            except requests.exceptions.Timeout:
+                print("❌ Registration timeout")
+                print("   Orchestrator may be busy, will retry later")
+                return False
+            except Exception as e:
+                print(f"❌ Registration error: {e}")
+                return False
+        
+        def send_heartbeat():
+            """Send heartbeat to orchestrator"""
+            if not registered:
+                return False
+            
+            try:
+                # Get system metrics
+                try:
+                    import psutil
+                    cpu_usage = psutil.cpu_percent(interval=1)
+                    memory_usage = psutil.virtual_memory().percent
+                except ImportError:
+                    cpu_usage = 15.0  # Default values if psutil not available
+                    memory_usage = 25.0
+                
+                heartbeat_data = {
+                    'node_id': node_id,
+                    'status': 'active',
+                    'timestamp': datetime.now().isoformat(),
+                    'cpu_usage': cpu_usage,
+                    'memory_usage': memory_usage,
+                    'load_score': (cpu_usage + memory_usage) / 2,  # Simple load calculation
+                    'active_tasks': 0,  # You can enhance this later
+                    'health_status': 'healthy',
+                    'uptime': time.time() - start_time,
+                    'agents_count': len(getattr(server, 'agents', {}))
+                }
+                
+                response = requests.post(
+                    f"{orchestrator_url}/api/v1/nodes/{node_id}/heartbeat",
+                    json=heartbeat_data,
+                    timeout=10,
+                    headers={'Content-Type': 'application/json'}
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get('success', False):
+                        print("💓 Heartbeat sent successfully")
+                        return True
+                    else:
+                        print(f"⚠️ Heartbeat rejected: {result.get('error', 'Unknown')}")
+                        return False
+                else:
+                    print(f"⚠️ Heartbeat failed: HTTP {response.status_code}")
+                    return False
+                    
+            except Exception as e:
+                print(f"⚠️ Heartbeat error: {e}")
+                return False
+        
+        def start_heartbeat():
+            """Start the heartbeat thread"""
+            def heartbeat_worker():
+                print("💓 Starting heartbeat thread (every 30 seconds)")
+                while registered:
+                    try:
+                        send_heartbeat()
+                        time.sleep(30)  # Heartbeat every 30 seconds
+                    except Exception as e:
+                        print(f"💓 Heartbeat thread error: {e}")
+                        time.sleep(30)
+            
+            heartbeat_thread = threading.Thread(target=heartbeat_worker, daemon=True)
+            heartbeat_thread.start()
+        
+        # Store start time for uptime calculation
+        start_time = time.time()
+        
+        # Attempt registration
+        registration_success = register_with_orchestrator()
+        
+        if registration_success:
+            print("🎉 Orchestrator integration successful!")
+            print(f"   Node registered as: {node_id}")
+            print(f"   Check dashboard: {orchestrator_url}")
+            print(f"   Streamlit dashboard: http://3.25.107.210:8501")
+            
+            # Store orchestrator info on server for later use
+            if hasattr(server, '__dict__'):
+                server.orchestrator_node_id = node_id
+                server.orchestrator_url = orchestrator_url
+                server.orchestrator_registered = True
+        else:
+            print("⚠️ Registration failed, but server will continue running")
+            print("   You can check the orchestrator status manually")
+            print("   The node will still function independently")
+        
+        return registration_success
+        
+    except ImportError as e:
+        print(f"❌ Missing dependencies for orchestrator integration: {e}")
+        print("   Install with: pip install requests psutil")
+        return False
+    except Exception as e:
+        print(f"❌ Orchestrator integration error: {e}")
+        print("   Server will continue without orchestrator integration")
+        return False
+
 if __name__ == "__main__":
     print("🚀 Starting Enhanced Node Server...")
     print("=" * 60)
@@ -225,7 +416,11 @@ if __name__ == "__main__":
             sys.exit(1)
         
         print("\n✅ Server instance created successfully!")
-        print("🎮 Features available:")
+        
+        # Setup orchestrator integration
+        orchestrator_success = setup_orchestrator_integration(server)
+        
+        print("\n🎮 Features available:")
         if hasattr(server, 'advanced_remote_control'):
             print("   📡 Advanced remote control")
         if hasattr(server, 'task_control'):
@@ -234,6 +429,8 @@ if __name__ == "__main__":
             print("   🔄 Version control")
         print("   🌐 WebSocket support")
         print("   📊 Real-time dashboard")
+        if orchestrator_success:
+            print("   🔗 Orchestrator integration")
         
         # Start the server
         server.start()
@@ -250,6 +447,12 @@ if __name__ == "__main__":
         print(f"   📊 Health Check: http://localhost:{port}/health")
         print(f"   🔍 Debug Info: http://localhost:{port}/debug")
         print(f"   🔌 WebSocket: ws://localhost:{port}/socket.io/")
+        
+        if orchestrator_success:
+            print(f"\n🎛️ Orchestrator Integration:")
+            print(f"   🌐 Orchestrator Dashboard: https://orc.peoplesainetwork.com")
+            print(f"   📊 Streamlit Dashboard: http://3.25.107.210:8501")
+            print(f"   🆔 Node ID: {getattr(server, 'orchestrator_node_id', 'Unknown')}")
         
         print(f"\n🎯 Press Ctrl+C to stop the server")
         
@@ -275,6 +478,9 @@ if __name__ == "__main__":
         if 'server' in locals() and server:
             if hasattr(server, 'stop'):
                 server.stop()
+            # Stop orchestrator integration
+            if hasattr(server, 'orchestrator_registered'):
+                print("🔗 Disconnecting from orchestrator...")
         print("👋 Server stopped successfully")
     
     except Exception as e:
@@ -285,7 +491,7 @@ if __name__ == "__main__":
         print("\n🔧 Troubleshooting suggestions:")
         print("1. Check Python version (3.7+ required)")
         print("2. Install missing dependencies:")
-        print("   pip install flask flask-socketio flask-cors")
+        print("   pip install flask flask-socketio flask-cors requests psutil")
         print("3. Verify file structure is correct")
         print("4. Check for syntax errors in Python files")
         print("5. Run in emergency mode: python -c 'from main import create_basic_server; s=create_basic_server(); s.app.run()'")
