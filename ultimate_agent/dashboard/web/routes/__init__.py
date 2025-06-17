@@ -1381,4 +1381,42 @@ class EnhancedConversationManager:
 
 
 # For backward compatibility, create an alias
-DashboardManager = DashboardServer
+class DashboardServerV2(DashboardServer):
+    """Dashboard server with start/stop helpers"""
+
+    def start_server(self):
+        """Start dashboard server in a background thread."""
+        if getattr(self, "running", False):
+            return
+        self.running = True
+        self.server_thread = threading.Thread(
+            target=self._run_server,
+            daemon=True,
+            name="DashboardServer",
+        )
+        self.server_thread.start()
+        print(
+            f"\U0001F310 Dashboard server starting on port {self.dashboard_port} (accessible externally)"
+        )
+
+    def _run_server(self):
+        """Run the Flask SocketIO server."""
+        try:
+            self.socketio.run(
+                self.app,
+                host="0.0.0.0",
+                port=self.dashboard_port,
+                debug=False,
+                use_reloader=False,
+            )
+        except Exception as e:  # pragma: no cover - runtime protection
+            print(f"\u274c Dashboard server error: {e}")
+
+    def stop(self):
+        """Stop the dashboard server."""
+        self.running = False
+        print("\U0001F310 Dashboard server stopped")
+
+
+# For backward compatibility
+DashboardManager = DashboardServerV2
