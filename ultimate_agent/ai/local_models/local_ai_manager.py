@@ -59,6 +59,7 @@ class QuantizedModel:
     tags: List[str] = field(default_factory=list)
     description: str = ""
     download_size_gb: float = 0.0
+    aliases: List[str] = field(default_factory=list)
     
     @property
     def full_name(self) -> str:
@@ -326,12 +327,18 @@ def get_quantized_model_catalog() -> List[QuantizedModel]:
             memory_gb=4.0,
             min_cores=4,
             min_ram_gb=8,
-            hardware_types=[HardwareType.LOW_END_CPU, HardwareType.MID_RANGE_CPU, 
+            hardware_types=[HardwareType.LOW_END_CPU, HardwareType.MID_RANGE_CPU,
                           HardwareType.HIGH_END_CPU, HardwareType.APPLE_SILICON,
                           HardwareType.LOW_END_GPU, HardwareType.MID_RANGE_GPU],
             tags=["general", "chat", "fast", "efficient"],
             description="Fast and efficient Mistral 7B model",
-            download_size_gb=4.1
+            download_size_gb=4.1,
+            aliases=[
+                "mistral",
+                "mistral:latest",
+                "mistral:7b-instruct",
+                "mistral:7b-instruct-v0.2-q4_0",
+            ]
         ),
         
         # Smaller models for minimal hardware
@@ -467,29 +474,35 @@ class LocalAIManager:
     async def _download_model_async(self, model: QuantizedModel) -> bool:
         """Download model asynchronously"""
         try:
-            logging.info(f"📥 Downloading {model.display_name} ({model.download_size_gb:.1f}GB)")
-            
-            def download_model():
-                try:
-                    self.ollama_client.pull(model.full_name)
+            logging.info(
+                f"📥 Downloading {model.display_name} ({model.download_size_gb:.1f}GB)"
+            )
+
+            async def try_pull(name: str) -> bool:
+                def download_model():
+                    try:
+                        self.ollama_client.pull(name)
+                        return True
+                    except Exception as e:
+                        logging.error(f"Failed to download {name}: {e}")
+                        return False
+
+                with ThreadPoolExecutor() as executor:
+                    return await asyncio.get_event_loop().run_in_executor(
+                        executor, download_model
+                    )
+
+            for name in [model.full_name, *model.aliases]:
+                success = await try_pull(name)
+                if success:
+                    self.loaded_models[model.full_name] = model
+                    if not self.current_model:
+                        self.current_model = model
+                    logging.info(f"✅ Successfully downloaded {name}")
                     return True
-                except Exception as e:
-                    logging.error(f"Failed to download {model.full_name}: {e}")
-                    return False
-            
-            # Run download in thread pool to avoid blocking
-            with ThreadPoolExecutor() as executor:
-                success = await asyncio.get_event_loop().run_in_executor(executor, download_model)
-            
-            if success:
-                self.loaded_models[model.full_name] = model
-                if not self.current_model:
-                    self.current_model = model
-                logging.info(f"✅ Successfully downloaded {model.display_name}")
-                return True
-            else:
-                logging.error(f"❌ Failed to download {model.display_name}")
-                return False
+
+            logging.error(f"❌ Failed to download {model.display_name}")
+            return False
                 
         except Exception as e:
             logging.error(f"❌ Download error for {model.display_name}: {e}")
