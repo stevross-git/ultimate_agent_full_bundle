@@ -973,13 +973,9 @@
                 }
 
                 const payload = {
-                    model: this.currentModel,
                     input: context ? `${context}\nuser: ${message}` : message,
-                    options: {
-                        return_confidence: true,
-                        return_details: true,
-                        context_aware: this.contextMemory
-                    }
+                    conversation_id: this.currentConversation?.id,
+                    model_type: this.currentModel
                 };
 
                 try {
@@ -987,14 +983,13 @@
                     let endpoint = '/api/ai/inference';
                     if (this.currentModel === 'sentiment') {
                         endpoint = '/api/ai/inference';
-                        payload.model = 'sentiment';
+                        payload.model_type = 'sentiment';
                     } else if (this.currentModel === 'transformer') {
                         endpoint = '/api/ai/inference';
-                        payload.model = 'transformer';
+                        payload.model_type = 'transformer';
                     } else {
-                        // For general chat, use a more conversational approach
-                        endpoint = '/api/ai/chat';
-                        payload.model = 'general';
+                        // For general chat, talk to the local AI via Ollama
+                        endpoint = '/api/v4/local-ai/chat';
                     }
 
                     const response = await fetch(endpoint, {
