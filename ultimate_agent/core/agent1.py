@@ -90,8 +90,6 @@ class UltimatePainNetworkAgent:
             'uptime': 0.0,
             'current_balance': 0.0
         }
-
-        self.dashboard_port = dashboard_port or 8080
         
         # Add Local AI initialization (PROPERLY INSIDE __init__)
         self._initialize_local_ai()
@@ -302,8 +300,7 @@ class UltimatePainNetworkAgent:
         # Start all managers
         try:
             self.task_scheduler.start()
-            if hasattr(self.dashboard_manager, "start_server"):
-                self.dashboard_manager.start_server()
+            self.dashboard_manager.start_server()
             print("✅ All managers started successfully")
         except Exception as e:
             print(f"❌ Error starting managers: {e}")
