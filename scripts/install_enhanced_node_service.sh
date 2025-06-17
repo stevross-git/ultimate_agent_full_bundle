@@ -13,8 +13,34 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# Create service file from template
-cat "$REPO_DIR/systemd_service.txt" > "$SERVICE_FILE"
+SERVICE_USER="${SUDO_USER:-$(whoami)}"
+
+# Create virtual environment if needed
+if [ ! -d "$REPO_DIR/venv" ]; then
+    python3 -m venv "$REPO_DIR/venv"
+    "$REPO_DIR/venv/bin/pip" install --upgrade pip
+    if [ -f "$REPO_DIR/requirements.txt" ]; then
+        "$REPO_DIR/venv/bin/pip" install -r "$REPO_DIR/requirements.txt"
+    fi
+fi
+
+# Generate service file
+cat > "$SERVICE_FILE" <<SERVICE
+[Unit]
+Description=Enhanced Ultimate Pain Network Node Server
+After=network.target
+
+[Service]
+Type=simple
+User=${SERVICE_USER}
+WorkingDirectory=${REPO_DIR}
+ExecStart=${REPO_DIR}/venv/bin/python main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
 
 # Reload systemd and enable service
 systemctl daemon-reload
