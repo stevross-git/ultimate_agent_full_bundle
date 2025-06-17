@@ -7,7 +7,6 @@ Plugin system for extensible functionality
 import os
 import sys
 import importlib
-import importlib.util
 import inspect
 import threading
 import time
