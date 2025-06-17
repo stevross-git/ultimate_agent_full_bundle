@@ -2,5 +2,8 @@
   "total_earnings": 0.0,
   "tasks_completed": 0,
   "uptime": 0.0,
-  "current_balance": 0.0
+  "current_balance": 0.0,
+  "start_time": 1750130700.509973,
+  "last_registration": 1750131239.1811233,
+  "last_heartbeat": 1750131271.2628832
 }

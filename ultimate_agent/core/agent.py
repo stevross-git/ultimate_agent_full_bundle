@@ -1,5 +1,6 @@
 """
 Ultimate Agent Core - Main Agent Coordination
+Fixed version with proper node registration
 """
 
 import asyncio
@@ -10,6 +11,7 @@ import os
 import uuid
 import hashlib
 import secrets
+import threading
 from datetime import datetime
 from typing import Dict, Any, Optional
 
@@ -220,7 +222,7 @@ class UltimateAgent:
 
 
 class UltimatePainNetworkAgent(UltimateAgent):
-    """Enhanced agent combining all functionality."""
+    """Enhanced agent combining all functionality with automatic node registration."""
 
     def __init__(self, node_url: str = None, dashboard_port: int = None, config: Optional[Dict[str, Any]] = None):
         # Initialize config first
@@ -270,12 +272,24 @@ class UltimatePainNetworkAgent(UltimateAgent):
         self.completed_tasks = []
         self.start_time = time.time()
 
-        self.node_url = node_url or self.config_manager.get('DEFAULT', 'node_url')
+        # Node URL and registration setup
+        self.node_url = node_url or self.config_manager.get('DEFAULT', 'node_url', fallback='https://srvnodes.peoplesainetwork.com')
+        
+        # Set the node URL in network manager
+        self.network_manager.set_node_url(self.node_url)
+        
+        # Registration state
+        self.registered = False
+        self.registration_attempts = 0
+        self.max_registration_attempts = self.config_manager.getint('REGISTRATION', 'max_registration_attempts', fallback=5)
+        self.registration_thread = None
+
         self.stats = {
             'total_earnings': 0.0,
             'tasks_completed': 0,
             'uptime': 0.0,
             'current_balance': 0.0,
+            'start_time': time.time()
         }
 
         self.dashboard_port = dashboard_port or config.get('dashboard_port', 8080)
@@ -285,6 +299,7 @@ class UltimatePainNetworkAgent(UltimateAgent):
         print("✅ Ultimate Pain Network Agent initialized")
         print(f"🌐 Node URL: {self.node_url}")
         print(f"📊 Dashboard will be available on port {self.dashboard_port}")
+        print(f"🌐 Agent will register to: {self.node_url}")
 
     def _initialize_local_ai(self):
         """Initialize Local AI components"""
@@ -315,12 +330,312 @@ class UltimatePainNetworkAgent(UltimateAgent):
             f.write(agent_id)
         return agent_id
 
+    def start(self) -> bool:
+        """Enhanced start method with automatic registration"""
+        print(f"\n🚀 Starting Enhanced Ultimate Pain Network Agent")
+        print(f"🆔 Agent ID: {self.agent_id}")
+        print(f"🌐 Node URL: {self.node_url}")
+
+        self._load_stats()
+        self.running = True
+
+        try:
+            # Start task scheduler
+            self.task_scheduler.start()
+            print("✅ Task scheduler started")
+            
+            # Start dashboard if available
+            if self.dashboard_manager and hasattr(self.dashboard_manager, 'start_server'):
+                print(f"🌐 Starting dashboard server on port {self.dashboard_port}...")
+                self.dashboard_manager.start_server()
+                print(f"✅ Dashboard server started on port {self.dashboard_port}")
+                print(f"🌐 Dashboard: http://localhost:{self.dashboard_port}")
+                print(f"🎛️ Control Room: http://localhost:{self.dashboard_port}/control-room")
+            else:
+                print("⚠️ Dashboard not available")
+            
+            # Start node registration process
+            self._start_registration_process()
+            
+            print("✅ All managers started successfully")
+            
+        except Exception as e:
+            print(f"❌ Error starting managers: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+        print("🎯 Agent started successfully!")
+
+        # Keep running
+        try:
+            while self.running:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n🛑 Agent shutdown initiated...")
+            self.stop()
+
+        return True
+    
+    def _start_registration_process(self):
+        """Start the registration process in a separate thread"""
+        if self.registration_thread and self.registration_thread.is_alive():
+            return
+        
+        self.registration_thread = threading.Thread(
+            target=self._registration_worker,
+            daemon=True,
+            name="AgentRegistration"
+        )
+        self.registration_thread.start()
+        print("🔄 Registration process started")
+    
+    def _registration_worker(self):
+        """Worker thread for handling registration and heartbeats"""
+        # Initial registration attempt
+        self._attempt_registration()
+        
+        # Heartbeat loop
+        heartbeat_interval = self.config_manager.getint('DEFAULT', 'heartbeat_interval', fallback=30)
+        
+        while self.running:
+            try:
+                if self.registered:
+                    # Send heartbeat every N seconds
+                    success = self._send_heartbeat()
+                    if not success:
+                        print("⚠️ Heartbeat failed, will retry registration")
+                        self.registered = False
+                        self.registration_attempts = 0
+                    
+                    time.sleep(heartbeat_interval)
+                else:
+                    # Try to register every 60 seconds if not registered
+                    retry_interval = self.config_manager.getint('REGISTRATION', 'registration_retry_interval', fallback=60)
+                    time.sleep(retry_interval)
+                    self._attempt_registration()
+                    
+            except Exception as e:
+                print(f"❌ Registration worker error: {e}")
+                time.sleep(30)
+    
+    def _attempt_registration(self):
+        """Attempt to register with the node"""
+        if self.registration_attempts >= self.max_registration_attempts:
+            print(f"❌ Max registration attempts ({self.max_registration_attempts}) reached")
+            return
+        
+        self.registration_attempts += 1
+        print(f"🔄 Registration attempt {self.registration_attempts}/{self.max_registration_attempts}")
+        
+        try:
+            # Prepare agent capabilities
+            capabilities = self._get_agent_capabilities()
+            
+            # Attempt registration
+            success = self.network_manager.register_agent(self.agent_id, capabilities)
+            
+            if success:
+                self.registered = True
+                self.registration_attempts = 0
+                print(f"✅ Successfully registered with node: {self.node_url}")
+                
+                # Update stats
+                self.stats['last_registration'] = time.time()
+                self._save_stats()
+                
+            else:
+                print(f"❌ Registration attempt {self.registration_attempts} failed")
+                
+        except Exception as e:
+            print(f"❌ Registration error: {e}")
+    
+    def _send_heartbeat(self) -> bool:
+        """Send heartbeat to maintain registration"""
+        try:
+            # Prepare current status
+            status_data = self._get_heartbeat_data()
+            
+            # Send heartbeat
+            success = self.network_manager.send_heartbeat(self.agent_id, status_data)
+            
+            if success:
+                print("💓 Heartbeat sent successfully")
+                self.stats['last_heartbeat'] = time.time()
+                self._save_stats()
+                return True
+            else:
+                print("⚠️ Heartbeat failed")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Heartbeat error: {e}")
+            return False
+    
+    def _get_agent_capabilities(self) -> Dict[str, Any]:
+        """Get comprehensive agent capabilities for registration"""
+        return {
+            'agent_id': self.agent_id,
+            'agent_type': 'UltimatePainNetworkAgent',
+            'version': '4.0-modular',
+            'node_url': self.node_url,
+            'dashboard_port': self.dashboard_port,
+            
+            # Core capabilities
+            'ai_training_enabled': hasattr(self, 'ai_manager') and self.ai_manager is not None,
+            'blockchain_enabled': hasattr(self, 'blockchain_manager') and self.blockchain_manager is not None,
+            'task_scheduling_enabled': hasattr(self, 'task_scheduler') and self.task_scheduler is not None,
+            'dashboard_enabled': hasattr(self, 'dashboard_manager') and self.dashboard_manager is not None,
+            
+            # AI capabilities
+            'ai_models_available': self._get_available_ai_models(),
+            'local_ai_enabled': hasattr(self, 'local_ai_manager') and self.local_ai_manager is not None,
+            
+            # System info
+            'system_info': self._get_system_info(),
+            
+            # Network info
+            'network_capabilities': {
+                'dashboard_url': f"http://localhost:{self.dashboard_port}",
+                'api_endpoints': [
+                    f"http://localhost:{self.dashboard_port}/api/stats",
+                    f"http://localhost:{self.dashboard_port}/api/v3/stats",
+                    f"http://localhost:{self.dashboard_port}/api/system"
+                ]
+            },
+            
+            # Performance metrics
+            'performance_metrics': {
+                'uptime': time.time() - self.start_time,
+                'tasks_completed': self.stats.get('tasks_completed', 0),
+                'total_earnings': self.stats.get('total_earnings', 0.0)
+            },
+            
+            # Timestamps
+            'registration_time': time.time(),
+            'agent_start_time': self.start_time
+        }
+    
+    def _get_heartbeat_data(self) -> Dict[str, Any]:
+        """Get data for heartbeat messages"""
+        return {
+            'agent_id': self.agent_id,
+            'status': 'online' if self.running else 'offline',
+            'uptime': time.time() - self.start_time,
+            'current_tasks': len(self.current_tasks),
+            'completed_tasks': len(self.completed_tasks),
+            'system_load': self._get_current_system_load(),
+            'memory_usage': self._get_memory_usage(),
+            'last_activity': time.time(),
+            'capabilities_updated': False,  # Set to True if capabilities changed
+            'network_stats': self.network_manager.get_connection_stats(),
+            'dashboard_active': hasattr(self, 'dashboard_manager') and self.dashboard_manager is not None
+        }
+    
+    def _get_available_ai_models(self) -> list:
+        """Get list of available AI models"""
+        models = []
+        
+        if hasattr(self, 'ai_manager') and self.ai_manager:
+            try:
+                models.extend(list(getattr(self.ai_manager, 'models', {}).keys()))
+            except:
+                pass
+        
+        if hasattr(self, 'local_ai_manager') and self.local_ai_manager:
+            try:
+                local_models = getattr(self.local_ai_manager, 'available_models', [])
+                models.extend(local_models)
+            except:
+                pass
+        
+        return list(set(models))  # Remove duplicates
+    
+    def _get_system_info(self) -> Dict[str, Any]:
+        """Get current system information"""
+        try:
+            import psutil
+            import platform
+            
+            return {
+                'platform': platform.system(),
+                'platform_version': platform.version(),
+                'architecture': platform.machine(),
+                'python_version': platform.python_version(),
+                'cpu_count': psutil.cpu_count(),
+                'memory_total_gb': round(psutil.virtual_memory().total / (1024**3), 1),
+                'disk_total_gb': round(psutil.disk_usage('/').total / (1024**3), 1) if platform.system() != 'Windows' else round(psutil.disk_usage('C:\\').total / (1024**3), 1),
+            }
+        except Exception as e:
+            return {
+                'platform': 'unknown',
+                'error': str(e)
+            }
+    
+    def _get_current_system_load(self) -> Dict[str, float]:
+        """Get current system load metrics"""
+        try:
+            import psutil
+            
+            return {
+                'cpu_percent': psutil.cpu_percent(interval=1),
+                'memory_percent': psutil.virtual_memory().percent,
+                'disk_percent': psutil.disk_usage('/').percent if psutil.disk_usage else 0
+            }
+        except Exception:
+            return {
+                'cpu_percent': 0,
+                'memory_percent': 0,
+                'disk_percent': 0
+            }
+    
+    def _get_memory_usage(self) -> Dict[str, float]:
+        """Get detailed memory usage"""
+        try:
+            import psutil
+            
+            memory = psutil.virtual_memory()
+            return {
+                'total_gb': memory.total / (1024**3),
+                'available_gb': memory.available / (1024**3),
+                'used_gb': memory.used / (1024**3),
+                'percent': memory.percent
+            }
+        except Exception:
+            return {
+                'total_gb': 0,
+                'available_gb': 0,
+                'used_gb': 0,
+                'percent': 0
+            }
+    
+    def get_registration_status(self) -> Dict[str, Any]:
+        """Get detailed registration status"""
+        return {
+            'registered': self.registered,
+            'node_url': self.node_url,
+            'agent_id': self.agent_id,
+            'registration_attempts': self.registration_attempts,
+            'max_attempts': self.max_registration_attempts,
+            'last_registration': self.stats.get('last_registration'),
+            'last_heartbeat': self.stats.get('last_heartbeat'),
+            'network_stats': self.network_manager.get_connection_stats()
+        }
+    
+    def force_registration(self) -> bool:
+        """Force immediate registration attempt"""
+        print("🔄 Forcing registration attempt...")
+        self.registration_attempts = 0  # Reset attempts
+        self._attempt_registration()
+        return self.registered
+
     def get_status(self) -> Dict[str, Any]:
         uptime = time.time() - self.start_time
         status = {
             'agent_id': self.agent_id,
             'node_url': self.node_url,
             'running': self.running,
+            'registered': self.registered,  # Add registration status
             'uptime': uptime,
             'current_tasks': len(self.current_tasks),
             'completed_tasks': len(self.completed_tasks),
@@ -441,53 +756,23 @@ class UltimatePainNetworkAgent(UltimateAgent):
     def start_async(self):
         super().start()
 
-    def start(self) -> bool:
-        """Start the Enhanced Ultimate Pain Network Agent - FIXED VERSION"""
-        print(f"\n🚀 Starting Enhanced Ultimate Pain Network Agent")
-        print(f"🆔 Agent ID: {self.agent_id}")
-        print(f"🌐 Node URL: {self.node_url}")
-
-        self._load_stats()
-        self.running = True
-
-        try:
-            # Start task scheduler
-            self.task_scheduler.start()
-            print("✅ Task scheduler started")
-            
-            # Start dashboard if available
-            if self.dashboard_manager and hasattr(self.dashboard_manager, 'start_server'):
-                print(f"🌐 Starting dashboard server on port {self.dashboard_port}...")
-                self.dashboard_manager.start_server()
-                print(f"✅ Dashboard server started on port {self.dashboard_port}")
-                print(f"🌐 Dashboard: http://localhost:{self.dashboard_port}")
-                print(f"🎛️ Control Room: http://localhost:{self.dashboard_port}/control-room")
-            else:
-                print("⚠️ Dashboard not available")
-                
-            print("✅ All managers started successfully")
-            
-        except Exception as e:
-            print(f"❌ Error starting managers: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
-
-        print("🎯 Agent started successfully!")
-
-        # Keep running
-        try:
-            while self.running:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print("\n🛑 Agent shutdown initiated...")
-            self.stop()
-
-        return True
-
     def stop(self):
+        """Enhanced stop method with proper cleanup"""
         print("🛑 Stopping Enhanced Ultimate Pain Network Agent...")
         self.running = False
+        
+        # Unregister from node
+        if self.registered:
+            try:
+                # Send final status
+                self.network_manager.send_heartbeat(self.agent_id, {
+                    'agent_id': self.agent_id,
+                    'status': 'shutdown',
+                    'message': 'Agent shutting down'
+                })
+                print("📡 Sent shutdown notification to node")
+            except Exception as e:
+                print(f"⚠️ Failed to send shutdown notification: {e}")
 
         self._save_stats()
 
@@ -496,6 +781,7 @@ class UltimatePainNetworkAgent(UltimateAgent):
             self.task_scheduler.stop()
             if self.dashboard_manager and hasattr(self.dashboard_manager, 'stop'):
                 self.dashboard_manager.stop()
+            self.network_manager.close()
             print("✅ All managers stopped successfully")
         except Exception as e:
             print(f"⚠️ Error stopping managers: {e}")

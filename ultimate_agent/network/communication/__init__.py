@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ultimate_agent/network/communication/__init__.py
-Network communication and node interaction
+Enhanced network communication with proper agent registration
 """
 
 import time
@@ -16,7 +16,7 @@ import json
 
 
 class NetworkManager:
-    """Manages network communication with nodes and other agents"""
+    """Enhanced network manager with proper agent registration"""
     
     def __init__(self, config_manager):
         self.config = config_manager
@@ -28,7 +28,6 @@ class NetworkManager:
             self.session = None
         else:
             self.session = requests.Session()
-
 
         # Store timeout separately since requests.Session has no timeout attribute
         self.request_timeout = self.config.getint('NETWORK', 'connection_timeout', fallback=30)
@@ -43,6 +42,9 @@ class NetworkManager:
             'last_failed_connection': None
         }
         
+        # Node URL storage
+        self._node_url = None
+        
         self._setup_session()
         print("🌐 Network manager initialized")
     
@@ -53,7 +55,7 @@ class NetworkManager:
 
         # Set headers
         self.session.headers.update({
-            'User-Agent': 'UltimatePainNetworkAgent-Modular/3.0.0',
+            'User-Agent': 'UltimatePainNetworkAgent-Enhanced/4.0.0',
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Connection': 'keep-alive'
@@ -68,84 +70,124 @@ class NetworkManager:
             self.session.verify = verify_ssl
         
         # Configure retries
-        from requests.adapters import HTTPAdapter
-        from urllib3.util.retry import Retry
-        
-        retry_strategy = Retry(
-            total=self.config.getint('NETWORK', 'retry_attempts', fallback=3),
-            backoff_factor=1,
-            status_forcelist=[429, 500, 502, 503, 504],
-        )
-        
-        adapter = HTTPAdapter(max_retries=retry_strategy)
-        self.session.mount("http://", adapter)
-        self.session.mount("https://", adapter)
+        try:
+            from requests.adapters import HTTPAdapter
+            from urllib3.util.retry import Retry
+            
+            retry_strategy = Retry(
+                total=self.config.getint('NETWORK', 'retry_attempts', fallback=3),
+                backoff_factor=1,
+                status_forcelist=[429, 500, 502, 503, 504],
+            )
+            
+            adapter = HTTPAdapter(max_retries=retry_strategy)
+            self.session.mount("http://", adapter)
+            self.session.mount("https://", adapter)
+        except ImportError:
+            print("⚠️ urllib3 not available, retries disabled")
+
+    def set_node_url(self, node_url: str):
+        """Set the primary node URL"""
+        self._node_url = node_url.rstrip('/')
+        print(f"🌐 Node URL set to: {self._node_url}")
     
     def register_agent(self, agent_id: str, capabilities: Dict[str, Any]) -> bool:
-        """Register agent with node server"""
+        """Enhanced agent registration with better error handling"""
+        if self.session is None:
+            print("❌ Network session not available")
+            return False
+        
+        if not self._node_url:
+            print("❌ Node URL not set")
+            return False
+        
         try:
-            # Get node URL from agent
-            node_url = getattr(self, '_node_url', None)
-            if not node_url:
-                return False
+            print(f"🔄 Attempting registration to {self._node_url}")
             
+            # Enhanced registration data
             registration_data = {
                 **capabilities,
+                "registration_protocol_version": "4.0",
                 "modular_architecture": True,
-                "network_manager_version": "1.0.0",
+                "network_manager_version": "2.0.0",
                 "communication_features": ["websocket", "rest", "real_time"],
-                "protocol_support": ["http", "https", "websocket"]
+                "protocol_support": ["http", "https", "websocket"],
+                "registration_timestamp": time.time()
             }
             
-            # Try multiple API versions
+            # Try multiple API versions with better error reporting
             endpoints = [
-                f"{node_url}/api/v4/agents/register",
-                f"{node_url}/api/v3/agents/register",
-                f"{node_url}/api/agents/register"
+                f"{self._node_url}/api/v4/agents/register",
+                f"{self._node_url}/api/v3/agents/register", 
+                f"{self._node_url}/api/v2/agents/register",
+                f"{self._node_url}/api/agents/register"
             ]
+            
+            last_error = None
             
             for endpoint in endpoints:
                 try:
+                    print(f"  📡 Trying endpoint: {endpoint}")
+                    
                     response = self._make_request('POST', endpoint, json=registration_data)
                     
                     if response and response.get("success"):
-                        self.connected_nodes[node_url] = {
+                        # Store successful connection info
+                        self.connected_nodes[self._node_url] = {
                             'endpoint': endpoint,
                             'connected_at': time.time(),
                             'last_heartbeat': time.time(),
                             'status': 'connected',
-                            'api_version': endpoint.split('/')[-3] if 'v' in endpoint else 'v1'
+                            'api_version': endpoint.split('/')[-3] if 'v' in endpoint else 'v1',
+                            'registration_data': registration_data
                         }
                         
                         self.connection_stats['successful_requests'] += 1
                         self.connection_stats['last_successful_connection'] = time.time()
                         
-                        print(f"✅ Agent registered with {endpoint}")
+                        print(f"✅ Agent registered successfully!")
+                        print(f"   📡 Endpoint: {endpoint}")
+                        print(f"   🆔 Agent ID: {agent_id}")
+                        
                         return True
                     else:
-                        print(f"⚠️ Registration failed: {response.get('error', 'Unknown error')}")
+                        error_msg = response.get('error', 'Unknown error') if response else 'No response'
+                        print(f"  ❌ Registration failed: {error_msg}")
+                        last_error = error_msg
                         
                 except Exception as e:
-                    print(f"⚠️ Failed to connect to {endpoint}: {e}")
+                    print(f"  ❌ Endpoint {endpoint} failed: {e}")
+                    last_error = str(e)
                     continue
             
+            # All endpoints failed
             self.connection_stats['failed_requests'] += 1
             self.connection_stats['last_failed_connection'] = time.time()
+            
+            print(f"❌ All registration endpoints failed")
+            print(f"   Last error: {last_error}")
+            
             return False
             
         except Exception as e:
             print(f"❌ Registration error: {e}")
+            self.connection_stats['failed_requests'] += 1
+            self.connection_stats['last_failed_connection'] = time.time()
             return False
     
     def send_heartbeat(self, agent_id: str, status_data: Dict[str, Any]) -> bool:
-        """Send heartbeat to connected nodes"""
+        """Enhanced heartbeat with better error handling"""
         if not self.connected_nodes:
+            print("⚠️ No connected nodes for heartbeat")
             return False
         
+        # Enhanced heartbeat data
         heartbeat_data = {
             **status_data,
+            "heartbeat_protocol_version": "4.0",
             "network_stats": self.get_connection_stats(),
             "communication_quality": self._assess_connection_quality(),
+            "heartbeat_timestamp": time.time(),
             "modular_heartbeat": True
         }
         
@@ -166,16 +208,25 @@ class NetworkManager:
                 if response and response.get("success"):
                     node_info['last_heartbeat'] = time.time()
                     node_info['status'] = 'connected'
+                    node_info['heartbeat_count'] = node_info.get('heartbeat_count', 0) + 1
                     success_count += 1
                     self.connection_stats['successful_requests'] += 1
                 else:
                     node_info['status'] = 'heartbeat_failed'
-                    print(f"⚠️ Heartbeat failed for {node_url}: {response.get('error', 'Unknown error')}")
+                    error_msg = response.get('error', 'Unknown error') if response else 'No response'
+                    print(f"⚠️ Heartbeat failed for {node_url}: {error_msg}")
                     
             except Exception as e:
                 print(f"❌ Heartbeat error for {node_url}: {e}")
                 node_info['status'] = 'error'
                 self.connection_stats['failed_requests'] += 1
+        
+        success_rate = success_count / total_nodes if total_nodes > 0 else 0
+        
+        if success_count > 0:
+            # Only print success messages occasionally to avoid spam
+            if success_count == total_nodes and total_nodes > 0:
+                print(f"💓 Heartbeat: {success_count}/{total_nodes} nodes (100%)")
         
         return success_count > 0
     
@@ -190,11 +241,9 @@ class NetworkManager:
             if self.session is None:
                 raise RuntimeError('Network session unavailable')
 
-
             # Apply default timeout if none provided
             if 'timeout' not in kwargs:
                 kwargs['timeout'] = self.request_timeout
-
 
             response = self.session.request(method, url, **kwargs)
             
@@ -319,13 +368,10 @@ class NetworkManager:
         
         return discovered_nodes
     
-    def set_node_url(self, node_url: str):
-        """Set the primary node URL"""
-        self._node_url = node_url.rstrip('/')
-    
     def get_status(self) -> Dict[str, Any]:
         """Get network manager status"""
         return {
+            'node_url': self._node_url,
             'connected_nodes': len(self.connected_nodes),
             'active_connections': len([n for n in self.connected_nodes.values() 
                                      if n['status'] == 'connected']),
@@ -337,10 +383,6 @@ class NetworkManager:
                 'sent': self.connection_stats['total_bytes_sent'],
                 'received': self.connection_stats['total_bytes_received']
             },
-
-            # Determine when the last network activity occurred. Filter out
-            # ``None`` values so ``max`` doesn't raise a comparison error and
-            # simply return ``None`` when no timestamps have been recorded.
             'last_activity': max(
                 [
                     t
@@ -351,7 +393,6 @@ class NetworkManager:
                     if t is not None
                 ],
                 default=None,
-
             )
         }
     
@@ -375,11 +416,8 @@ class NetworkManager:
         # Adjust timeouts based on connection quality
         quality = self._assess_connection_quality()
         if self.session is not None and quality in ['poor', 'fair']:
-            # Increase timeout for poor connections
-
             new_timeout = min(60, self.request_timeout * 1.5)
             self.request_timeout = new_timeout
-
             optimizations.append(
                 f"Increased timeout to {new_timeout}s due to {quality} connection quality"
             )
