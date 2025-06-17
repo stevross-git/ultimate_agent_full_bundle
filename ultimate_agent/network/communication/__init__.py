@@ -22,12 +22,12 @@ class NetworkManager:
         self.config = config_manager
 
         if requests is None:
-            raise ImportError(
-                "The 'requests' library is required for network communication."
-                " Please install dependencies with `pip install -r ultimate_agent/requirements.txt`."
+            print(
+                "⚠️ 'requests' library not available, network features disabled"
             )
-
-        self.session = requests.Session()
+            self.session = None
+        else:
+            self.session = requests.Session()
         self.connected_nodes = {}
         self.connection_stats = {
             'successful_requests': 0,
@@ -43,6 +43,9 @@ class NetworkManager:
     
     def _setup_session(self):
         """Setup HTTP session with optimal configuration"""
+        if self.session is None:
+            return
+
         # Set headers
         self.session.headers.update({
             'User-Agent': 'UltimatePainNetworkAgent-Modular/3.0.0',
@@ -178,7 +181,10 @@ class NetworkManager:
             request_data = kwargs.get('json', {})
             request_size = len(json.dumps(request_data)) if request_data else 0
             self.connection_stats['total_bytes_sent'] += request_size
-            
+
+            if self.session is None:
+                raise RuntimeError('Network session unavailable')
+
             response = self.session.request(method, url, **kwargs)
             
             # Calculate response size for stats
@@ -357,11 +363,13 @@ class NetworkManager:
         
         # Adjust timeouts based on connection quality
         quality = self._assess_connection_quality()
-        if quality in ['poor', 'fair']:
+        if self.session is not None and quality in ['poor', 'fair']:
             # Increase timeout for poor connections
             new_timeout = min(60, self.session.timeout * 1.5)
             self.session.timeout = new_timeout
-            optimizations.append(f"Increased timeout to {new_timeout}s due to {quality} connection quality")
+            optimizations.append(
+                f"Increased timeout to {new_timeout}s due to {quality} connection quality"
+            )
         
         return {
             'optimizations_applied': len(optimizations),
@@ -405,7 +413,8 @@ class NetworkManager:
     def close(self):
         """Close network manager and cleanup connections"""
         try:
-            self.session.close()
+            if self.session:
+                self.session.close()
             self.connected_nodes.clear()
             print("🌐 Network manager closed")
         except Exception as e:

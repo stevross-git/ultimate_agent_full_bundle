@@ -49,8 +49,12 @@ def main():
 
         # ✅ ADD THIS BLOCK
         if hasattr(agent, "dashboard_manager") and agent.dashboard_manager:
-            print("🌐 Launching Dashboard Web Server on port", agent.dashboard_port)
-            agent.dashboard_manager.start_server()
+            port = getattr(agent, "dashboard_port", getattr(agent.dashboard_manager, "dashboard_port", ""))
+            if hasattr(agent.dashboard_manager, "start_server"):
+                print("🌐 Launching Dashboard Web Server on port", port)
+                agent.dashboard_manager.start_server()
+            else:
+                print("⚠️ Dashboard manager missing start_server")
         else:
             print("⚠️ Dashboard not initialized or missing")
 
