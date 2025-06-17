@@ -61,7 +61,8 @@ class UltimatePainNetworkAgent:
         self.monitoring_manager = MonitoringManager()
         self.plugin_manager = PluginManager()
         self.database_manager = DatabaseManager()
-        self.task_scheduler = TaskScheduler(self.ai_manager, self.config_manager)
+        # Pass blockchain manager so tasks can submit earnings
+        self.task_scheduler = TaskScheduler(self.ai_manager, self.blockchain_manager)
         self.network_manager = NetworkManager(self.config_manager)
         
         # FIX: Get URLs from config for DiscoveryClient instead of passing ConfigManager
@@ -90,6 +91,8 @@ class UltimatePainNetworkAgent:
             'uptime': 0.0,
             'current_balance': 0.0
         }
+
+        self.dashboard_port = dashboard_port or 8080
         
         # Add Local AI initialization (PROPERLY INSIDE __init__)
         self._initialize_local_ai()
@@ -300,7 +303,8 @@ class UltimatePainNetworkAgent:
         # Start all managers
         try:
             self.task_scheduler.start()
-            self.dashboard_manager.start_server()
+            if hasattr(self.dashboard_manager, "start_server"):
+                self.dashboard_manager.start_server()
             print("✅ All managers started successfully")
         except Exception as e:
             print(f"❌ Error starting managers: {e}")
