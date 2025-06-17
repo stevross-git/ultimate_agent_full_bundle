@@ -669,7 +669,9 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
     
     def __init__(self, config, local_ai_manager=None):
         # Initialize existing AI manager
+
         from ultimate_agent.ai.models import AIModelManager
+
         self.base_ai_manager = AIModelManager(config)
         
         # Add local AI capabilities
