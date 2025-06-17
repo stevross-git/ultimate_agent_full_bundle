@@ -108,13 +108,33 @@ class ConfigManager:
             'websocket_enabled': 'true',
             'static_files_enabled': 'true'
         }
-        
+
         # Plugin settings
         self.config['PLUGINS'] = {
             'enabled': 'true',
             'plugin_directory': './plugins',
             'auto_load': 'true',
             'sandbox_enabled': 'true'
+        }
+
+        # Local AI settings
+        self.config['LOCAL_AI'] = {
+            'enabled': 'true',
+            'auto_model_management': 'true',
+            'preload_models': 'false',
+            'prefer_local_ai': 'true',
+            'fallback_to_cloud': 'true',
+            'max_concurrent_requests': '3'
+        }
+
+        # Ollama settings
+        self.config['OLLAMA'] = {
+            'host': 'localhost',
+            'port': '11434',
+            'timeout': '30.0',
+            'auto_pull_models': 'false',
+            'model_selection_strategy': 'auto',
+            'default_model': 'auto'
         }
     
     def _save_config(self):
