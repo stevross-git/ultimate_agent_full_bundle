@@ -383,7 +383,7 @@ class TaskScheduler:
             self.cancel_task(task_id)
         
         # Wait for threads to complete
-        for thread in self.executor_threads.values():
+        for thread in list(self.executor_threads.values()):
             if thread.is_alive():
                 thread.join(timeout=5)
 

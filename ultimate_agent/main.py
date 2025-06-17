@@ -47,6 +47,7 @@ def main():
         agent.start()
 
 
+
         # Check if dashboard is available and get the port
         dashboard_port = args.dashboard_port or 8080
         if hasattr(agent, "modules") and "dashboard" in agent.modules:
@@ -55,6 +56,7 @@ def main():
                 dashboard_port = dashboard.dashboard_port
             print(f"🌐 Dashboard Web Server available on port {dashboard_port}")
             print(f"🌐 Access at: http://localhost:{dashboard_port}")
+
 
         else:
             print("⚠️ Dashboard not initialized")

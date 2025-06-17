@@ -61,7 +61,8 @@ class UltimatePainNetworkAgent:
         self.monitoring_manager = MonitoringManager()
         self.plugin_manager = PluginManager()
         self.database_manager = DatabaseManager()
-        self.task_scheduler = TaskScheduler(self.ai_manager, self.config_manager)
+        # Pass blockchain manager so tasks can submit earnings
+        self.task_scheduler = TaskScheduler(self.ai_manager, self.blockchain_manager)
         self.network_manager = NetworkManager(self.config_manager)
         
         # FIX: Get URLs from config for DiscoveryClient instead of passing ConfigManager
