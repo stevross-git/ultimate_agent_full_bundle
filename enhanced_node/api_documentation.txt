@@ -169,6 +169,75 @@ paths:
         '404':
           description: Agent not found
 
+  /api/v3/agents/{agent_id}/ai/inference:
+    post:
+      tags: [Agent Management]
+      summary: Proxy AI inference request
+      description: Forward an AI inference request to the specified agent
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Inference result returned from agent
+        '404':
+          description: Agent not found
+
+  /api/v3/agents/{agent_id}/start_task:
+    post:
+      tags: [Task Control]
+      summary: Start task on agent
+      description: Proxy a task start request to the specified agent
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Task started successfully
+        '404':
+          description: Agent not found
+
+  /api/v3/agents/{agent_id}/blockchain/transaction:
+    post:
+      tags: [Agent Management]
+      summary: Proxy blockchain transaction
+      description: Forward a blockchain transaction request to the agent
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Transaction processed
+        '404':
+          description: Agent not found
+
   # Task Control Endpoints
   /api/v4/task-control/create-task:
     post:
@@ -245,6 +314,29 @@ paths:
         '404':
           description: Agent not found
 
+  /api/v5/remote/agents/{agent_id}/bulk-command:
+    post:
+      tags: [Remote Control]
+      summary: Send bulk command to agent
+      description: Execute a bulk command on the specified agent
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Bulk command accepted
+        '404':
+          description: Agent not found
+
   # Bulk Operations Endpoints
   /api/v5/remote/bulk-operation:
     post:
@@ -283,6 +375,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BulkOperationsList'
+
+  /api/v5/remote/bulk-operations/{operation_id}:
+    get:
+      tags: [Bulk Operations]
+      summary: Get bulk operation status
+      description: Retrieve status information for a specific bulk operation
+      parameters:
+        - name: operation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bulk operation status retrieved
+        '404':
+          description: Bulk operation not found
 
   # Command Scheduling Endpoints
   /api/v5/remote/schedule-command:
@@ -325,6 +434,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScheduledCommandsList'
+
+  /api/v5/remote/scheduled-commands/{command_id}:
+    delete:
+      tags: [Command Scheduling]
+      summary: Cancel scheduled command
+      description: Cancel a previously scheduled command
+      parameters:
+        - name: command_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scheduled command cancelled
+        '404':
+          description: Scheduled command not found
 
   # Script Deployment Endpoints
   /api/v5/remote/deploy-script:
@@ -413,6 +539,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/CommandHistory'
 
+  /api/v5/remote/commands/{command_id}/replay:
+    post:
+      tags: [Remote Control]
+      summary: Replay previous command
+      description: Replay a previously executed command by ID
+      parameters:
+        - name: command_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Command replayed successfully
+        '404':
+          description: Command not found
+
+  /api/health:
+    get:
+      tags: [Health Monitoring]
+      summary: Node health check
+      description: Retrieve overall health status of the node
+      responses:
+        '200':
+          description: Node health information
+
   # Statistics Endpoints
   /api/v3/node/stats:
     get:
@@ -427,6 +579,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/NodeStatistics'
 
+  /api/v3/ultimate-agent-summary:
+    get:
+      tags: [Statistics]
+      summary: Get Ultimate Agent API summary
+      description: Retrieve a summary of Ultimate Agent capabilities across all agents
+      responses:
+        '200':
+          description: Summary retrieved successfully
+
   /api/v5/remote/advanced-statistics:
     get:
       tags: [Statistics]
@@ -439,6 +600,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdvancedStatistics'
+
+  /api/v5/remote/advanced-capabilities:
+    get:
+      tags: [Remote Control]
+      summary: Get advanced capabilities
+      description: Retrieve list of advanced remote control capabilities
+      responses:
+        '200':
+          description: Advanced capabilities retrieved
 
   # Version Control Endpoints
   /api/v6/version/updates/check:
@@ -487,6 +657,33 @@ paths:
       responses:
         '200':
           description: Rollback history retrieved
+
+  /api/v6/version/health:
+    get:
+      tags: [Version Control]
+      summary: Get version control health
+      description: Retrieve health status of version control services
+      responses:
+        '200':
+          description: Version control health retrieved
+
+  /api/v6/version/emergency/stop-all-updates:
+    post:
+      tags: [Version Control]
+      summary: Emergency stop all updates
+      description: Stop all active version updates immediately
+      responses:
+        '200':
+          description: Updates stopped
+
+  /api/v6/version/emergency/rollback-all:
+    post:
+      tags: [Version Control]
+      summary: Emergency rollback all agents
+      description: Rollback recently updated agents in an emergency
+      responses:
+        '200':
+          description: Rollback initiated
 components:
   schemas:
     # Agent Management Schemas
