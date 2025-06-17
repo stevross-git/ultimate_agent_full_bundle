@@ -36,7 +36,7 @@ class DashboardServer:  # Changed from DashboardManager to DashboardServer
         self.app.secret_key = secrets.token_hex(16)
         CORS(self.app)
         
-        # add_local_ai_routes(self.app, self.agent)  # Commented out to fix import issues
+        add_local_ai_routes(self.app, self.agent)
 
         
         # WebSocket setup
@@ -1377,8 +1377,6 @@ class EnhancedConversationManager:
     def stop(self):
         """Stop dashboard server"""
         self.running = False
-        if hasattr(self, 'server_thread') and self.server_thread:
-            print("🌐 Dashboard server stopping...")
         print("🌐 Dashboard server stopped")
 
 
