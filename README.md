@@ -186,6 +186,10 @@ log_level = INFO
 performance_tracking = true
 ```
 
+The `[LOCAL_AI]` section controls on-device model usage. To avoid automatic
+model downloads in offline environments, set `preload_models = false` and
+`auto_pull_models = false` under `[OLLAMA]`.
+
 ### **Command Line Options**
 
 ```bash
