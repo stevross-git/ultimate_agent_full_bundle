@@ -415,7 +415,7 @@ class LocalAIManager:
         self.loaded_models: Dict[str, QuantizedModel] = {}
         self.model_catalog = get_quantized_model_catalog()
         self.current_model: Optional[QuantizedModel] = None
-        
+
         # Performance tracking
         self.inference_stats = {
             'total_requests': 0,
@@ -423,12 +423,25 @@ class LocalAIManager:
             'avg_response_time': 0.0,
             'tokens_per_second': 0.0
         }
-        
-        # Configuration
+
+        # Configuration defaults
         self.max_concurrent_requests = 3
         self.auto_model_management = True
         self.preload_models = True
         self.download_timeout = DEFAULT_MODEL_DOWNLOAD_TIMEOUT
+
+
+        if self.config:
+            self.auto_model_management = self.config.getboolean(
+                'LOCAL_AI', 'auto_model_management', fallback=True
+            )
+            self.preload_models = self.config.getboolean(
+                'LOCAL_AI', 'preload_models', fallback=True
+            )
+            self.max_concurrent_requests = self.config.getint(
+                'LOCAL_AI', 'max_concurrent_requests', fallback=3
+            )
+
 
         self._initialize()
     
@@ -469,7 +482,12 @@ class LocalAIManager:
                         if loop and loop.is_running():
                             loop.create_task(self._download_model_async(optimal_model))
                         else:
-                            asyncio.run(self._download_model_async(optimal_model))
+                            threading.Thread(
+                                target=lambda: asyncio.run(
+                                    self._download_model_async(optimal_model)
+                                ),
+                                daemon=True,
+                            ).start()
             else:
                 logging.warning("⚠️ No suitable model found for this hardware")
                 
@@ -506,6 +524,7 @@ class LocalAIManager:
                         logging.error(f"Failed to download {name}: {e}")
                         return False
 
+
                 loop = asyncio.get_event_loop()
                 with ThreadPoolExecutor() as executor:
                     future = loop.run_in_executor(executor, download_model)
@@ -518,6 +537,12 @@ class LocalAIManager:
                             f"Download timed out for {name} after {self.download_timeout}s"
                         )
                         return False
+
+                with ThreadPoolExecutor() as executor:
+                    return await asyncio.get_event_loop().run_in_executor(
+                        executor, download_model
+                    )
+
 
             for name in [model.full_name, *model.aliases]:
                 success = await try_pull(name)

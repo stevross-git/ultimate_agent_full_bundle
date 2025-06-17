@@ -106,6 +106,11 @@ class DashboardServer:
             """AI Chat interface"""
             return self._get_ai_chat_html()
 
+        @self.app.route('/local-ai-chat')
+        def local_ai_chat_page():
+            """Local AI chat interface"""
+            return self._get_local_ai_chat_html()
+
         # ==================== API ENDPOINTS ====================
         
         @self.app.route('/api/stats')
@@ -732,6 +737,7 @@ class DashboardServer:
                         <button class="btn" onclick="refreshStats()">🔄 Refresh Stats</button>
                         <button class="btn" onclick="openControlRoom()">🎛️ Control Room</button>
                         <button class="btn" onclick="openAIChat()">💬 AI Chat</button>
+                        <button class="btn" onclick="openLocalAIChat()">🤖 Local AI Chat</button>
                         <button class="btn" onclick="showSystemInfo()">ℹ️ System Info</button>
                     </div>
                 </div>
@@ -831,7 +837,11 @@ class DashboardServer:
                 function openAIChat() {{
                     window.open('/ai-chat', '_blank');
                 }}
-                
+
+                function openLocalAIChat() {{
+                    window.open('/local-ai-chat', '_blank');
+                }}
+
                 async function showSystemInfo() {{
                     const systemDiv = document.getElementById('systemInfo');
                     if (systemDiv.style.display === 'none') {{
@@ -1007,6 +1017,17 @@ class DashboardServer:
         """Return AI chat interface"""
         template_path = os.path.join(
             os.path.dirname(__file__), '..', 'templates', 'ai_chat_interface.html'
+        )
+        try:
+            with open(template_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except Exception as e:
+            return f"<p>Error loading template: {e}</p>"
+
+    def _get_local_ai_chat_html(self):
+        """Return Local AI chat interface"""
+        template_path = os.path.join(
+            os.path.dirname(__file__), '..', 'templates', 'ai.html'
         )
         try:
             with open(template_path, 'r', encoding='utf-8') as f:

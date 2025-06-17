@@ -308,6 +308,13 @@ class UltimatePainNetworkAgent(UltimateAgent):
             self.local_ai_conversation_manager = None
             return
 
+        # Check configuration to see if local AI is enabled
+        if self.config_manager and not self.config_manager.getboolean('LOCAL_AI', 'enabled', fallback=True):
+            print("⚠️ Local AI disabled in configuration")
+            self.local_ai_manager = None
+            self.local_ai_conversation_manager = None
+            return
+
         try:
             print("🧠 Initializing Local AI...")
             self.local_ai_manager = create_local_ai_manager(self.config_manager)
