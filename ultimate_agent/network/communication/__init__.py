@@ -29,8 +29,10 @@ class NetworkManager:
         else:
             self.session = requests.Session()
 
+
         # Store timeout separately since requests.Session has no timeout attribute
         self.request_timeout = self.config.getint('NETWORK', 'connection_timeout', fallback=30)
+
         self.connected_nodes = {}
         self.connection_stats = {
             'successful_requests': 0,
@@ -188,9 +190,11 @@ class NetworkManager:
             if self.session is None:
                 raise RuntimeError('Network session unavailable')
 
+
             # Apply default timeout if none provided
             if 'timeout' not in kwargs:
                 kwargs['timeout'] = self.request_timeout
+
 
             response = self.session.request(method, url, **kwargs)
             
@@ -372,8 +376,10 @@ class NetworkManager:
         quality = self._assess_connection_quality()
         if self.session is not None and quality in ['poor', 'fair']:
             # Increase timeout for poor connections
+
             new_timeout = min(60, self.request_timeout * 1.5)
             self.request_timeout = new_timeout
+
             optimizations.append(
                 f"Increased timeout to {new_timeout}s due to {quality} connection quality"
             )
