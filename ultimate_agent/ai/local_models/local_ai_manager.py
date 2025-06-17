@@ -364,11 +364,27 @@ def get_quantized_model_catalog() -> List[QuantizedModel]:
             memory_gb=2.5,
             min_cores=4,
             min_ram_gb=6,
-            hardware_types=[HardwareType.MINIMAL_HARDWARE, HardwareType.LOW_END_CPU, 
+            hardware_types=[HardwareType.MINIMAL_HARDWARE, HardwareType.LOW_END_CPU,
                           HardwareType.MID_RANGE_CPU, HardwareType.APPLE_SILICON],
             tags=["general", "efficient", "small", "chat"],
             description="Microsoft Phi-3 Mini - efficient and capable",
             download_size_gb=2.2
+        ),
+
+        # DeepSeek R1 model - try latest then 1.5b
+        QuantizedModel(
+            name="deepseek-r1",
+            size="latest",
+            quantization="",
+            memory_gb=2.5,
+            min_cores=4,
+            min_ram_gb=8,
+            hardware_types=[HardwareType.LOW_END_CPU, HardwareType.MID_RANGE_CPU,
+                          HardwareType.LOW_END_GPU, HardwareType.MID_RANGE_GPU],
+            tags=["general", "chat", "efficient"],
+            description="DeepSeek R1 model",
+            download_size_gb=2.5,
+            aliases=["deepseek-r1:1.5b"]
         ),
         
         # Specialized models for specific hardware
