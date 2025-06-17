@@ -20,6 +20,8 @@ from pathlib import Path
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+DEFAULT_MODEL_DOWNLOAD_TIMEOUT = 60  # seconds
+
 try:
     import ollama
     OLLAMA_AVAILABLE = True
@@ -426,6 +428,8 @@ class LocalAIManager:
         self.max_concurrent_requests = 3
         self.auto_model_management = True
         self.preload_models = True
+        self.download_timeout = DEFAULT_MODEL_DOWNLOAD_TIMEOUT
+
 
         if self.config:
             self.auto_model_management = self.config.getboolean(
@@ -437,6 +441,7 @@ class LocalAIManager:
             self.max_concurrent_requests = self.config.getint(
                 'LOCAL_AI', 'max_concurrent_requests', fallback=3
             )
+
 
         self._initialize()
     
@@ -519,10 +524,25 @@ class LocalAIManager:
                         logging.error(f"Failed to download {name}: {e}")
                         return False
 
+
+                loop = asyncio.get_event_loop()
+                with ThreadPoolExecutor() as executor:
+                    future = loop.run_in_executor(executor, download_model)
+                    try:
+                        return await asyncio.wait_for(
+                            future, timeout=self.download_timeout
+                        )
+                    except asyncio.TimeoutError:
+                        logging.error(
+                            f"Download timed out for {name} after {self.download_timeout}s"
+                        )
+                        return False
+
                 with ThreadPoolExecutor() as executor:
                     return await asyncio.get_event_loop().run_in_executor(
                         executor, download_model
                     )
+
 
             for name in [model.full_name, *model.aliases]:
                 success = await try_pull(name)

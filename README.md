@@ -21,6 +21,7 @@ A next-generation, modular agent system for distributed AI training, blockchain 
 - Hyperparameter optimization
 - GPU/CPU adaptive processing
 - Download models from Hugging Face
+- Configurable model download timeout via `MODEL_DOWNLOAD_TIMEOUT`
 - Simultaneous training and inference
 
 💰 **Enhanced Blockchain Integration**
