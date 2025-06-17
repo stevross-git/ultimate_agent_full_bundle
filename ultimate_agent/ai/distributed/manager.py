@@ -15,7 +15,7 @@ import threading
 import queue
 
 # Import your existing AI components
-from ..models.ai_models import AIModelManager
+from ..models import AIModelManager
 from ..training import AITrainingEngine
 from ..inference import InferenceEngine
 

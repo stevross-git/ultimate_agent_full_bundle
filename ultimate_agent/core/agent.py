@@ -100,7 +100,7 @@ class UltimateAgent:
     def _initialize_ai_modules(self):
         """Initialize AI-related modules"""
         try:
-            from ..ai.models.ai_models import AIModelManager
+            from ..ai.models import AIModelManager
             self.modules['ai_models'] = AIModelManager(self.config)
             self.logger.info("✅ AI modules initialized")
         except ImportError as e:

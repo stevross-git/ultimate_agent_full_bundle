@@ -33,10 +33,11 @@ def main():
     
     parser = argparse.ArgumentParser(description="Launch the Ultimate Agent")
     parser.add_argument("--node-url", help="Node URL for registration", default=None)
-    parser.add_argument("--dashboard-port", type=int, help="Dashboard port", default=8080)
+    parser.add_argument("--dashboard-port", type=int, help="Dashboard port", default=None)
     args = parser.parse_args()
 
     try:
+
         from ultimate_agent import create_agent
 
         print("🤖 Initializing Ultimate Agent...")
@@ -46,33 +47,15 @@ def main():
         print("🚀 Starting Ultimate Agent...")
         agent.start()
 
-        # Check if dashboard is available and get the port
-        dashboard_port = args.dashboard_port or 8080
-        if hasattr(agent, "modules") and "dashboard" in agent.modules:
-            dashboard = agent.modules["dashboard"]
-            if hasattr(dashboard, "dashboard_port"):
-                dashboard_port = dashboard.dashboard_port
-            print(f"🌐 Dashboard Web Server available on port {dashboard_port}")
-            print(f"🌐 Access at: http://localhost:{dashboard_port}")
+        # ✅ ADD THIS BLOCK
+        if hasattr(agent, "dashboard_manager") and agent.dashboard_manager:
+            print("🌐 Launching Dashboard Web Server on port", agent.dashboard_port)
+            agent.dashboard_manager.start_server()
         else:
-            print("⚠️ Dashboard not initialized")
+            print("⚠️ Dashboard not initialized or missing")
 
-        # Keep the main thread alive
-        try:
-            import threading
-            import time
-            
-            print("✅ Ultimate Agent is running...")
-            print("Press Ctrl+C to stop")
-            
-            while True:
-                time.sleep(1)
-                
-        except KeyboardInterrupt:
-            print("\n🛑 Shutting down Ultimate Agent...")
-            if hasattr(agent, 'stop'):
-                agent.stop()
 
+        
     except ImportError as e:
         print(f"❌ Import error: {e}")
         print("\n🔧 Troubleshooting suggestions:")
