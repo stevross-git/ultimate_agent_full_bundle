@@ -6,6 +6,7 @@ AI model management and training capabilities
 
 import time
 import random
+import threading
 try:
     import numpy as np
 except Exception:  # pragma: no cover - optional dependency
@@ -105,6 +106,43 @@ class AIModelManager:
         if self.training_engine:
             return self.training_engine.start_training(task_type, config, progress_callback)
         return {'success': False, 'error': 'Training engine not available'}
+
+    def train_and_infer(self,
+                        train_task: str,
+                        train_config: Dict,
+                        infer_model: str,
+                        infer_input: Any,
+                        progress_callback: Callable = lambda *_: True) -> Dict[str, Any]:
+        """Run training and inference simultaneously."""
+        if not self.training_engine or not self.inference_engine:
+            return {'success': False, 'error': 'Training or inference engine not available'}
+
+        results: Dict[str, Any] = {}
+        exceptions: list[Exception] = []
+
+        def _train():
+            try:
+                results['training'] = self.training_engine.start_training(train_task, train_config, progress_callback)
+            except Exception as e:  # pragma: no cover - best effort
+                exceptions.append(e)
+
+        def _infer():
+            try:
+                results['inference'] = self.inference_engine.run_inference(infer_model, infer_input)
+            except Exception as e:  # pragma: no cover - best effort
+                exceptions.append(e)
+
+        t_train = threading.Thread(target=_train, daemon=True)
+        t_infer = threading.Thread(target=_infer, daemon=True)
+        t_train.start()
+        t_infer.start()
+        t_train.join()
+        t_infer.join()
+
+        if exceptions:
+            return {'success': False, 'error': str(exceptions[0])}
+
+        return {'success': True, 'training': results.get('training'), 'inference': results.get('inference')}
 
     def get_training_capabilities(self) -> List[str]:
         if self.training_engine:
