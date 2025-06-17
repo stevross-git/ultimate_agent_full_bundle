@@ -21,6 +21,7 @@ A next-generation, modular agent system for distributed AI training, blockchain 
 - Hyperparameter optimization
 - GPU/CPU adaptive processing
 - Download models from Hugging Face
+- Simultaneous training and inference
 
 💰 **Enhanced Blockchain Integration**
 - Multi-currency wallet support (ETH, PAIN, AI tokens)
@@ -265,6 +266,19 @@ def progress_callback(progress, details):
     return True  # Continue training
 
 result = training_engine.start_training('neural_network_training', config, progress_callback)
+```
+
+##### **Simultaneous Training and Inference**
+
+```python
+# Train while running inference in parallel
+combo_result = ai_manager.train_and_infer(
+    'neural_network_training',
+    config,
+    'sentiment',
+    "This is great!",
+    progress_callback,
+)
 ```
 
 ### **🎯 Task Management**
