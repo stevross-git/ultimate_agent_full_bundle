@@ -436,7 +436,14 @@ class LocalAIManager:
                 else:
                     logging.info(f"📥 Model {optimal_model.display_name} needs to be downloaded")
                     if self.preload_models:
-                        asyncio.create_task(self._download_model_async(optimal_model))
+                        try:
+                            loop = asyncio.get_running_loop()
+                        except RuntimeError:
+                            loop = None
+                        if loop and loop.is_running():
+                            loop.create_task(self._download_model_async(optimal_model))
+                        else:
+                            asyncio.run(self._download_model_async(optimal_model))
             else:
                 logging.warning("⚠️ No suitable model found for this hardware")
                 
