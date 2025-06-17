@@ -39,9 +39,28 @@ class TaskScheduler:
         
         # Task execution threads
         self.executor_threads = {}
-        self.running = True
-        
+        self._thread = None
+        self.running = False
+
         print(f"🎯 Task Scheduler initialized")
+
+    def start(self):
+        """Start the scheduler background loop."""
+        if self.running:
+            return
+
+        self.running = True
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
+
+    def _run_loop(self):
+        """Internal thread loop for processing tasks"""
+        while self.running:
+            try:
+                self.auto_start_tasks()
+                time.sleep(1)
+            except Exception as e:
+                print(f"❌ Scheduler loop error: {e}")
     
     def get_available_task_types(self) -> List[str]:
         """Get list of available task types"""
@@ -364,34 +383,11 @@ class TaskScheduler:
             self.cancel_task(task_id)
         
         # Wait for threads to complete
-        for thread in self.executor_threads.values():
+        for thread in list(self.executor_threads.values()):
             if thread.is_alive():
                 thread.join(timeout=5)
-        
+
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=5)
+
         print("✅ Task scheduler stopped")
-
-
-
-def __init__(self, config):
-    self.config = config or {}
-    self.batch_size = self.config.get('TASK_FETCH_BATCH', 5)
-
-    # You can extract required subsystems from config if needed
-    self.ai_manager = config.get('ai_manager')
-    self.blockchain_manager = config.get('blockchain_manager')
-
-    from ..simulation import TaskSimulator
-    from ..control import TaskControlClient
-
-    self.task_simulator = TaskSimulator(self.ai_manager, self.blockchain_manager)
-    self.task_control_client = TaskControlClient(self)
-
-    self.current_tasks = {}
-    self.completed_tasks = []
-    self.task_queue = []
-    self.max_concurrent_tasks = config.get('max_concurrent_tasks', 3)
-
-    self.executor_threads = {}
-    self.running = True
-
-    print(f"🎯 Task Scheduler initialized")
